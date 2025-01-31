@@ -1,0 +1,12 @@
+/build/
+/bin
+/CmakeFiles/
+CMakeCache.txt
+*.o
+*.exe
+*.out
+*.a
+*.so
+*.dylib
+*.log
+*.swp
