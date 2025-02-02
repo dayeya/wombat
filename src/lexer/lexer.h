@@ -1,79 +1,13 @@
 #ifndef _LEXER_H
 #define _LEXER_H
 
-#include "lexer.h"
-
 #include <iostream>
 #include <string>
 #include <optional>
 #include <fstream>
 #include <filesystem>
 
-typedef enum KeywordKind {
-	/// A function identifier.
-	Func,
-	/// The end of a function.
-	Endf,
-	/// Variable declaration
-	Let,
-	/// Logical if.
-	If,
-	/// Logical else.
-	Else,
-	/// Logical while.
-	While,
-	/// logical for.
-	For,
-	/// In operator. e.g ` 1 in [1, 2, 3] `.
-	In,
-
-	/// Return statement. { value }; 
-	/// Note: ` return; ` will return null-value by default.
-	Return,
-
-	/// Break statement. Only within a loop.
-	Break,
-	/// Continue statement. Only within a loop.
-	Continue,
-
-	/// Match block, will contain [LiterKind] cases and BLOCKS as scopes.
-	// See [Match-Blocks] in the docs.
-	Match,
-
-	/// @NOT_IMPLEMENTED, Struct type definition. 
-	Struct,
-	/// @NOT_IMPLEMENTED, Enum type definition.
-	Enum,
-	/// @NOT_IMPLEMENTED, Import and Import*.
-	Import,
-	/// Logical AND. e.g ` BOOLEAN and BOOLEAN`.
-	And,
-	/// Logical OR. e.g	` BOOLEAN or BOOLEAN `.
-	Or,
-	/// Logical NOT. e.g ` not BOOLEAN `.
-	Not,
-
-	/// @NOT_IMPLEMENTED, faster math operator
-	///  Instead of ++var and --var, wombat uses INC and DEC. 
-	///
-	///  INC, increment the value by 1. e.g ` inc var; `
-	Inc,
-	/// DEC, decrement the value by 1. e.g ` dec var; `
-	Dec,
-
-	/// Additive operator.
-	Add,
-	/// Subtraction operator.
-	Sub,
-	/// Multiplication operator.
-	Mul,
-	/// Division operator.
-	Div,
-	/// Modulus operator.
-	Mod,
-	/// Power operator. Symbolized by ` ** `.
-	Power
-};
+using std::unique_ptr;
 
 class Source
 {
@@ -90,47 +24,31 @@ public:
 		this->InitStream();
 	};
 
-	/**
-	 * @brief called when the source file is no longer needed.
-	 */
+	/// @brief called when the source file is no longer needed.
 	~Source() {
 		stream_.close();
 		// [TODO] -> log into a [FINAL_PROCSES_LOG_FILE] the closing of the stream.
 	};
 
-	/**
-	 * @brief check if the given path exists.
-	 * throws a std::errc::no_such_file_or_directory.
-	 * See [RESOURCE_ERROR] for more info.
-	 */	
+	/// @brief Validates the path of the given source, emits an EmitPhase::VALIDATION
+	/// 	   See [emitter.h] for more information.
 	void ValidatePath();
 
-	/**
-	 * @brief check if the given path has the correct extension.
-	 * throws an std::errc::invalid_argument.
-	 * See [RESOURCE_ERROR] for more info.
-	 */
+	/// @brief Validates the extension of the source file, emits an EmitPhase::VALIDATION
+	/// 	   See [emitter.h] for more information.
 	void ValidateExtension();
 
-	/**
-	 * @brief opens a FILE handler to the given source file.
-	 * throws an std::errc::io_error if failed.
-	 */
+	/// @brief Opens the source file, emits an EmitPhase::PRECOMP.
+	/// 	   See [emitter.h] for more information.
 	void InitStream();
 
-	/**
-	 * @brief Peeks the current datagram from the source without reading it. 
-	 */
+	/// @brief Peeks the current datagram from the source without reading it. 
 	int Peak();
 
-	/**
-	 * @brief reads data from the filebuf
-	 */
 	void ReadFromFileBuf(int offset);
 
-	/**
-	 * @brief Getter for the underlying stream.
-	 */
+	/// @brief Getter for the buffer of the source file.
+	/// @return returns an ifstream.
 	inline std::ifstream& GetSourceStream() { return stream_; }
 
 private:
@@ -144,19 +62,13 @@ public:
 	/**
 	 * @brief init for ` Cursor `. validates the given path by the user.
 	 */
-	explicit Cursor(Source& source)
-		: source_(source), offset_(0), line_(0), column_(0) {};
+	explicit Cursor(unique_ptr<Source> source)
+		: source_{std::move(source)}, offset_{0}, line_{0}, column_{0} {};
 
 	/**
 	 * @brief destructor for ` Cursor `.
 	 */
 	~Cursor() = default;
-
-	/**
-	 * @brief The InnerSource getter, retrieves the _source 
-	 * @return 
-	 */
-	Source& InnerSource() { return source_; }
 
 	/**
 	 * @brief Checks if the cursor reached the end of the file.
@@ -167,10 +79,10 @@ public:
 	/**
 	 * @brief Reads the current character.
 	 */
-	const int Consume();
+	char Read();
 
 private:
-	Source& source_; 
+	unique_ptr<Source> source_; 
 	int offset_;
 	int line_;
 	int column_;
@@ -179,26 +91,22 @@ private:
 
 class Lexer 
 {
+private:
+	unique_ptr<Cursor> cursor_;
 public:
 	/**
 	 * @brief creates a lexer for the given source.
 	 * @param source - target for the lexer, loaded BEFORE the process.
 	 */
-	explicit Lexer(Source& source) : cursor_(source) {};
+	explicit Lexer(unique_ptr<Source> source) : cursor_{std::make_unique<Cursor>(std::move(source))} {};
 
 	/**
 	 * @brief destructor for ` Lexer `.
 	 */
 	~Lexer() = default;
 
-	void iterate();
-
-	void lex_line();
-
-	void lex_buffer();
-
-private:
-	Cursor cursor_;
+	auto Cat() -> void;
+	auto LexLine() -> void;
 };
 
 #endif // _LEXER_H

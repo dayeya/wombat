@@ -1,0 +1,3 @@
+func main() -> free
+    write("hello, world!);
+endf
