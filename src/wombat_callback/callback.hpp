@@ -3,41 +3,41 @@
 
 #include <iostream>
 #include <optional>
-#include <functional>
 #include <tuple>
+#include <functional>
+
+#include "diagnostic.hpp"
+
+enum class CallbackIdentifer {
+    ArgumentDiagnosticCallback
+};
 
 /**
  * @brief Callback class represents the one of the main concepts of wombats UX and error management.
  * A callback is a function that will execute whenever the main 'interface' / 'driver' of wombat-compiler performs and early exit.
  * Any callback will be visualized by a cmd-block of information regarding the information about the error origin.  
  */
-template<typename RetType, typename ...Args>
 class Callback {
 public:
-    /// Ensuring all derived callbacks are <std::function>
-    using Fn = std::function<RetType(Args...)>;
+    /// Ensure that *any* callback must return *void* and emit a diagnostic. 
+    using Fn = std::function<const void(const Diagnostic&)>;
 
-    Callback(int callbackId, Fn func, Args... args) 
-        : id_(callbackId), 
-          callback_(std::move(func)), 
-          args_(
-            std::make_tuple(std::forward<Args>(args)...)  
-        ) {}
+    Callback(CallbackIdentifer cb_iden, Fn func, const Diagnostic& diagnostic)
+        : id_(cb_iden), 
+          callback_(std::move(func)),
+          diag_(diagnostic) {}
 
     /**
      * @brief Invokes the inner callback_ function from the callback-stack.
      * If given callback fails than 
      * @return std::optional<RetType>
      */
-    auto invoke() -> std::optional<RetType>;
-
-protected:
-    auto try_callback() -> RetType;
+    auto invoke() const -> void;
 
 private:
-    int id_;
+    CallbackIdentifer id_;
     Fn callback_;
-    std::tuple<Args...> args_;
+    Diagnostic diag_;
 };
 
 #endif // CALLBACK_HPP_

@@ -9,7 +9,9 @@
                 "/usr/include/c++/13/backward",
                 "/usr/lib/gcc/x86_64-linux-gnu/13/include",
                 "/usr/local/include",
-                "/usr/include/x86_64-linux-gnu"
+                "/usr/include/x86_64-linux-gnu",
+                "${workspaceFolder}/src/wombat_errors",
+                "${workspaceFolder}/src/wombat_compiler"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc-13",

@@ -13,7 +13,7 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/src/wombat_cli/args.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_errors/emitter.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_errors/diagnostic.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_callback/callback.tpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_callback/callback.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)

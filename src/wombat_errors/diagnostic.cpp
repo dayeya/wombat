@@ -16,8 +16,6 @@ auto Diagnostic::print_location() const -> void {
 }
 
 auto Diagnostic::print_message() const -> void {
-    if(messages_.empty()) return; 
-    
     int index = 1;
     for (const auto& msg : messages_) {
         std::cout << "[\033[1;36m" << index << "\033[0m] " << msg << ".\n";
@@ -25,8 +23,6 @@ auto Diagnostic::print_message() const -> void {
     }
 }
 auto Diagnostic::print_suggestion() const -> void {
-    if(suggestions_.empty()) return;
-
     for(const auto& suggestion : suggestions_) {
         suggestion.suggest();
     }
