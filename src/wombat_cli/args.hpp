@@ -49,7 +49,6 @@ struct Option {
 class Args {
 public:
     Args() = default;
-    auto show() -> void;
     static auto parse_args(int argc, char** argv) -> std::expected<Args, Diagnostic>;
 
 private:

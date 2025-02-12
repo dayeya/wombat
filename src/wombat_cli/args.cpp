@@ -8,13 +8,6 @@
 #include "args.hpp"
 #include "emitter.hpp"
 
-auto Args::show() -> void {
-    for(const auto& elem : options_)
-    {
-        std::cout << elem.first.name << " " << elem.first.value << " Enabled: " << elem.second << "\n";
-    }
-}
-
 auto Args::set_option(std::string opt, std::string value) -> void {
     options_.emplace(
         std::pair<Option, Enabled>({ opt, value }, true)
