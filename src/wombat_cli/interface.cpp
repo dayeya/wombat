@@ -1,7 +1,7 @@
 #include <iomanip>
 #include <string>
 #include <expected>
-#include <vector>
+#include <deque>
 
 #include "args.hpp"
 #include "emitter.hpp"
@@ -10,7 +10,7 @@
 
 auto WInterface::build_interface(int argc, char** argv) -> WInterface {
     auto wombat_emitter = Emitter();
-    std::vector<Callback> wombat_callbacks;
+    std::deque<Callback> wombat_callbacks;
 
     // Attempt to parse command-line arguments.
     // If parsing fails, recieve the callback and register it. See [callback].
@@ -40,8 +40,10 @@ auto WInterface::build_interface(int argc, char** argv) -> WInterface {
 auto WInterface::execute() -> void {
     //! Catch early errors.
     //! They can manifest during input validation or argument parsing.
-    for(const auto& callback : callback_stack_) {
+    while(!callback_stack_.empty()) {
+        auto callback = callback_stack_.front();
         callback.invoke();
+        callback_stack_.pop_front();
     }
 }
 

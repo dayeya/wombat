@@ -1,7 +1,7 @@
 #ifndef INTERFACE_HPP_
 #define INTERFACE_HPP_
 
-#include <vector>
+#include <deque>
 
 #include "args.hpp"
 #include "emitter.hpp"
@@ -13,7 +13,7 @@ public:
     WInterface(
         Args parsed_arguments,
         Emitter diagnostic_emitter,
-        std::vector<Callback> callback_stack
+        std::deque<Callback> callback_stack
     ) : args_(parsed_arguments), diagnostic_emitter_(diagnostic_emitter), callback_stack_(callback_stack) {}
     
     static auto build_interface(int argc, char** argv) -> WInterface;
@@ -27,7 +27,7 @@ public:
 private:
     Args args_;
     Emitter diagnostic_emitter_;
-    std::vector<Callback> callback_stack_;
+    std::deque<Callback> callback_stack_;
 
     /**
      * @brief Changes the output dir of the compiler, which contains all '.exe' files.
