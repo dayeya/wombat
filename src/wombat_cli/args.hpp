@@ -10,8 +10,8 @@
 #include "diagnostic.hpp"
 
 using std::string;
-
 using Enabled = bool;
+
 
 /**
  * @brief Option class for storing data passed to the interface.
@@ -51,15 +51,15 @@ public:
     Args() = default;
     static auto parse_args(int argc, char** argv) -> std::expected<Args, Diagnostic>;
 
+    auto set_option(string opt, std::string value) -> void;
+    auto has_option(string opt) -> bool;
+    auto get_option_value(string opt) -> std::optional<Option>;
+    auto enable_flag(string flg) -> void;
+    auto has_flag(string flg) -> bool;
+
 private:
     std::map<string, Enabled> flags_;
     std::map<Option, Enabled> options_;
-
-    auto set_option(string opt, std::string value) -> void;
-    auto has_option(string opt) -> bool;
-    auto enable_flag(string flg) -> void;
-    auto has_flag(string flg) -> bool;
-    auto has_required_value(string opt) -> std::optional<Option>;
 
     /**
      * @brief Checks if the given [arg] is an argument that *must* be followed by a value.
@@ -73,9 +73,10 @@ private:
 
     static bool is_option(std::string opt) {
         return (
-            opt == "--build"  || opt == "-b" ||
-            opt == "--run"    || opt == "-r" ||
-            opt == "--outdir" || opt == "-u"
+            opt == "--build"   || opt == "-b" ||
+            opt == "--run"     || opt == "-r" ||
+            opt == "--outdir"  || opt == "-u" ||
+            opt == "--outfile" || opt == "-o"
         );
     }
 

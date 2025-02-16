@@ -1,23 +1,8 @@
 func main() -> free
+    let x: string = "hello!";
+    let! PI: float = 3.14;
+
+    let p_x: ref<int> = addres(x); // address is a built-in.
+
     write("hello, world!);
 endf
-
-
-// NOTES:
-
-// create MODES
-// Mode::WombatBuild
-// Mode::WombatPerform
-// Mode::Info
-
-// create CLI interface.
-// CLI::run_compiler
-// CLI::parse_args
-// CLI::has_opt
-// CLI::WOMBAT_VERSION
-
-// Compiler -> create a private emitter for fatal erros
-// Compiler::emit_fatal
-// Compiler::emit_warning
-// Compiler::emit_msg
-// Compiler::exec_mode

@@ -1,0 +1,15 @@
+func display_name(name: String, last_name: String) -> free
+    write(
+        format("Hello, Mr. {}, {}", name, last_name)
+    );
+endf
+
+func check_normal_probability(expected: float, std_deviation: float, x_i: float) -> float
+    // error checking
+    if std_deviation == 0 {
+        write(
+            format("error, cant devide by zero. got={}", std_deviation)
+        );
+    }
+    return (x_i - expected) / std_deviation;
+endf

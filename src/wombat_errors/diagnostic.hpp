@@ -5,6 +5,7 @@
 #include <optional>
 #include <vector>
 #include <string>
+#include <expected>
 
 enum class DiagnosticPhase { 
     PRECOMP,    /// Pre-compilation phase.
@@ -52,7 +53,7 @@ constexpr auto make_readable_kind(DiagnosticKind p) -> const char* {
 }
 
 struct CodeLocation {
-    const std::string& file_name;
+    std::string file_name;
     int line;
     int col;
 
@@ -86,5 +87,12 @@ struct Diagnostic {
     auto print_message() const -> void;
     auto print_suggestion() const -> void;
 };
+
+auto unexpected_diagnostic_from(
+    DiagnosticKind kind,
+    std::vector<std::string> messages,
+    std::vector<Suggestion> suggestions,
+    std::optional<CodeLocation> code_loc
+) -> std::unexpected<Diagnostic>;
 
 #endif // DIAGNOSTIC_HPP_

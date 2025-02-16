@@ -12,10 +12,38 @@ namespace fs = std::filesystem;
  * @brief Contains all kinds of possible and allowed tokens within the lexial bounderies of the language.
  */
 enum class TokenKind {
-    Literal,            // Represents literals like integers, raw-strings and bytes.
+    //!
+    //! Literal.
+    Literal,
+
+    //!
+    //! Identifier can be either of two options: user-defined or keyword.
+    //!
     Identifier,         // Represents user-defined data, data-types and behavior. e.g variable-name, functions and structs.
     Keyword,            // Words that represent a meaningful behavior/feature in the language. e.g 'let', 'func' and so on and so forth.
+    
+    //!
+    //! Readables!, wombat offers a core-syntax language feature! 
+    //! See [readables] in wombat-docs.
+    //!
+    //! Briefly, readables make developers code cleaner and readable code!
+    //! They operate on a single-argument and they are notated by the '!' symbol.
+    //! e.g:
+    //! 
+    //! let x: int = 8;
+    //! let p_x: ref<int> = &x 
+    //!
+    //! For wombat, this code is *not* readable.
+    //! Wombat proposes readables.
+    //! 
+    //! let x: int = 8; 
+    //! let p_x: ref<int> = address! { x };
+    //!
+    Readable,
 
+    //! 
+    //! Punctuators
+    //!
     OpenParen,          // Symbol for '('
     CloseParen,         // Symbol for ')'
     OpenBracket,        // Symbol for '['
@@ -39,7 +67,7 @@ enum class TokenKind {
     Eq,                 // Assignment operator,                 '='
     Le,                 // Less than or equal to operator,      '<='
     Ge,                 // Greater than or equal to operator,   '>='
-    END,                // End of file marker
+    Eof,                // End of file marker
 
     LineComment,        // Single-line comment, '//'
     Foreign,            // Unknown or invalid token for the language
@@ -93,12 +121,16 @@ public:
      * @brief appends a new token to the vector.
      * @return True if operation of successful.
      */
-    auto pushToken(const Token& wombat_token) -> bool;
+    auto push_token(const Token& wombat_token) -> bool;
 
     /**
      * @brief returns the current number of tokens tokenized by the lexer.
      */
-    auto numOfTokens() -> std::size_t;
+    auto num_of_tokens() -> std::size_t;
+
+    auto tokens() -> std::vector<Token> {
+        return m_tokens; 
+    }
 
 private:
     std::vector<Token> m_tokens;

@@ -9,7 +9,8 @@
 #include "diagnostic.hpp"
 
 enum class CallbackIdentifer {
-    ArgumentDiagnosticCallback
+    ArgumentDiagnostic,
+    IoFileValidation
 };
 
 /**

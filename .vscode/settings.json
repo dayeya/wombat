@@ -54,7 +54,9 @@
         "typeinfo": "cpp",
         "map": "cpp",
         "span": "cpp",
-        "expected": "cpp"
+        "expected": "cpp",
+        "queue": "cpp",
+        "variant": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/gcc",
     "C_Cpp.default.cppStandard": "gnu++23",

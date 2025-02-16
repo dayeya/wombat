@@ -21,7 +21,7 @@ auto Args::has_option(std::string opt) -> bool {
     return it != options_.end();
 }
 
-auto Args::has_required_value(std::string opt) -> std::optional<Option> {
+auto Args::get_option_value(std::string opt) -> std::optional<Option> {
     if(!has_option(opt)) return std::nullopt;
 
     auto it = std::find_if(options_.begin(), options_.end(), [&opt](const auto& pair) {
@@ -45,16 +45,6 @@ auto Args::parse_args(int argc, char** argv) -> std::expected<Args, Diagnostic> 
 
     const auto peek_next_arg = [&viewer](size_t k) {
         return (k + 1 < viewer.size()) ? std::make_optional<std::string>(viewer[k + 1]) : std::nullopt;
-    };
-
-    const auto unexpected_diagnostic_from = [](
-        DiagnosticKind kind,
-        std::vector<std::string> messages,
-        std::vector<Suggestion> suggestions,
-        std::optional<CodeLocation> code_loc
-    ) {
-        auto diag = Diagnostic(kind, messages, suggestions, code_loc);  
-        return std::unexpected(diag);
     };
 
     // Zero arguments provided.

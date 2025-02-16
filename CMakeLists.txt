@@ -14,6 +14,10 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/src/wombat_errors/emitter.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_errors/diagnostic.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_callback/callback.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_files/io_file.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/compiler.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/lex.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/token.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -30,4 +34,6 @@ target_include_directories(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_errors
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_lexer
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_files
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer
 )

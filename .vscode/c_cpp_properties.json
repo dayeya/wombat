@@ -11,7 +11,9 @@
                 "/usr/local/include",
                 "/usr/include/x86_64-linux-gnu",
                 "${workspaceFolder}/src/wombat_errors",
-                "${workspaceFolder}/src/wombat_compiler"
+                "${workspaceFolder}/src/wombat_compiler",
+                "${workspaceFolder}/src/wombat_files",
+                "${workspaceFolder}/src/wombat_compiler/wombat_lazy_lexer"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc-13",

@@ -1,50 +1,51 @@
 #ifndef INTERFACE_HPP_
 #define INTERFACE_HPP_
 
-#include <deque>
+#include <iostream>
+#include <queue>
 
+#include "io_file.hpp"
 #include "args.hpp"
 #include "emitter.hpp"
 #include "callback.hpp"
 #include "compiler.hpp"
+
+//! Type-aliasing for cleaner code.
+using CallbackQueue = std::queue<Callback>;
+using Input = std::tuple<>;
 
 class WInterface {
 public:
     WInterface(
         Args parsed_arguments,
         Emitter diagnostic_emitter,
-        std::deque<Callback> callback_stack
-    ) : args_(parsed_arguments), diagnostic_emitter_(diagnostic_emitter), callback_stack_(callback_stack) {}
+        std::queue<Callback> callback_stack,
+        InputFile in_file,
+        OutputFile out_file
+    ) : args_(parsed_arguments), 
+        diagnostic_emitter_(diagnostic_emitter), 
+        callback_stack_(callback_stack),
+        in_file(InputFile()),
+        out_file(OutputFile()) {}
     
     static auto build_interface(int argc, char** argv) -> WInterface;
     
     /**
      * @brief Function which executes the given prompt.
-     *        See the private section for a deeper dive.  
+     * See the private section for a deeper dive.  
      */
     auto execute() -> void;
+    auto flush_callbacks() -> void;
 
 private:
     Args args_;
     Emitter diagnostic_emitter_;
-    std::deque<Callback> callback_stack_;
+    std::queue<Callback> callback_stack_;
+    InputFile in_file;
+    OutputFile out_file;
 
-    /**
-     * @brief Changes the output dir of the compiler, which contains all '.exe' files.
-     *        Invoked when using --outdir | -u
-     */
-    auto setOutputDir() -> void;
-
-    /**
-     * @brief Displays the output dir *full* path. 
-     *        Invoked when using  --outdir | -u [INPUT]
-     */
-    auto displayOutputDir() -> void;
-
-    /** @brief Displays an 'help' message to the user, cannot be overloaded on top of other options.
-     *         Invoked when using --help | -h.
-     */
-    static auto help_information() -> void;
+    auto validate_input() -> void;
+    auto help_information() -> void;
 };
 
 #endif // INTERFACE_HPP_
