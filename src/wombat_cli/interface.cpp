@@ -87,8 +87,7 @@ auto WInterface::build_interface(int argc, char** argv) -> WInterface {
 }
 
 auto WInterface::execute() -> void {
-    
-    //! Flush early callbacks
+    //! Report early-caught diagnostics.
     if(!callback_queue_.empty()) {
         flush_callbacks();
         return;
@@ -108,8 +107,6 @@ auto WInterface::execute() -> void {
     //! 
     //! if(args_.has_flag("--build") || args_.has_flag("-r")) {}
     //!
-
-    
 
     auto comp = Compiler();
     
