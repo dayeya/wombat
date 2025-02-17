@@ -24,7 +24,7 @@ public:
         OutputFile out_file
     ) : args_(parsed_arguments), 
         diagnostic_emitter_(diagnostic_emitter), 
-        callback_stack_(callback_stack),
+        callback_queue_(callback_stack),
         in_file(InputFile()),
         out_file(OutputFile()) {}
     
@@ -40,7 +40,7 @@ public:
 private:
     Args args_;
     Emitter diagnostic_emitter_;
-    std::queue<Callback> callback_stack_;
+    std::queue<Callback> callback_queue_;
     InputFile in_file;
     OutputFile out_file;
 

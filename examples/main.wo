@@ -1,8 +1,9 @@
 func main() -> free
-    let x: string = "hello!";
+    let x: String = "hello!"    ;
     let! PI: float = 3.14;
+    let x: int = 0;
 
-    let p_x: ref<int> = addres(x); // address is a built-in.
+    let p_x: ref<int> = addres! x; // address is a built-in.
 
-    write("hello, world!);
+    write("hello, world!");
 endf

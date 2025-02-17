@@ -7,8 +7,10 @@
 #include <string>
 #include <cassert>
 #include <vector>
+#include <expected>
 
 #include "token.hpp"
+#include "diagnostic.hpp"
 
 using std::unique_ptr, std::shared_ptr;
 
@@ -35,7 +37,6 @@ struct Lexer {
     bool lexer_is_digit(char c);
     bool lexer_is_symbol(char c);
     bool lexer_is_new_line(char c);
-    bool lexer_is_readable(std::string iden);
 
     void skip_whitespaces();
     void output_token(const Token& token);

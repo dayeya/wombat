@@ -87,6 +87,13 @@ auto WInterface::build_interface(int argc, char** argv) -> WInterface {
 }
 
 auto WInterface::execute() -> void {
+    
+    //! Flush early callbacks
+    if(!callback_queue_.empty()) {
+        flush_callbacks();
+        return;
+    }
+
     if(args_.has_flag("--help") || args_.has_flag("-h")) {
         help_information();
         return;
@@ -112,11 +119,11 @@ auto WInterface::execute() -> void {
 }
 
 auto WInterface::flush_callbacks() -> void {
-    while(!callback_stack_.empty()) {
-        callback_stack_
+    while(!callback_queue_.empty()) {
+        callback_queue_
             .front()
             .invoke();
-        callback_stack_.pop();
+        callback_queue_.pop();
     }
 }
 

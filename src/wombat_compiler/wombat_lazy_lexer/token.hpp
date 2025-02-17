@@ -14,7 +14,11 @@ namespace fs = std::filesystem;
 enum class TokenKind {
     //!
     //! Literal.
-    Literal,
+    LiteralInt,
+    LiteralFloat,
+    LiteralString,
+    LiteralChar,
+    LiteralBoolean, 
 
     //!
     //! Identifier can be either of two options: user-defined or keyword.
