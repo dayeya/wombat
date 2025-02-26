@@ -333,12 +333,6 @@ void Lexer::next_token(LazyTokenStream& token_stream) {
   token_stream.advance_with_token(std::move(token_stream.m_current_token));
 }
 
-void Lexer::output_token(const Token& token) {
-  std::cout << "WOMBAT::Token { text: " << token.value 
-            << ", kind: " + kind_to_str(token.kind)
-            << " };" << "\n"; 
-}
-
 bool Lexer::open_and_populate_cursor() {
   std::ifstream ifs(m_cursor.file_name, std::ios::in);
 

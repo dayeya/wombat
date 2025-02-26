@@ -122,7 +122,6 @@ private:
 
     inline char advance_cursor() { return m_cursor.advance_self(); }
 
-    void output_token(const Token& token);
     void assign_token(unique_ptr<Token>& token, std::string value, TokenKind kind);
 
     void lex_eof(unique_ptr<Token>& token);
