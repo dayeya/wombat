@@ -11,6 +11,7 @@ add_executable(
     main.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_cli/interface.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_cli/args.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_cutil/cutil.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_errors/diagnostic.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_callback/callback.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_files/io_file.cpp
@@ -34,5 +35,6 @@ target_include_directories(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_lexer
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_files
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_cutil
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer
 )

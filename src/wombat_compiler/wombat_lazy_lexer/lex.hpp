@@ -15,13 +15,6 @@
 
 namespace fs = std::filesystem;
 
-namespace CharUtils {
-    bool is_alnum(char c);
-    bool is_digit(char c);
-    bool is_alpha(char c);
-    bool is_symbol(char c);
-}
-
 struct Cursor {
     std::string file_name;
     std::vector<std::string> source;
@@ -84,6 +77,7 @@ struct Cursor {
         std::vector<std::string> region(1, "");
 
         int target_line = (line == -1) ? current_line : line;
+
         if (target_line >= 0 && target_line < total_lines) {
             region[0] = source[target_line];
         }

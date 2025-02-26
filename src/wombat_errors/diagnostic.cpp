@@ -40,35 +40,29 @@ void Renderer::render_pretty_print(const Diagnostic& diag) const {
     }
 
     std::cout << " ~ ";
+
     if(!diag.hint.empty()) {
-        std::cout << diag.hint << ".\n";
+        std::cout << diag.hint << "\n";
     } else { 
         std::cout << "\n";
     }
+
+    std::cout << "\n";
 }
 
-//!
-//! ERROR FORMATTING
-// Error: unterminated string 
-// at main.cpp:5:21
-//  |
-// [5] let x = "daniel"name"; 
-//  |                  ^^^^^
-//  |                  invalid syntax
-//  ~
-//
-//
-// Short form.
-//
-// Error: not enough arguments provided                  
-// ~ use ` ./wombat --help ` for more information
+void Renderer::render_short(const Diagnostic& diag) const {
+    auto level = diag.level_to_str();
+    auto phase = diag.phase_to_str();
+    auto header = Header { level, diag.message }; 
 
-//!
-//!
-// Warning: Unused variable `z`
-// test.wb:7:8
-//  |
-// [7] let! z = 42;
-//  |       ^ declared but never used
-//  |
-//  ~ remove `z` or prefix it with `_` to silence this warning.
+    std::cout << header.format().str() << "\n";
+    std::cout << "~ ";
+
+    if(!diag.hint.empty()) {
+        std::cout << diag.hint << "\n";
+    } else { 
+        std::cout << "\n";
+    }
+
+    std::cout << "\n";
+}

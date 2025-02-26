@@ -13,7 +13,8 @@
                 "${workspaceFolder}/src/wombat_errors",
                 "${workspaceFolder}/src/wombat_compiler",
                 "${workspaceFolder}/src/wombat_files",
-                "${workspaceFolder}/src/wombat_compiler/wombat_lazy_lexer"
+                "${workspaceFolder}/src/wombat_compiler/wombat_lazy_lexer",
+                "${workspaceFolder}/src/wombat_compiler/wombat_cutil"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc-13",

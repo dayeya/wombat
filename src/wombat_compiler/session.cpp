@@ -18,7 +18,6 @@ void Session::validate_arg_span(Args arg_span) {
     if(arg_span.is_present(AvailOpt::Build)) {
         InputFile ifl(arg_span.get_option_value(AvailOpt::Build));
         
-
         if(auto res = ifl.validate(".wo", true, false); !res) {
             register_diagnostic_rendering(res.error());
         } else {
@@ -41,15 +40,17 @@ void Session::validate_arg_span(Args arg_span) {
         } else {
             executable = std::move(ofl);
         }
-    } else;
+    }
 }
 
 void Session::register_diagnostic_rendering(const Diagnostic& diag) {
-    Callback diagnostic_rendering_callback{
+    auto rendering_scheme = (!diag.labels.empty()) ? &Renderer::render_pretty_print : &Renderer::render_short;
+
+    Callback diagnostic_rendering_callback {
         CallbackId::DiagnosticRendering,
-        std::bind_front(&Renderer::render_pretty_print, &renderer),
-        diag
+        std::bind_front(rendering_scheme, &renderer), diag
     };
+
     session_callbacks.q.push(diagnostic_rendering_callback); 
 }
 

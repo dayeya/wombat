@@ -68,9 +68,8 @@ public:
             []() { return State::Stopped; }
         );
     }
-
+    
     void init_session(std::function<State()> compile);
-
     void register_diagnostic_rendering(const Diagnostic& diag);
 };
 

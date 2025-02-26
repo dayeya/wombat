@@ -1,25 +1,14 @@
 #include <iostream>
 #include <optional>
 #include <expected>
+#include <algorithm>
 #include <sstream>
 #include <fstream>
 #include <cstring>
 #include <string>
 
+#include "cutil.hpp"
 #include "lex.hpp"
-
-bool CharUtils::is_alnum(char c)  { 
-  return std::isalnum(static_cast<unsigned char>(c));
-}
-bool CharUtils::is_digit(char c)  { 
-  return std::isdigit(static_cast<unsigned char>(c));
-}
-bool CharUtils::is_alpha(char c)  { 
-  return std::isalpha(static_cast<unsigned char>(c));
-}
-bool CharUtils::is_symbol(char c) { 
-  return std::ispunct(static_cast<unsigned char>(c));
-}
 
 void Lexer::assign_token(
   unique_ptr<Token>& token, 
@@ -49,9 +38,6 @@ void Lexer::lex_line_comment(unique_ptr<Token>& token) {
 
   advance_cursor();
 
-  //! Maybe change check to:
-  //! while(!m_cursor.current.reached_eof() && !lexer_is_new_line(m_cursor.current.peek_next()))
-
   while(!m_cursor.reached_eof() && !m_cursor.reached_new_line()) {
     token->extend(advance_cursor());
   }
@@ -64,8 +50,8 @@ void Lexer::lex_word(unique_ptr<Token>& token) {
   token->extend(m_cursor.current);  
 
   while(
-    !m_cursor.reached_eof() && 
-    (CharUtils::is_alnum(m_cursor.peek_next()) || m_cursor.peek_next() == '_')
+    !m_cursor.reached_eof() &&
+    CharUtils::is_alnum(m_cursor.peek_next()) || m_cursor.peek_next() == '_'
   ) {
     token->extend(advance_cursor());
   }
@@ -239,12 +225,12 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
     auto region = Region {
       m_cursor.file_name,
       m_cursor.current_line,
-      m_cursor.current_col,
-      m_cursor.multi_lined_region(token->pos.first, m_cursor.current_line),
+      token->pos.second,
+      m_cursor.one_lined_region(token->pos.first),
     };
 
     std::vector<Label> labels{Label{
-      "invalid char",
+      "string starts here but is not terminated",
       std::vector<Region>{region}
     }}; 
 
@@ -265,7 +251,6 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
 
     if (m_cursor.peek_next() == '\'') {
       advance_cursor();
-
       token->kind = TokenKind::LiteralChar;
     } else {
       auto region = Region {
@@ -275,12 +260,11 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
         m_cursor.one_lined_region(),
       };
       
-      std::vector<Label> labels{Label{
-        "here", 
-        std::vector<Region>{region}
-      }}; 
+      std::vector<Label> labels{
+        Label{"", std::vector<Region>{region}}
+      }; 
 
-      register_critical_diagnostic_pretty("unterminated char literal", "close the literal with \'", labels);
+      register_critical_diagnostic_pretty("unterminated char literal", "close the literal with `\'`", labels);
     }
   };
 

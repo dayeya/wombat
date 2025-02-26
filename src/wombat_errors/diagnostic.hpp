@@ -9,6 +9,8 @@
 #include <string>
 #include <expected>
 
+#include "cutil.hpp"
+
 enum class Phase {
     Precomp,
     Lexer,
@@ -87,6 +89,13 @@ struct Diagnostic {
     constexpr auto phase_to_str() const -> std::string;
 };
 
+constexpr std::string red_bold     {"\033[1;31m"};
+constexpr std::string green_bold   {"\033[1;32m"};
+constexpr std::string yellow_bold  {"\033[1;33m"};
+constexpr std::string blue_bold    {"\033[1;34m"};
+constexpr std::string cyan_bold    {"\033[1;36m"};
+constexpr std::string reset        {"\033[0m"};
+
 /**
  * @brief Renderer defines the textual format of the Wombat diagnostic system.
  *
@@ -116,9 +125,12 @@ struct Renderer {
             : level(l), message(m) {};
 
         auto format() -> std::ostringstream {
-            std::ostringstream sstream;
-            sstream << level << ": " << message << ".";
-            return sstream;
+            std::ostringstream formatted_header;
+
+            auto col = (level == "critical") ? red_bold : yellow_bold;
+
+            formatted_header << col << level << reset << ": " << message;
+            return formatted_header;
         };
     };
 
@@ -132,27 +144,28 @@ struct Renderer {
         Marker(int o, Region r, std::string m)
             : origin(o), reg(std::move(r)), region_msg(m) {}
 
-        auto format() -> std::ostringstream {
-            std::ostringstream sstream;
-            sstream << " |" << "\n";
-            sstream << "[" 
-                    << reg.location.first + 1 
-                    << "] ";
-                    
-            for(int k = 0; k < reg.source_code.size(); ++k) {
-                if(k == 0) {
-                    sstream << reg.source_code.at(k) << "\n";
-                    sstream << " |" 
-                            << std::string(reg.location.second + 1, ' ') 
-                            << "^ " 
-                            << region_msg; 
-                } else {
-                    sstream << " |" 
-                            << reg.source_code[k] ;
-                }
+        std::ostringstream format() const {
+            std::ostringstream out;
+            
+            const auto& [trimmed_line, offset] = CharUtils::left_trim(reg.source_code.front());
+
+            out << " |\n"
+                << "[" << cyan_bold << reg.location.first + 1 << reset << "] " 
+                << trimmed_line << "\n" 
+                << " |";
+
+            int caret_position = reg.location.second + 1 - offset;
+            if (caret_position < 0) caret_position = 0;
+        
+            out << std::string(caret_position, ' ') << "^ " << region_msg;
+        
+            for (size_t k = 1; k < reg.source_code.size(); ++k) {
+                out << " |" << reg.source_code[k] << "\n";
             }
-            return sstream;
+        
+            return out;
         }
+            
     };
 
     Renderer() {};
