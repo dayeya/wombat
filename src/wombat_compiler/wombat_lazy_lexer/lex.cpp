@@ -203,8 +203,8 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
               escaped_char != '\\' && 
               escaped_char != '"'
             ) {
-              std::stringstream message("unexpected escape sequence: \\"); 
-              message << std::string(1, escaped_char) << "'";
+              std::string message("unexpected escape sequence: "); 
+              message += "'\\" + std::string(1, escaped_char) + "'";
 
               auto region = Region {
                 m_cursor.file_name,
@@ -218,7 +218,7 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
                 std::vector<Region>{region}
               }}; 
 
-              register_critical_diagnostic_pretty(message.str(), "", labels);
+              register_critical_diagnostic_pretty(message, "", labels);
           }
           
           token->extend(escaped_char);
@@ -258,13 +258,14 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
       advance_cursor();
       token->kind = TokenKind::LiteralChar;
       token->value = "";
-      return std::nullopt;
+      return;
     }
     
     token->extend(advance_cursor());
 
     if (m_cursor.peek_next() == '\'') {
       advance_cursor();
+
       token->kind = TokenKind::LiteralChar;
     } else {
       auto region = Region {
@@ -275,7 +276,7 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
       };
       
       std::vector<Label> labels{Label{
-        "unterminated here", 
+        "here", 
         std::vector<Region>{region}
       }}; 
 
@@ -298,12 +299,34 @@ void Lexer::next_token(LazyTokenStream& token_stream) {
   advance_cursor();
 
   if(m_cursor.reached_new_line()) return;
-  if(m_cursor.current == '/' && m_cursor.peek_next() == '/') lex_line_comment(token_stream.m_current_token);
 
-  if(m_cursor.reached_eof()) lex_eof(token_stream.m_current_token);
-  else if(CharUtils::is_alpha(m_cursor.current) || m_cursor.current == '_') lex_word(token_stream.m_current_token);
-  else if(CharUtils::is_digit(m_cursor.current) || m_cursor.current == '"') lex_literal(token_stream.m_current_token);
-  else if(CharUtils::is_symbol(m_cursor.current)) lex_symbol(token_stream.m_current_token);
+  if(
+    m_cursor.current == '/' && 
+    m_cursor.peek_next() == '/'
+  ) {
+    lex_line_comment(token_stream.m_current_token);
+    return;
+  }
+
+  if(m_cursor.reached_eof()) {
+    lex_eof(token_stream.m_current_token);
+  }
+  else if(
+    CharUtils::is_alpha(m_cursor.current) || 
+    m_cursor.current == '_'
+  ) {
+    lex_word(token_stream.m_current_token);
+  }
+  else if(
+    CharUtils::is_digit(m_cursor.current) || 
+    m_cursor.current == '"' || 
+    m_cursor.current == '\''
+  ) {
+    lex_literal(token_stream.m_current_token);
+  }
+  else if(CharUtils::is_symbol(m_cursor.current)) {
+    lex_symbol(token_stream.m_current_token);
+  }
   else { 
     lex_foreign(token_stream.m_current_token, m_cursor.current); 
   };

@@ -5,22 +5,21 @@
 
 constexpr auto Diagnostic::phase_to_str() const -> std::string {
     switch (phase) {
-        case Phase::Precomp:   return "Pre-compilation";
-        case Phase::Lexer: return "Lexical-analysis";
-        case Phase::Parser:    return "Syntax-and-semantic analysis";
-        case Phase::CodeGen:   return "Assembly-code-generation";
-        case Phase::Optimize:  return "Code-optimization";
-        default: 
-            return "Unknown";
+        case Phase::Precomp:   return "precompilation";
+        case Phase::Lexer:     return "lexical analysis";
+        case Phase::Parser:    return "syntax and semantic analysis";
+        case Phase::CodeGen:   return "code generation";
+        case Phase::Optimize:  return "Code optimization";
+        default: return "Unknown";
     }
 }
 
 constexpr auto Diagnostic::level_to_str() const -> std::string {
     switch (level) {
-        case Level::Warning:  return "Warning";
-        case Level::Critical: return "Critical";
-        case Level::Help:     return "Help";
-        default: return "Unknown";
+        case Level::Warning:  return "warning";
+        case Level::Critical: return "critical";
+        case Level::Help:     return "help";
+        default: return "unknown";
     }
 }
 
@@ -29,15 +28,22 @@ void Renderer::render_pretty_print(const Diagnostic& diag) const {
     auto phase = diag.phase_to_str();
     auto header = Header { level, diag.message }; 
 
-    std::cout << header.format().str() << std::endl;
+    std::cout << header.format().str() << "\n";
 
     if(!diag.labels.empty()) {
-        //! NOT IMPLEMENTED.
-        std::cout << "<Has labels, not implemented for now...>" << std::endl;
+        for(const auto& label : diag.labels) {
+            for(const auto& reg : label.regions) {
+                auto marker = Marker { reg.location.first, reg, label.text };
+                std::cout << marker.format().str() << "\n";
+            }
+        }
     }
 
+    std::cout << " ~ ";
     if(!diag.hint.empty()) {
-        std::cout << "~ " << diag.hint << ".\n";
+        std::cout << diag.hint << ".\n";
+    } else { 
+        std::cout << "\n";
     }
 }
 

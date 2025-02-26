@@ -2,10 +2,10 @@
 #define DIAGNOSTIC_HPP_
 
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <optional>
 #include <vector>
-#include <span>
 #include <string>
 #include <expected>
 
@@ -27,14 +27,14 @@ enum class Level {
  */
 struct Region {
     std::string file_name;
-    std::pair<int, int> location; // coordinates of the starting position where the region begins.
-    std::span<std::string> source_code;
+    std::pair<int, int> location; // coordinates of the location where the error happend.
+    std::vector<std::string> source_code;
 
     Region(
         std::string& f,
         int line,
         int col,
-        std::span<std::string> sc
+        std::vector<std::string> sc
     ) : file_name(f),
         location(std::make_pair(line, col)),
         source_code(std::move(sc)) {}
@@ -42,13 +42,13 @@ struct Region {
 
 /**
  * @brief Labeles represent the error of a diagnostic in a better context.
- * This is done by explaining the user where the error emerged from, pointed by the label symbol and text.  
+ * This is done by explaining the user where the error emerged from, pointed by the label symbol and text.
  *   ____________________________________________________
  *  |                                                    |
  *  |                                                    |
  * [l]  let str: String = "name;                         |
  *  |                         ^ unterminated literal     |
- *  |                           --------------------     | 
+ *  |                           --------------------     |
  *  |                                  Label             |
  *  |____________________________________________________|
  * 
@@ -125,12 +125,34 @@ struct Renderer {
     //! Marker will represent a textual-string that contains the label of the source-code.
     struct Marker {
         int origin;
-        Label label;
+        Region reg;
+        std::string region_msg;
 
-        Marker(int o, Label l)
-            : origin(o), label(std::move(l)) {}
 
-        auto format();
+        Marker(int o, Region r, std::string m)
+            : origin(o), reg(std::move(r)), region_msg(m) {}
+
+        auto format() -> std::ostringstream {
+            std::ostringstream sstream;
+            sstream << " |" << "\n";
+            sstream << "[" 
+                    << reg.location.first + 1 
+                    << "] ";
+                    
+            for(int k = 0; k < reg.source_code.size(); ++k) {
+                if(k == 0) {
+                    sstream << reg.source_code.at(k) << "\n";
+                    sstream << " |" 
+                            << std::string(reg.location.second + 1, ' ') 
+                            << "^ " 
+                            << region_msg; 
+                } else {
+                    sstream << " |" 
+                            << reg.source_code[k] ;
+                }
+            }
+            return sstream;
+        }
     };
 
     Renderer() {};

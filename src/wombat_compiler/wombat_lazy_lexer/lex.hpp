@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-#include <span>
+#include <vector>
 #include <expected>
 #include <sstream>
 
@@ -60,7 +60,6 @@ struct Cursor {
         if (current_line + 1 < total_lines && !source[current_line + 1].empty()) {
             return source[current_line + 1][0];
         }
-
         return '\0';
     }
 
@@ -81,26 +80,24 @@ struct Cursor {
         return eof;
     }
 
-    //! Returns a one-line region safely.
-    std::span<std::string> one_lined_region(int line = -1) {
-        std::vector<std::string> region;
+    std::vector<std::string> one_lined_region(int line = -1) {
+        std::vector<std::string> region(1, "");
 
         int target_line = (line == -1) ? current_line : line;
         if (target_line >= 0 && target_line < total_lines) {
-            region.emplace_back(source[target_line]);
+            region[0] = source[target_line];
         }
 
-        return std::span(region);
+        return region;
     }
 
-    //! Returns a multi-line region safely.
-    std::span<std::string> multi_lined_region(int start_line, int end_line) {
+    std::vector<std::string> multi_lined_region(int start_line, int end_line) {
         start_line = std::max(0, start_line);
-        end_line = std::min(total_lines, end_line);
-
-        if (start_line >= end_line) return {};
-
-        return std::span(source.data() + start_line, end_line - start_line);
+        end_line = std::min(total_lines - 1, end_line);
+    
+        if (start_line >= total_lines || start_line > end_line) return {};
+    
+        return {source.begin() + start_line, source.begin() + end_line + 1};
     }
 
     //! Returns the human-readable (1-based) line number.
