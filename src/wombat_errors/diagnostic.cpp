@@ -56,7 +56,7 @@ void Renderer::render_short(const Diagnostic& diag) const {
     auto header = Header { level, diag.message }; 
 
     std::cout << header.format().str() << "\n";
-    std::cout << "~ ";
+    std::cout << green_bold << "~ " << reset;
 
     if(!diag.hint.empty()) {
         std::cout << diag.hint << "\n";

@@ -146,7 +146,11 @@ struct Renderer {
 
         std::ostringstream format() const {
             std::ostringstream out;
-            
+
+            out << "at " << reg.file_name << ":" 
+                << reg.location.first + 1 << ":"
+                << reg.location.second << "\n";
+
             const auto& [trimmed_line, offset] = CharUtils::left_trim(reg.source_code.front());
 
             out << " |\n"
