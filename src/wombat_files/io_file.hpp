@@ -10,9 +10,6 @@
 
 namespace fs = std::filesystem;
 
-//! Expecting an Error 'maybe :)'
-//! When validating files we do not return a value on success. Rather, we just return a diagnostic if needed.
-using ExpectedIoDiagnostic = std::expected<std::monostate, Diagnostic>;
 
 struct IoFile {
     fs::path file;
@@ -21,10 +18,16 @@ struct IoFile {
     IoFile() = default;
     IoFile(std::string path) : file(path), file_perms(fs::perms::none) {};
 
+    inline std::string as_str() { return file.native(); }
+    
     auto can_read() -> bool;
     auto can_write() -> bool;
-    auto validate_input_file() -> ExpectedIoDiagnostic;
-    auto validate_out_file() -> ExpectedIoDiagnostic;
+
+    auto validate(
+        const std::string& extension, 
+        bool for_read, 
+        bool for_write
+    ) -> std::expected<std::monostate, Diagnostic>;
 };
 
 //! Aliasing types for cleaner code.

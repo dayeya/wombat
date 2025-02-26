@@ -2,97 +2,141 @@
 #define DIAGNOSTIC_HPP_
 
 #include <iostream>
+#include <sstream>
 #include <optional>
 #include <vector>
+#include <span>
 #include <string>
 #include <expected>
 
-enum class DiagnosticPhase { 
-    PRECOMP,    /// Pre-compilation phase.
-    LEXING,     /// Lexical analysis phase.
-    PARSING,    /// Syntax and semantic analysis phase.
-    CODEGEN,    /// Assembly code generation phase.
-    OPTIMIZE,   /// Code optimization phase.
-    VALIDATION  /// Validation phase, such as file permission checks.
+enum class Phase {
+    Precomp,
+    Lexer,
+    Parser,
+    CodeGen,
+    Optimize,
+    SessInit
 };
 
-enum class DiagnosticKind {
-    Info,       /// Information.
-    Warning,    /// Warning.
-    Critical,   /// Critical.
-    Help        /// Help.
+enum class Level {
+    Critical, Warning, Help
 };
 
 /**
- * @brief Converts a `DiagnosticPhase` enumeration value to a stack-allocated string representation.
- * 
- * This function provides a readable string representation of each compilation phase.
- * @param p Phase to convert.
- * @returns stack-allocated readable string of 'p'.
+ * @brief Region describes a span of the source code, where an error occured.
  */
-constexpr auto make_readable_phase(DiagnosticPhase p) -> const char* {
-    switch (p) {
-        case DiagnosticPhase::PRECOMP:    return "Pre-compilation";
-        case DiagnosticPhase::LEXING:     return "Lexical-analysis";
-        case DiagnosticPhase::PARSING:    return "Syntax-and-semantic analysis";
-        case DiagnosticPhase::CODEGEN:    return "Assembly-code-generation";
-        case DiagnosticPhase::OPTIMIZE:   return "Code-optimization";
-        case DiagnosticPhase::VALIDATION: return "Input-= Validation";
-        default: return "Unknown";
-    }
-}
-
-constexpr auto make_readable_kind(DiagnosticKind p) -> const char* {
-    switch (p) {
-        case DiagnosticKind::Info:     return "Information";
-        case DiagnosticKind::Warning:  return "Warning";
-        case DiagnosticKind::Critical: return "Critical";
-        case DiagnosticKind::Help:     return "Help";
-        default: return "Unknown";
-    }
-}
-
-struct CodeLocation {
+struct Region {
     std::string file_name;
-    int line;
-    int col;
+    std::pair<int, int> location; // coordinates of the starting position where the region begins.
+    std::span<std::string> source_code;
 
-    CodeLocation(const std::string& fn, int l, int c) : file_name(fn), line(l), col(c) {}
+    Region(
+        std::string& f,
+        int line,
+        int col,
+        std::span<std::string> sc
+    ) : file_name(f),
+        location(std::make_pair(line, col)),
+        source_code(std::move(sc)) {}
 };
 
-struct Suggestion {
-    std::string suggestion_;
+/**
+ * @brief Labeles represent the error of a diagnostic in a better context.
+ * This is done by explaining the user where the error emerged from, pointed by the label symbol and text.  
+ *   ____________________________________________________
+ *  |                                                    |
+ *  |                                                    |
+ * [l]  let str: String = "name;                         |
+ *  |                         ^ unterminated literal     |
+ *  |                           --------------------     | 
+ *  |                                  Label             |
+ *  |____________________________________________________|
+ * 
+*/
+struct Label {
+    std::string text;
+    std::vector<Region> regions;
 
-    Suggestion(std::string suggestion) : suggestion_(suggestion) {}
+    Label(std::string t, std::vector<Region> r) 
+        : text(t), regions(std::move(r)) {}
 
-    auto suggest() const -> void;
+    void render_label();
 };
 
 struct Diagnostic {
-    DiagnosticKind kind_;
-    std::vector<std::string> messages_;
-    std::vector<Suggestion> suggestions_;
-    std::optional<CodeLocation> code_loc_;
+    Level level;
+    Phase phase;
+    std::string message;
+    std::string hint;
+    std::vector<Label> labels;
 
     Diagnostic(
-        DiagnosticKind kind,
-        const std::vector<std::string>& message,
-        const std::vector<Suggestion>& suggestions,
-        std::optional<CodeLocation> code_loc
-    )
-        : kind_(kind), code_loc_(code_loc), messages_(message), suggestions_(suggestions) {}
-    
-    auto print_header() const -> void;
-    auto print_location() const -> void;
-    auto print_message() const -> void;
-    auto print_suggestion() const -> void;
+        Level l, 
+        Phase p, 
+        std::string msg, 
+        std::string h,
+        std::vector<Label> label_vec
+    ) : level(l),
+        phase(p),
+        message(msg),
+        hint(h),
+        labels(std::move(label_vec)) {}
+
+    void pretty_print() const;
+    constexpr auto level_to_str() const -> std::string;
+    constexpr auto phase_to_str() const -> std::string;
 };
 
-auto unexpected_diagnostic_from(
-    DiagnosticKind kind,
-    std::vector<std::string> messages,
-    std::vector<Suggestion> suggestions,
-    std::optional<CodeLocation> code_loc
-) -> std::unexpected<Diagnostic>;
+/**
+ * @brief Renderer defines the textual format of the Wombat diagnostic system.
+ *
+ * Structure:
+ *                                    _
+ *          [Level]: [Message]         | Header
+ *      _   At [File:Line:Column]     _|
+ *     |   |                                                      _
+ *     |   |                                                       |
+ *     |  [*] [Relevant source-code]                               | Marker
+ * Arm |   |   ^^^^^^ ---- [Labels pointing to relevant parts]     |
+ *     |   .                                                      _|
+ *     |   .
+ *     |   .
+ *     |_  |                                                               
+ *         ~ [Hints, suggestions, or additional information]     <-- Hint
+ * 
+ */
+struct Renderer {
+
+    //! Header will represent a textual-string that summarises the diagnostic.
+    struct Header {
+        std::string level;
+        std::string message;
+
+        Header(std::string l, std::string m)
+            : level(l), message(m) {};
+
+        auto format() -> std::ostringstream {
+            std::ostringstream sstream;
+            sstream << level << ": " << message << ".";
+            return sstream;
+        };
+    };
+
+    //! Marker will represent a textual-string that contains the label of the source-code.
+    struct Marker {
+        int origin;
+        Label label;
+
+        Marker(int o, Label l)
+            : origin(o), label(std::move(l)) {}
+
+        auto format();
+    };
+
+    Renderer() {};
+    
+    void render_short(const Diagnostic& diag) const;
+    void render_pretty_print(const Diagnostic& diag) const;
+};
 
 #endif // DIAGNOSTIC_HPP_

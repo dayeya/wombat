@@ -3,40 +3,66 @@
 
 #include "diagnostic.hpp"
 
-auto unexpected_diagnostic_from(
-    DiagnosticKind kind,
-    std::vector<std::string> messages,
-    std::vector<Suggestion> suggestions,
-    std::optional<CodeLocation> code_loc
-) -> std::unexpected<Diagnostic> {
-    auto diag = Diagnostic(kind, messages, suggestions, code_loc);  
-    return std::unexpected(diag);
-};
-
-auto Suggestion::suggest() const -> void {
-    std::cout << "maybe! " << suggestion_ << ".\n";
-}
-
-auto Diagnostic::print_header() const -> void {
-    std::cout << "Diagnostic [" << make_readable_kind(kind_) << "]\n"; 
-}
-
-auto Diagnostic::print_location() const -> void {
-    if(!code_loc_.has_value()) return;
-    std::cout << code_loc_->file_name << ":" << code_loc_->line << ":" << code_loc_->col << ":\n";
-}
-
-auto Diagnostic::print_message() const -> void {
-    int index = 1;
-    for (const auto& msg : messages_) {
-        std::cout << " |\n";
-        std::cout << "[\033[1;36m" << index << "\033[0m] " << msg << ".\n";
-        std::cout << " |\n";
-        ++index;
+constexpr auto Diagnostic::phase_to_str() const -> std::string {
+    switch (phase) {
+        case Phase::Precomp:   return "Pre-compilation";
+        case Phase::Lexer: return "Lexical-analysis";
+        case Phase::Parser:    return "Syntax-and-semantic analysis";
+        case Phase::CodeGen:   return "Assembly-code-generation";
+        case Phase::Optimize:  return "Code-optimization";
+        default: 
+            return "Unknown";
     }
 }
-auto Diagnostic::print_suggestion() const -> void {
-    for(const auto& suggestion : suggestions_) {
-        suggestion.suggest();
+
+constexpr auto Diagnostic::level_to_str() const -> std::string {
+    switch (level) {
+        case Level::Warning:  return "Warning";
+        case Level::Critical: return "Critical";
+        case Level::Help:     return "Help";
+        default: return "Unknown";
     }
 }
+
+void Renderer::render_pretty_print(const Diagnostic& diag) const {
+    auto level = diag.level_to_str();
+    auto phase = diag.phase_to_str();
+    auto header = Header { level, diag.message }; 
+
+    std::cout << header.format().str() << std::endl;
+
+    if(!diag.labels.empty()) {
+        //! NOT IMPLEMENTED.
+        std::cout << "<Has labels, not implemented for now...>" << std::endl;
+    }
+
+    if(!diag.hint.empty()) {
+        std::cout << "~ " << diag.hint << ".\n";
+    }
+}
+
+//!
+//! ERROR FORMATTING
+// Error: unterminated string 
+// at main.cpp:5:21
+//  |
+// [5] let x = "daniel"name"; 
+//  |                  ^^^^^
+//  |                  invalid syntax
+//  ~
+//
+//
+// Short form.
+//
+// Error: not enough arguments provided                  
+// ~ use ` ./wombat --help ` for more information
+
+//!
+//!
+// Warning: Unused variable `z`
+// test.wb:7:8
+//  |
+// [7] let! z = 42;
+//  |       ^ declared but never used
+//  |
+//  ~ remove `z` or prefix it with `_` to silence this warning.

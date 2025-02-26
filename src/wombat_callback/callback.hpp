@@ -8,9 +8,8 @@
 
 #include "diagnostic.hpp"
 
-enum class CallbackIdentifer {
-    ArgumentDiagnostic,
-    IoFileValidation
+enum class CallbackId {
+    DiagnosticRendering,
 };
 
 /**
@@ -23,7 +22,7 @@ public:
     /// Ensure that *any* callback must return *void* and emit a diagnostic. 
     using Fn = std::function<const void(const Diagnostic&)>;
 
-    Callback(CallbackIdentifer cb_iden, Fn func, const Diagnostic& diagnostic)
+    Callback(CallbackId cb_iden, Fn func, const Diagnostic& diagnostic)
         : id_(cb_iden), 
           callback_(std::move(func)),
           diag_(diagnostic) {}
@@ -36,7 +35,7 @@ public:
     auto invoke() const -> void;
 
 private:
-    CallbackIdentifer id_;
+    CallbackId id_;
     Fn callback_;
     Diagnostic diag_;
 };

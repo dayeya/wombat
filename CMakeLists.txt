@@ -11,11 +11,10 @@ add_executable(
     main.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_cli/interface.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_cli/args.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_errors/emitter.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_errors/diagnostic.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_callback/callback.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_files/io_file.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/compiler.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/session.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/lex.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/token.cpp
 )

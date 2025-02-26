@@ -1,11 +1,11 @@
 #ifndef TOKEN_HPP_
 #define TOKEN_HPP_
 
-#include <iostream>
-#include <filesystem>
 #include <vector>
+#include <memory>
 
-namespace fs = std::filesystem;
+using std::unique_ptr, std::make_unique;
+using std::shared_ptr, std::make_shared;
 
 /**
  * @enum TokenKind.
@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
  */
 enum class TokenKind {
     //!
-    //! Literal.
+    //! Literals
     LiteralInt,
     LiteralFloat,
     LiteralString,
@@ -38,7 +38,7 @@ enum class TokenKind {
     //! let p_x: ref<int> = &x 
     //!
     //! For wombat, this code is *not* readable.
-    //! Wombat proposes readables.
+    //! Wombat proposes the following:
     //! 
     //! let x: int = 8; 
     //! let p_x: ref<int> = address! { x };
@@ -58,6 +58,7 @@ enum class TokenKind {
     CloseAngle,         // Symbol for '<'
     Colon,              // Symbol for ':'
     SemiColon,          // Symbol for ';'
+    Comma,              // Symbol for ';'
     Bang,               // Symbol for '!'
 
     Whitespace,         // Sequence of non-meaningful characters like spaces or tabs
@@ -78,6 +79,8 @@ enum class TokenKind {
     None                // Indicator for an empty token
 };
 
+std::string kind_to_str(const TokenKind& kind);
+
 /**
  * @struct Token
  * @brief Represents a token identified by the lexer.
@@ -85,13 +88,22 @@ enum class TokenKind {
 struct Token {
     TokenKind kind;
     std::string value;
+    std::pair<int, int> pos; // [line, col] - start of the token.
+
+    Token() 
+      : value(""), 
+        kind(TokenKind::None), 
+        pos(std::make_pair(-1, -1)) {};
+
+    void token_to_str() const;
 
     /**
      * @brief Flushes the buffer of 'value' and sets the kind to 'TokenKind::None'.
      */
     void clean() {
-        value.clear();
+        value = std::string();
         kind = TokenKind::None;
+        pos = std::make_pair(-1, -1);
     }
 
     /**
@@ -112,32 +124,19 @@ struct Token {
     }
 };
 
-/**
- * @class TokenStream
- * @brief A vector representing the tokenization of the entire source file.
- */
-class TokenStream {
-public:
-    /// Default constructor
-    TokenStream() = default;
+struct LazyTokenStream {
+    unique_ptr<Token> m_current_token;
+    std::vector<unique_ptr<Token>> m_tokens;
 
-    /**
-     * @brief appends a new token to the vector.
-     * @return True if operation of successful.
-     */
-    auto push_token(const Token& wombat_token) -> bool;
+    LazyTokenStream()
+        : m_current_token(std::make_unique<Token>()), m_tokens() {}; 
 
-    /**
-     * @brief returns the current number of tokens tokenized by the lexer.
-     */
-    auto num_of_tokens() -> std::size_t;
-
-    auto tokens() -> std::vector<Token> {
-        return m_tokens; 
+    inline bool reached_end_of_stream() { 
+        auto& last_token = m_tokens.back();
+        return last_token->compare_kind(TokenKind::Eof); 
     }
-
-private:
-    std::vector<Token> m_tokens;
+    
+    void advance_with_token(unique_ptr<Token> token);
 };
 
 #endif // TOKEN_HPP_

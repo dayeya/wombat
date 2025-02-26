@@ -1,101 +1,79 @@
 #include <iostream>
 #include <optional>
 #include <expected>
+#include <sstream>
+#include <fstream>
+#include <cstring>
+#include <string>
 
 #include "lex.hpp"
-#include "diagnostic.hpp"
-#include "token.hpp"
 
-using std::unique_ptr, std::make_unique;
-using std::shared_ptr, std::make_shared;
-
-bool Lexer::lexer_is_new_line(char c) {
-  return c == '\n';
-}
-
-bool Lexer::lexer_is_alnum(char c) {
+bool CharUtils::is_alnum(char c)  { 
   return std::isalnum(static_cast<unsigned char>(c));
 }
-
-bool Lexer::lexer_is_digit(char c) {
+bool CharUtils::is_digit(char c)  { 
   return std::isdigit(static_cast<unsigned char>(c));
 }
-
-bool Lexer::lexer_is_alpha(char c) {
-  return std::isalpha(static_cast<unsigned char>(c)) || c == '_';
+bool CharUtils::is_alpha(char c)  { 
+  return std::isalpha(static_cast<unsigned char>(c));
 }
-
-bool Lexer::lexer_is_symbol(char c) {
+bool CharUtils::is_symbol(char c) { 
   return std::ispunct(static_cast<unsigned char>(c));
 }
 
-auto Lexer::advance_cursor() -> char {
-  source.get(m_cur);
-  if(lexer_is_new_line(m_cur)) {
-      m_line++;
-      m_col = 0; // set col_ BEFORE the start of the line 
-  } else {
-      m_col++;
-  }
-  return m_cur;
-}
-
-auto Lexer::peek_next() -> int {
-  return source.peek();
-}
-
-void Lexer::skip_whitespaces() {
-  auto next_ch = peek_next();
-  while(
-    !source.eof() && 
-    std::isspace(static_cast<unsigned char>(next_ch))
-  ) {
-      advance_cursor();
-      next_ch = peek_next();
-  }
-}
-
-void Lexer::assign_token(Token* token, std::string text, TokenKind kind) {
-  token->value = text;
+void Lexer::assign_token(
+  unique_ptr<Token>& token, 
+  std::string value, 
+  TokenKind kind
+) {
+  token->value = value;
   token->kind = kind;
 }
 
-void Lexer::lex_eof(Token* token) {
+void Lexer::lex_eof(unique_ptr<Token>& token) {
   token->kind = TokenKind::Eof;
+  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
 }
 
-void Lexer::lex_foreign(Token* token, char ch) {
+void Lexer::lex_foreign(unique_ptr<Token>& token, char ch) {
   token->extend(ch);
   token->kind = TokenKind::Foreign;
+  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
 }
 
-void Lexer::lex_line_comment(Token* token) {
-  token->extend(m_cur);
+void Lexer::lex_line_comment(unique_ptr<Token>& token) {
+  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+
+  token->extend(m_cursor.current);
   token->extend(advance_cursor());
 
   advance_cursor();
-  while(!source.eof() && !lexer_is_new_line(peek_next())) {
+
+  //! Maybe change check to:
+  //! while(!m_cursor.current.reached_eof() && !lexer_is_new_line(m_cursor.current.peek_next()))
+
+  while(!m_cursor.reached_eof() && !m_cursor.reached_new_line()) {
     token->extend(advance_cursor());
   }
 
   token->kind = TokenKind::LineComment;
 }
 
-auto Lexer::lex_word(Token* token) -> std::expected<Token*, Diagnostic> {
-  token->extend(m_cur);  
+void Lexer::lex_word(unique_ptr<Token>& token) {
+  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+  token->extend(m_cursor.current);  
 
   while(
-    !source.eof() && 
-    (lexer_is_alnum(peek_next()) || peek_next() == '_')
+    !m_cursor.reached_eof() && 
+    (CharUtils::is_alnum(m_cursor.peek_next()) || m_cursor.peek_next() == '_')
   ) {
     token->extend(advance_cursor());
   }
 
   //! Assuming that the current token is a readable, if it is followed by a '!';
-  if(peek_next() == '!') {
+  if(m_cursor.peek_next() == '!') {
     token->extend(advance_cursor());
     token->kind = TokenKind::Readable;
-    return token;
   } else {
     if(
       token->value == "func"   ||
@@ -113,149 +91,134 @@ auto Lexer::lex_word(Token* token) -> std::expected<Token*, Diagnostic> {
       token->value == "ref"
     ) {
       token->kind = TokenKind::Keyword;
-      return token;
+    } else {
+      token->kind = TokenKind::Identifier;
     }
   }
-
-  token->kind = TokenKind::Identifier;
-  return token;
 }
 
-auto Lexer::lex_symbol(Token* token) -> std::expected<Token*, Diagnostic> {
-  if(m_cur == '(') {
-    assign_token(token, "(", TokenKind::OpenParen);
-  } else if(m_cur == ')') {
-    assign_token(token, ")", TokenKind::CloseParen);
-  } else if(m_cur == '{') {
-    assign_token(token, "{", TokenKind::OpenCurly);
-  } else if(m_cur == '}') {
-    assign_token(token, "}", TokenKind::CloseCurly);
-  } else if(m_cur == '[') {
-    assign_token(token, "[", TokenKind::OpenBracket);
-  } else if(m_cur == ']') {
-    assign_token(token, "]", TokenKind::CloseBracket);
-  } else if(m_cur == ':') {
-    assign_token(token, ":", TokenKind::Colon);
-  } else if(m_cur == ';') {
-    assign_token(token, ";", TokenKind::SemiColon);
-  } else if(m_cur == '<') {
-    if(peek_next() == '=') {
-      assign_token(token, "<=", TokenKind::Le);
-      advance_cursor();
-    } else {
-      assign_token(token, "<", TokenKind::OpenAngle);
-    }
-  } else if(m_cur == '>') {
-    if(peek_next() == '=') {
-      assign_token(token, ">=", TokenKind::Ge);
-      advance_cursor();
-    } else {
-      assign_token(token, ">", TokenKind::CloseAngle);
-    }
-  } else if(m_cur == '-') {
-    if(peek_next() == '>') {
-      assign_token(token, "->", TokenKind::ReturnSymbol);
-      advance_cursor();
-    } else {
-      assign_token(token, "-", TokenKind::Minus);
-    }
-  } else if(m_cur == '+') {
-    assign_token(token, "+", TokenKind::Plus);
-  } else if(m_cur == '=') {
-    if(peek_next() == '=') {
-      assign_token(token, "==", TokenKind::DoubleEq);
-      advance_cursor();
-    } else {
-      assign_token(token, "=", TokenKind::Eq);
-    }
-  } else {
-    // Invalid symbol
-    assign_token(token, std::string{m_cur}, TokenKind::Foreign);
+void Lexer::lex_symbol(unique_ptr<Token>& token) {
+  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+
+  switch (m_cursor.current) {
+    case '(': assign_token(token, "(", TokenKind::OpenParen);    break;
+    case ')': assign_token(token, ")", TokenKind::CloseParen);   break;
+    case '{': assign_token(token, "{", TokenKind::OpenCurly);    break;
+    case '}': assign_token(token, "}", TokenKind::CloseCurly);   break;
+    case '[': assign_token(token, "[", TokenKind::OpenBracket);  break;
+    case ']': assign_token(token, "]", TokenKind::CloseBracket); break;
+    case ':': assign_token(token, ":", TokenKind::Colon);        break;
+    case ';': assign_token(token, ";", TokenKind::SemiColon);    break;
+    case ',': assign_token(token, ",", TokenKind::Comma);        break;
+    case '+': assign_token(token, "+", TokenKind::Plus);         break;
+    default: break;
   }
-  return token;
-}
 
-auto Lexer::lex_literal(Token* token) -> std::expected<Token*, Diagnostic> {
-  // Lexes a numerical literal, either an integer or a float.
-  auto lex_numerical_literal = [&]() -> std::expected<Token*, Diagnostic> {
-    token->extend(m_cur);
-    while (!source.eof() && lexer_is_digit(peek_next())) {
-      token->extend(advance_cursor());
-    }
+  //! If token was assigned with a value in the above switch statement, we exit.
+  if(token->kind != TokenKind::None) {
+    return;
+  }
 
-    // Lexing a float.
-    if (peek_next() == '.') {
-      token->extend(advance_cursor());
-      if (!lexer_is_digit(peek_next())) {
-        return unexpected_diagnostic_from(
-          DiagnosticKind::Critical,
-          { "character after radix point is not a digit, found: '" + std::string{static_cast<char>(peek_next())} + "'" },
-          {}, //! no suggestions for now.
-          CodeLocation(file_name, m_line, m_col)
-        );
+  switch (m_cursor.current)
+  {
+    case '<':
+      if (m_cursor.peek_next() == '=') {
+        assign_token(token, "<=", TokenKind::Le);
+        advance_cursor();
+      } else {
+        assign_token(token, "<", TokenKind::OpenAngle);
       }
-      
-      while (!source.eof() && lexer_is_digit(peek_next())) {
+      break;
+    case '>':
+      if (m_cursor.peek_next() == '=') {
+        assign_token(token, ">=", TokenKind::Ge);
+        advance_cursor();
+      } else {
+        assign_token(token, ">", TokenKind::CloseAngle);
+      }
+      break;
+    case '-':
+      if (m_cursor.peek_next() == '>') {
+        assign_token(token, "->", TokenKind::ReturnSymbol);
+        advance_cursor();
+      } else {
+        assign_token(token, "-", TokenKind::Minus);
+      }
+      break;
+    case '=':
+      if (m_cursor.peek_next() == '=') {
+        assign_token(token, "==", TokenKind::DoubleEq);
+        advance_cursor();
+      } else {
+        assign_token(token, "=", TokenKind::Eq);
+      }
+      break;
+    default:
+      assign_token(token, std::string{m_cursor.current}, TokenKind::Foreign);
+      break;
+  }
+}
+
+void Lexer::lex_literal(unique_ptr<Token>& token) {
+  // Lexes a numerical literal, either an integer or a float.
+  auto lex_numerical_literal = [&]() -> void {
+    token->extend(m_cursor.current);
+    while (!m_cursor.reached_eof() && CharUtils::is_digit(m_cursor.peek_next())) {
+      token->extend(advance_cursor());
+    }
+
+    //! try to lex a float.
+    if (m_cursor.peek_next() == '.') {
+      if (!CharUtils::is_digit(m_cursor.peek_next())) {
+        return;
+      }
+  
+      token->extend(advance_cursor());
+      while (!m_cursor.reached_eof() && CharUtils::is_digit(m_cursor.peek_next())) {
         token->extend(advance_cursor());
       }
 
       token->kind = TokenKind::LiteralFloat; // Float literal.
-      return token;
+      return;
     }
-        
-    //! Check for invalid integer literal.
-    //!Cases like:
-    //!
-    //! let gravity: int = 34r; //! NOT ALLOWED.
-    //!
-    //! Those cases will be tokenized as: [LiteralInt, Identifier].
-    //! Since wombat is a lazy-lexed language, the PARSER will catch those errors.
-    //! 
+
     token->kind = TokenKind::LiteralInt;
-    return token;
   };
 
   //! Lexes a string literal.
-  //! Handles incorrect syntax-errors like:
-  //!
-  //! ` let msg: String = "hello!"hi!"; // unterminated string literal. ` 
-  //!
-  auto lex_string_literal = [&]() -> std::expected<Token*, Diagnostic> {
+  auto lex_string_literal = [&]() {
     //! '"' was processed, so we consume it.
-    token->extend(m_cur);
+    token->extend(m_cursor.current);
 
-    while (!source.eof()) {
-        char next_char = peek_next();
+    while (!m_cursor.reached_eof()) {
+        char next_char = m_cursor.peek_next();
 
-        //! Allow escape characters, for example:
-        //!
-        //! ` let message: String = "hello, my\"name is\"daniel";
-        //!
         if (next_char == '\\') {
           token->extend(advance_cursor());
 
-          if (source.eof()) {
-            return unexpected_diagnostic_from(
-              DiagnosticKind::Critical,
-              { "string ends with an incomplete escape sequence" },
-              {},
-              CodeLocation(file_name, m_line, m_col)
-            );
-          }
-
           char escaped_char = advance_cursor();
-          
-          //! Wombat allows multiple escape characters in string-literals. 
-          if (escaped_char != 'n'  && 
+
+          if (
+              escaped_char != 'n'  && 
               escaped_char != '\\' && 
               escaped_char != '"'
             ) {
-              return unexpected_diagnostic_from(
-                DiagnosticKind::Critical,
-                { "invalid escape sequence: '\\" + std::string(1, escaped_char) + "'" },
-                {},
-                CodeLocation(file_name, m_line, m_col)
-              );
+              std::stringstream message("unexpected escape sequence: \\"); 
+              message << std::string(1, escaped_char) << "'";
+
+              auto region = Region {
+                m_cursor.file_name,
+                m_cursor.current_line,
+                m_cursor.current_col,
+                m_cursor.one_lined_region(),
+              };
+
+              std::vector<Label> labels{Label{
+                "invalid char", 
+                std::vector<Region>{region}
+              }}; 
+
+              register_critical_diagnostic_pretty(message.str(), "", labels);
           }
           
           token->extend(escaped_char);
@@ -265,81 +228,86 @@ auto Lexer::lex_literal(Token* token) -> std::expected<Token*, Diagnostic> {
         if (next_char == '"') {
           token->extend(advance_cursor());
           token->kind = TokenKind::LiteralString;
-          return token;
+          return;
         }
 
         token->extend(advance_cursor());
     }
-    
-    return unexpected_diagnostic_from(
-        DiagnosticKind::Critical,
-        { "unterminated string literal" },
-        {},
-        CodeLocation(file_name, m_line, m_col)
-    );
+
+    std::string message = "unterminated string literal";
+
+    auto region = Region {
+      m_cursor.file_name,
+      m_cursor.current_line,
+      m_cursor.current_col,
+      m_cursor.multi_lined_region(token->pos.first, m_cursor.current_line),
+    };
+
+    std::vector<Label> labels{Label{
+      "invalid char",
+      std::vector<Region>{region}
+    }}; 
+
+    register_critical_diagnostic_pretty(message, "", labels);
   };
 
   // Lexes a char literal (e.g. 'a' or '\n').
-  auto lex_char_literal = [&]() -> std::expected<Token*, Diagnostic> {
+  auto lex_char_literal = [&]() {
     advance_cursor();
-    if (peek_next() == '\'') {
+    if (m_cursor.peek_next() == '\'') {
       advance_cursor();
       token->kind = TokenKind::LiteralChar;
       token->value = "";
-      return token;
+      return std::nullopt;
     }
     
-    token->extend(advance_cursor()); // Get the character
+    token->extend(advance_cursor());
 
-    if (peek_next() == '\'') {
+    if (m_cursor.peek_next() == '\'') {
       advance_cursor();
       token->kind = TokenKind::LiteralChar;
-      return token;
     } else {
-      return unexpected_diagnostic_from(
-        DiagnosticKind::Critical,
-        { "unterminated char literal" },
-        { Suggestion("try closing " + token->value + " with '") },
-        CodeLocation(file_name, m_line, m_col)
-      );
+      auto region = Region {
+        m_cursor.file_name,
+        m_cursor.current_line,
+        m_cursor.current_col,
+        m_cursor.one_lined_region(),
+      };
+      
+      std::vector<Label> labels{Label{
+        "unterminated here", 
+        std::vector<Region>{region}
+      }}; 
+
+      register_critical_diagnostic_pretty("unterminated char literal", "close the literal with \'", labels);
     }
   };
 
-  //! If m_cur is not a opening [string/char] literal is it necessarily a digit. 
-  if (m_cur == '"')  return lex_string_literal();
-  if (m_cur == '\'') return lex_char_literal();
-  return lex_numerical_literal();
+  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+
+  //! If m_cursor.current is not a opening [string/char] literal is it necessarily a digit. 
+  if (m_cursor.current == '"')  lex_string_literal();
+  else if (m_cursor.current == '\'') lex_char_literal();
+  else {
+    lex_numerical_literal();
+  }
 }
 
-
-auto Lexer::lexer_next_token(TokenStream* token_stream, Token* token) -> std::expected<Token*, Diagnostic> {
-  token->clean();
-  skip_whitespaces();
+void Lexer::next_token(LazyTokenStream& token_stream) {
+  m_cursor.skip_whitespace();
   advance_cursor();
 
-  if(source.eof()) lex_eof(token);
-  else if(m_cur == '/' && peek_next() == '/') lex_line_comment(token);
-  else if(lexer_is_alpha(m_cur)) lex_word(token);
-  else if(lexer_is_digit(m_cur) || m_cur == '"') lex_literal(token);
-  else if(lexer_is_symbol(m_cur)) lex_symbol(token);
+  if(m_cursor.reached_new_line()) return;
+  if(m_cursor.current == '/' && m_cursor.peek_next() == '/') lex_line_comment(token_stream.m_current_token);
+
+  if(m_cursor.reached_eof()) lex_eof(token_stream.m_current_token);
+  else if(CharUtils::is_alpha(m_cursor.current) || m_cursor.current == '_') lex_word(token_stream.m_current_token);
+  else if(CharUtils::is_digit(m_cursor.current) || m_cursor.current == '"') lex_literal(token_stream.m_current_token);
+  else if(CharUtils::is_symbol(m_cursor.current)) lex_symbol(token_stream.m_current_token);
   else { 
-    lex_foreign(token, m_cur); 
+    lex_foreign(token_stream.m_current_token, m_cursor.current); 
   };
-
-  auto res = token_stream->push_token(*token);
-  return token;
-}
-
-auto Lexer::lex_source() -> TokenStream {
-  Token cur_token;
-  TokenStream token_stream{};
-
-  lexer_next_token(&token_stream, &cur_token);
-  while(!cur_token.compare_kind(TokenKind::Eof)) {
-    lexer_next_token(&token_stream, &cur_token);
-  }
-
-  return token_stream;
+  token_stream.advance_with_token(std::move(token_stream.m_current_token));
 }
 
 void Lexer::output_token(const Token& token) {
@@ -348,66 +316,35 @@ void Lexer::output_token(const Token& token) {
             << " };" << "\n"; 
 }
 
-auto Lexer::kind_to_str(const TokenKind& kind) -> std::string {
-  switch (kind) {
-      case TokenKind::OpenParen:       
-        return "Open_Paren";
-      case TokenKind::CloseParen:      
-        return "Close_Paren";
-      case TokenKind::OpenBracket:     
-        return "Open_Bracket";
-      case TokenKind::CloseBracket:    
-        return "Close_Bracket";
-      case TokenKind::OpenCurly:       
-        return "Open_Curly";
-      case TokenKind::CloseCurly:
-        return "Close_Curly";
-      case TokenKind::OpenAngle:       
-        return "Open_Angle";
-      case TokenKind::CloseAngle:      
-        return "Close_Angle";
-      case TokenKind::Lt:              
-        return "Less_Then";
-      case TokenKind::Gt:              
-        return "Greater_Then";
-      case TokenKind::ReturnSymbol:           
-        return "Arrow";
-      case TokenKind::Minus:
-        return "Minus_Operator";
-      case TokenKind::Plus:            
-        return "Plus_Operator";
-      case TokenKind::DoubleEq:  
-        return "Equals_Assigment";
-      case TokenKind::Eq: 
-        return "Equals_Statement";
-      case TokenKind::Le:              
-        return "Less_Then_Or_Equal_To";
-      case TokenKind::Ge:              
-        return "Greater_Then_Or_Equal_To";
-      case TokenKind::Eof:             
-        return "End_Of_File";
-      case TokenKind::Colon:
-        return "Colon";
-      case TokenKind::SemiColon:
-        return "Semi_Colon";   
-      case TokenKind::LiteralInt:    
-        return "Literal_INTEGER";
-      case TokenKind::LiteralFloat:    
-        return "Literal_FLOAT";
-      case TokenKind::LiteralString:    
-        return "Literal_STRING";
-      case TokenKind::LiteralChar:    
-        return "Literal_CHAR";
-      case TokenKind::Identifier:
-        return "Identifier";
-      case TokenKind::Keyword:
-        return "Keyword";
-      case TokenKind::Readable:
-        return "Readable[Maybe]";
-      case TokenKind::Whitespace:      
-        return "Whitespace";
-      case TokenKind::LineComment:
-        return "Single_Line_Comment";
+bool Lexer::open_and_populate_cursor() {
+  std::ifstream ifs(m_cursor.file_name, std::ios::in);
+
+  if(!ifs.is_open()) {  
+    register_critical_diagnostic_short("could not open: " + m_cursor.file_name, strerror(errno));
+    return false;
   }
-  return "Foreign_Token";
+  
+  std::string line;
+  while (std::getline(ifs, line))
+  {
+    m_cursor.source.push_back(line);
+  }
+  m_cursor.total_lines = m_cursor.source.size();
+
+  ifs.close();
+  return true;
+}
+
+auto Lexer::lex_source() -> LazyTokenStream {
+  LazyTokenStream token_stream{};
+
+  if(!open_and_populate_cursor()) {
+    return token_stream;
+  }
+
+  do {
+    next_token(token_stream);
+  } while(!token_stream.reached_end_of_stream());
+
+  return token_stream;
 }

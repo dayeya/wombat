@@ -2,6 +2,7 @@
 #define ARGS_HPP_
 
 #include <iostream>
+#include <unordered_set>
 #include <string>
 #include <optional>
 #include <expected>
@@ -13,18 +14,18 @@ using std::string;
 using Enabled = bool;
 
 
-/**
- * @brief Option class for storing data passed to the interface.
- * e.g [ wombat --build <PATH> ]
- *               <name> <param>
- */
-struct Option {
-    string name;
-    string value;
+enum class AvailOpt {
+    //! The user specified either '--build' or '-b'
+    Build,
 
-    bool operator<(const Option& other) const {
-        return name < other.name;
-    }
+    //! The user specified either '--run' or '-r'
+    Run,
+
+    //! The user specified either '--help' or '-h'
+    Help,
+
+    //! The user specified either '--outfile' or '-o'
+    OutFile
 };
 
 /**
@@ -50,41 +51,79 @@ class Args {
 public:
     Args() = default;
     static auto parse_args(int argc, char** argv) -> std::expected<Args, Diagnostic>;
+    
+    auto is_present(AvailOpt opt) -> bool {
+        switch (opt)
+        {
+            case AvailOpt::Build:
+                return has_option_str("--build") || has_option_str("-b");
+            case AvailOpt::Run:
+                return has_option_str("--run") || has_option_str("-r");
+            case AvailOpt::Help:
+                return has_option_str("--help") || has_option_str("-h");
+            case AvailOpt::OutFile:
+                return has_option_str("--outfile") || has_option_str("-o");
+            default:
+                return false;
+        }
+    }
 
-    auto set_option(string opt, std::string value) -> void;
-    auto has_option(string opt) -> bool;
-    auto get_option_value(string opt) -> std::optional<Option>;
-    auto enable_flag(string flg) -> void;
-    auto has_flag(string flg) -> bool;
+    auto get_option_value(AvailOpt opt) const -> std::string {
+        switch (opt)
+        {
+            case AvailOpt::Build:
+                return get_option_value_str("--build")
+                        .value_or(get_option_value_str("-b").value_or("(NONE)"));
+            case AvailOpt::Run:
+                return get_option_value_str("--run")
+                        .value_or(get_option_value_str("-r").value_or("(NONE)"));
+            case AvailOpt::OutFile:
+                return get_option_value_str("--outfile")
+                        .value_or(get_option_value_str("-o").value_or("(NONE)"));                
+            default:
+                return "(NONE)";
+        }
+    }
 
+    auto has_flag(const std::string& flg) const -> bool {
+        return flags_.contains(flg);
+    }
+    
 private:
-    std::map<string, Enabled> flags_;
-    std::map<Option, Enabled> options_;
+    std::unordered_set<std::string> flags_;
+    std::unordered_map<std::string, std::string> options_;
 
-    /**
-     * @brief Checks if the given [arg] is an argument that *must* be followed by a value.
-     */
-    static bool must_have_value(string arg) {
-        return (
-            arg == "--build"  || arg == "-b" ||
-            arg == "--run"    || arg == "-r"
-        );
+    auto get_option_value_str(const std::string& opt) const -> std::optional<std::string> {
+        auto it = options_.find(opt);
+        return (it != options_.end()) ? std::optional(it->second) : std::nullopt;
     }
 
-    static bool is_option(std::string opt) {
-        return (
-            opt == "--build"   || opt == "-b" ||
-            opt == "--run"     || opt == "-r" ||
-            opt == "--outdir"  || opt == "-u" ||
-            opt == "--outfile" || opt == "-o"
-        );
+    auto enable_flag(const std::string& flg) -> void {
+        flags_.insert(flg);
     }
 
-    static bool is_flag(string flg) {
-        return (
-            flg == "--verbose" || flg == "-v" ||
-            flg == "--help"    || flg == "-h" 
-        );
+    auto set_option(const std::string& opt, const std::string& value) -> void {
+        options_[opt] = value;
+    }
+
+    auto has_option_str(const std::string& opt) const -> bool {
+        return options_.contains(opt);
+    }
+
+    static bool must_have_value(const std::string& arg) {
+        return arg == "--build"  || arg == "-b" ||
+               arg == "--run"    || arg == "-r" ||
+               arg == "--outdir" || arg == "-u" ||
+               arg == "--out"    || arg == "-o";
+    }
+
+    static bool is_option(const std::string& opt) {
+        return must_have_value(opt);
+    }
+
+    static bool is_flag(const std::string& flg) {
+        return flg == "--verbose" || flg == "-v" ||
+               flg == "--help"    || flg == "-h";
     }
 };
 

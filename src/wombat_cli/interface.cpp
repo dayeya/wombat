@@ -5,143 +5,78 @@
 #include <functional>
 
 #include "args.hpp"
-#include "emitter.hpp"
+#include "diagnostic.hpp"
 #include "callback.hpp"
 #include "io_file.hpp"
-#include "compiler.hpp"
+#include "lex.hpp"
 #include "interface.hpp"
+#include "session.hpp"
 
-auto WInterface::build_interface(int argc, char** argv) -> WInterface {
-    auto wombat_emitter = Emitter();
-    std::queue<Callback> wombat_callbacks;
-
-    // Lambda to register argument-parsing errors as callbacks.
-    auto register_argument_diagnostic = [&](const Diagnostic& diag_from_arg_parsing) -> std::expected<Args, Diagnostic> {
-        wombat_callbacks.emplace(
-            CallbackIdentifer::ArgumentDiagnostic, 
-            std::bind_front(&Emitter::emit_diagnostic, &wombat_emitter),
-            diag_from_arg_parsing
-        );
-        return Args{};
-    };
-
-    auto register_input_validation_diagnostic = [&](const Diagnostic& diag_from_io_validation) -> std::expected<std::monostate, Diagnostic> {
-        wombat_callbacks.emplace(
-            CallbackIdentifer::IoFileValidation, 
-            std::bind_front(&Emitter::emit_diagnostic, &wombat_emitter),
-            diag_from_io_validation
-        );
-        return std::monostate{};
-    };
-
-    // Attempt to parse command-line arguments.
-    // If parsing fails, recieve the diagnostic and register it.
-    auto parsed_arguments = Args::parse_args(argc, argv)
-        .or_else(register_argument_diagnostic)
-        .value();
-
-    //! Empty-in-file by default.
-    InputFile input_file;
-    if(parsed_arguments.has_option("--build") || parsed_arguments.has_option("-b")) {
-        auto b_opt = parsed_arguments.get_option_value("-b");
-        auto build_opt = parsed_arguments.get_option_value("--build");
+void Interface::run(int argc, char** argv) {
+    //! Args::parse_args function validates the user-command in terms of allowed syntax.
+    //! Later, the session iteself will validate the *actual* data passed via cmd.
+    auto arg_span = Args::parse_args(argc, argv);
     
-        input_file.file = build_opt.value_or(b_opt.value_or(Option{ "undifined_option" })).value;
-    
-        input_file.validate_input_file()
-            .or_else(register_input_validation_diagnostic)
-            .value();
-    }
-    if(parsed_arguments.has_option("--run") || parsed_arguments.has_option("-r")) {
-        auto r_opt = parsed_arguments.get_option_value("-r");
-        auto run_opt = parsed_arguments.get_option_value("--run");
-    
-        input_file.file = run_opt.value_or(r_opt.value_or(Option{ "undifined_option" })).value;
-    
-        input_file.validate_input_file()
-            .or_else(register_input_validation_diagnostic)
-            .value();
-    }
+    auto current_session = Session();
 
-    OutputFile output_file;
-    if(parsed_arguments.has_option("--outputfile") || parsed_arguments.has_option("-o")) {
-        auto u_opt = parsed_arguments.get_option_value("-o");
-        auto out_opt = parsed_arguments.get_option_value("--outputfile");
-    
-        output_file.file = out_opt.value_or(u_opt.value_or(Option{ "undifined_option" })).value;
-    
-        output_file.validate_input_file()
-            .or_else(register_input_validation_diagnostic)
-            .value();
-    }
-
-    WInterface wombat_interface(
-        parsed_arguments,
-        wombat_emitter,
-        wombat_callbacks,
-        input_file,
-        output_file
-    );
-
-    return wombat_interface;
-}
-
-auto WInterface::execute() -> void {
-    //! Report early-caught diagnostics.
-    if(!callback_queue_.empty()) {
-        flush_callbacks();
+    //! Catch early diagnostics from CLI.
+    if(!arg_span.has_value()) {
+        current_session.register_diagnostic_rendering(arg_span.error());
+        current_session.init_empty_session();
         return;
     }
 
-    if(args_.has_flag("--help") || args_.has_flag("-h")) {
-        help_information();
-        return;
-    }
+    //! Validate any input from the command line.
+    current_session.validate_arg_span(arg_span.value());
 
-    //! Handle --outdir option
-    //! 
-    //! if(args_.has_flag("--outdir") || args_.has_flag("-u")) {}
-    //!
+    current_session.init_session([&]() -> State {
+        //! Those diagnostics can manifest during validation
+        //! processes, etc...
+        if(current_session.caught_early_diagnostics()) {
+            return State::Stopped;
+        }
+        
+        if(
+            arg_span.value().has_flag("--help") ||
+            arg_span.value().has_flag("-h")
+        ) {
+            Interface::help_information();
+            return State::Completed;
+        }
 
-    //! Handle --build option
-    //! 
-    //! if(args_.has_flag("--build") || args_.has_flag("-r")) {}
-    //!
+        //! Set state to `currently running`.
+        current_session.c_state = State::Running;
 
-    auto comp = Compiler();
-    
-    comp.start_lexing(
-        args_.get_option_value("--build").value().value
-    );
+        auto lexer = Lexer(current_session.source.as_str());
+        auto lazy_token_stream = lexer.lex_source();
+
+        if(!lexer.diagnostics.empty()) {
+            for(const auto& diag : lexer.diagnostics) {
+                current_session.register_diagnostic_rendering(diag);
+            }
+            return State::Stopped;
+        } else {
+            for(const auto& tok : lazy_token_stream.m_tokens) {
+                tok->token_to_str();
+            }
+        }
+
+        return State::Completed;
+    });
 }
 
-auto WInterface::flush_callbacks() -> void {
-    while(!callback_queue_.empty()) {
-        callback_queue_
-            .front()
-            .invoke();
-        callback_queue_.pop();
-    }
-}
-
-auto WInterface::help_information() -> void {
+auto Interface::help_information() -> void {
     std::cout << R"(Usage: wombat [OPTIONS] [INPUTS]
 
 Options:
     -b, --build [SOURCE_PATH] <FLAGS>   Compile the source file at SOURCE_PATH.
-                                        Use FLAGS to customize compilation.
-
     -r, --run [SOURCE_PATH] <FLAGS>     Compile and run the executable.
-                                        Use FLAGS to customize compilation.
-
     -u, --outdir [DIR_PATH]             Specify the output directory. 
                                         Defaults to the current directory if omitted.
-
     -h, --help                          Display this help menu.
 
 Flags:
     -v, --verbose                       Enable detailed process logging.
-
     -o, --out [EXE_PATH]                Specify the output executable path.
                                         Defaults to the same directory as the source.
 )";

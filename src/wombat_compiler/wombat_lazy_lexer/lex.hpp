@@ -2,65 +2,188 @@
 #define LEXER_HPP_
 
 #include <iostream>
-#include <fstream>
+#include <memory>
 #include <filesystem>
 #include <string>
-#include <cassert>
 #include <vector>
+#include <span>
 #include <expected>
+#include <sstream>
 
 #include "token.hpp"
 #include "diagnostic.hpp"
 
-using std::unique_ptr, std::shared_ptr;
-
 namespace fs = std::filesystem;
 
-struct Lexer {
-    std::stringstream source; 
+namespace CharUtils {
+    bool is_alnum(char c);
+    bool is_digit(char c);
+    bool is_alpha(char c);
+    bool is_symbol(char c);
+}
+
+struct Cursor {
     std::string file_name;
-    char m_cur;
-    int m_line, m_col;
-    
-    Lexer(std::string s) {
-	    std::ifstream ifs{s};
-        if(ifs.is_open()) {
-            file_name = s;
-            source << ifs.rdbuf();
+    std::vector<std::string> source;
+    char current = 0;
+    int current_line = 0;
+    int current_col = 0;
+    int total_lines = 0;
+    bool eof = false;
+
+    explicit Cursor(std::string filename) 
+        : file_name(std::move(filename)), source() {}
+
+    char advance_self() {
+        if (current_col == source[current_line].size()) {
+            if (current_line + 1 < total_lines) {
+                current_line++;
+                current_col = 0;
+                current = '\n';
+                return current;
+            } else {
+                eof = true;
+                return '\0';
+            }
         } else {
-	        std::cout << "[LEXER::ERROR] could not start lexer, file opening failed" << std::endl;
-	    }
-    };
+            current = source[current_line][current_col++];
+            return current;
+        }
+    }
 
-    bool lexer_is_alpha(char c);
-    bool lexer_is_alnum(char c);
-    bool lexer_is_digit(char c);
-    bool lexer_is_symbol(char c);
-    bool lexer_is_new_line(char c);
+    //! Peeks the next character safely.
+    char peek_next() {
+        if (current_col < source[current_line].size()) {
+            return source[current_line][current_col];
+        }
+        
+        if (current_line + 1 < total_lines && !source[current_line + 1].empty()) {
+            return source[current_line + 1][0];
+        }
 
-    void skip_whitespaces();
-    void output_token(const Token& token);
-    void assign_token(Token* token, std::string text, TokenKind kind);
+        return '\0';
+    }
 
-    auto peek_next() -> int;
-    auto advance_cursor() -> char;
-    auto advance_with_token(const Token& token);
-    auto kind_to_str(const TokenKind& kind) -> std::string;
+    void skip_whitespace() {
+        while (
+            !reached_eof() && 
+            std::isspace(static_cast<unsigned char>(peek_next()))
+        ) {
+            advance_self();
+        }
+    }
 
-    void lex_eof(Token* token);
-    void lex_foreign(Token* token, char ch);
-    void lex_line_comment(Token* token);
-    auto lex_word(Token* token) -> std::expected<Token*, Diagnostic>;
-    auto lex_literal(Token* token) -> std::expected<Token*, Diagnostic>;
-    auto lex_symbol(Token* token) -> std::expected<Token*, Diagnostic>;
-    auto lexer_next_token(TokenStream* token_stream, Token* token) -> std::expected<Token*, Diagnostic>;
-    auto lex_source() -> TokenStream;
+    bool reached_new_line() const {
+        return current == '\n' || current == '\r';
+    }
+
+    bool reached_eof() const {
+        return eof;
+    }
+
+    //! Returns a one-line region safely.
+    std::span<std::string> one_lined_region(int line = -1) {
+        std::vector<std::string> region;
+
+        int target_line = (line == -1) ? current_line : line;
+        if (target_line >= 0 && target_line < total_lines) {
+            region.emplace_back(source[target_line]);
+        }
+
+        return std::span(region);
+    }
+
+    //! Returns a multi-line region safely.
+    std::span<std::string> multi_lined_region(int start_line, int end_line) {
+        start_line = std::max(0, start_line);
+        end_line = std::min(total_lines, end_line);
+
+        if (start_line >= end_line) return {};
+
+        return std::span(source.data() + start_line, end_line - start_line);
+    }
+
+    //! Returns the human-readable (1-based) line number.
+    int humanized_current_line() const {
+        return current_line + 1;
+    }
 };
 
-struct LazyLexer {
-    Lexer lexer;
 
-    auto next_token() -> Token;  
+class Lexer {
+public:
+    std::vector<Diagnostic> diagnostics;
+
+    explicit Lexer(std::string native_path) 
+        : m_cursor(native_path) {}
+
+    bool open_and_populate_cursor();
+    LazyTokenStream lex_source();
+
+private:
+    Cursor m_cursor;
+
+    inline char advance_cursor() { return m_cursor.advance_self(); }
+
+    void output_token(const Token& token);
+    void assign_token(unique_ptr<Token>& token, std::string value, TokenKind kind);
+
+    void lex_eof(unique_ptr<Token>& token);
+    void lex_foreign(unique_ptr<Token>& token, char ch);
+    void lex_line_comment(unique_ptr<Token>& token);
+
+    void lex_word(unique_ptr<Token>& token_stream);
+    void lex_literal(unique_ptr<Token>& token_stream);
+    void lex_symbol(unique_ptr<Token>& token_stream);
+    void next_token(LazyTokenStream& token_stream);
+
+    void register_warning_diagnostic_pretty(
+        std::string message, 
+        std::string hint,
+        std::vector<Label> labels
+    ) {
+        diagnostics.emplace_back(Diagnostic(
+            Level::Warning, 
+            Phase::Lexer, 
+            message, 
+            hint, 
+            labels
+        ));
+    }
+
+    void register_critical_diagnostic_pretty(
+        std::string message, 
+        std::string hint,
+        std::vector<Label> labels
+    ) {
+        diagnostics.emplace_back(Diagnostic(
+            Level::Critical, 
+            Phase::Lexer, 
+            message, 
+            hint, 
+            labels
+        ));
+    }
+
+    void register_critical_diagnostic_short(std::string message, std::string hint) {
+        diagnostics.emplace_back(Diagnostic(
+            Level::Critical, 
+            Phase::Lexer, 
+            message, 
+            hint, 
+            {}
+        ));
+    }
+      
+    void register_warning_diagnostic_short(std::string message, std::string hint) {
+        diagnostics.emplace_back(Diagnostic(
+            Level::Warning, 
+            Phase::Lexer, 
+            message, 
+            hint, 
+            {}
+        ));
+    }
 };
 
 #endif // LEXER_HPP_
