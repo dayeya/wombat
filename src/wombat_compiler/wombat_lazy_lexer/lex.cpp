@@ -256,8 +256,8 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
       auto region = Region {
         m_cursor.file_name,
         m_cursor.current_line,
-        m_cursor.current_col,
-        m_cursor.one_lined_region(),
+        token->pos.second,
+        m_cursor.one_lined_region(token->pos.first),
       };
       
       std::vector<Label> labels{

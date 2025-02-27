@@ -17,42 +17,42 @@ void Interface::run(int argc, char** argv) {
     //! Later, the session iteself will validate the *actual* data passed via cmd.
     auto arg_span = Args::parse_args(argc, argv);
     
-    auto current_session = Session();
+    auto current_session = std::make_unique<Session>();
 
     //! Catch early diagnostics from CLI.
     if(!arg_span.has_value()) {
-        current_session.register_diagnostic_rendering(arg_span.error());
-        current_session.init_empty_session();
+        current_session->register_diagnostic_rendering(arg_span.error());
+        current_session->flush_all_callbacks();
         return;
     }
 
     //! Validate any input from the command line.
-    current_session.validate_arg_span(arg_span.value());
+    current_session->validate_arg_span(arg_span.value());
 
-    current_session.init_session([&]() -> State {
-        //! Those diagnostics can manifest during validation
-        //! processes, etc...
-        if(current_session.caught_early_diagnostics()) {
-            return State::Stopped;
-        }
-        
-        if(
-            arg_span.value().has_flag("--help") ||
-            arg_span.value().has_flag("-h")
-        ) {
-            Interface::help_information();
-            return State::Completed;
-        }
+    //! Those diagnostics can manifest during validation
+    //! processes, etc...
+    if(current_session->caught_early_diagnostics()) {
+        current_session->flush_all_callbacks();
+        return;
+    }
 
-        //! Set state to `currently running`.
-        current_session.c_state = State::Running;
+    if(
+        arg_span.value().has_flag("--help") ||
+        arg_span.value().has_flag("-h")
+    ) {
+        Interface::help_information();
+        return;
+    }
 
-        auto lexer = Lexer(current_session.source.as_str());
+    init_build_session(std::move(current_session), [](unique_ptr<Session>& sess) -> State {
+        sess->c_state = State::Running;
+
+        auto lexer = Lexer(sess->source.as_str());
         auto lazy_token_stream = lexer.lex_source();
 
         if(!lexer.diagnostics.empty()) {
             for(const auto& diag : lexer.diagnostics) {
-                current_session.register_diagnostic_rendering(diag);
+                sess->register_diagnostic_rendering(diag);
             }
             return State::Stopped;
         } else {

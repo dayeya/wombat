@@ -1,4 +1,3 @@
-func a() -> free 
-    let eof: ch = '0;
-    let alon: String = "daniel;
+func main() -> free
+    let l: char = ';
 endf

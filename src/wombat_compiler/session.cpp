@@ -67,13 +67,13 @@ void Session::flush_if_caught_diagnostics() {
     }
 }
 
-void Session::init_session(std::function<State()> compile) {
-    //! Compute the compilation_result form the compile function.
-    auto compilation_result = compile();    
+void init_build_session(
+    unique_ptr<Session> sess, 
+    std::function<State(unique_ptr<Session>&)> behavior
+) {
+    auto compilation_result = behavior(sess);
 
-    //! Queue-Diagnostic-Caching. This allows the compiler to store errors and emit them when needed.
-    //! The first error that occured will be the first to be shown, etc.
     if(compilation_result == State::Stopped) {
-        flush_if_caught_diagnostics();
+        sess->flush_if_caught_diagnostics();
     }
 }

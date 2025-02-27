@@ -59,18 +59,22 @@ public:
 
     void flush_all_callbacks();
     void flush_if_caught_diagnostics();
-    bool caught_early_diagnostics();
-    
     void validate_arg_span(Args arg_span);
+    bool caught_early_diagnostics();
 
-    void init_empty_session() {
-        init_session(
-            []() { return State::Stopped; }
-        );
-    }
-    
-    void init_session(std::function<State()> compile);
     void register_diagnostic_rendering(const Diagnostic& diag);
+
+private:
+    //! Starting point of every session. 
+    //! Behavior is a closure that defines how the session should run.
+    State _session(std::function<State()> behavior) {
+        return behavior();
+    }
 };
+
+void init_build_session(
+    unique_ptr<Session> sess, 
+    std::function<State(unique_ptr<Session>&)> behavior
+);
 
 #endif // SESSION_HPP_

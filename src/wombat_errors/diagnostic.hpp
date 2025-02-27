@@ -49,9 +49,9 @@ struct Region {
  *  |                                                    |
  *  |                                                    |
  * [l]  let str: String = "name;                         |
- *  |                         ^ unterminated literal     |
- *  |                           --------------------     |
- *  |                                  Label             |
+ *  |                     ^ unterminated literal         |
+ *  |                       --------------------         |
+ *  |                              Label                 |
  *  |____________________________________________________|
  * 
 */
@@ -134,7 +134,6 @@ struct Renderer {
         };
     };
 
-    //! Marker will represent a textual-string that contains the label of the source-code.
     struct Marker {
         int origin;
         Region reg;
