@@ -18,6 +18,8 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/src/wombat_compiler/session.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/lex.cpp
     ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/token.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/parser.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/readables.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -37,4 +39,5 @@ target_include_directories(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_files
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_cutil
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser
 )

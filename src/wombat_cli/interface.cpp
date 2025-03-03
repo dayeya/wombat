@@ -4,12 +4,10 @@
 #include <queue>
 #include <functional>
 
-#include "args.hpp"
-#include "diagnostic.hpp"
-#include "callback.hpp"
-#include "io_file.hpp"
-#include "lex.hpp"
 #include "interface.hpp"
+#include "lex.hpp"
+#include "args.hpp"
+#include "parser.hpp"
 #include "session.hpp"
 
 void Interface::run(int argc, char** argv) {
@@ -60,6 +58,8 @@ void Interface::run(int argc, char** argv) {
                 tok->token_to_str();
             }
         }
+
+        // auto parser = Parser(lazy_token_stream);
 
         return State::Completed;
     });

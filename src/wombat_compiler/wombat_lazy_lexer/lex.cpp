@@ -60,26 +60,27 @@ void Lexer::lex_word(unique_ptr<Token>& token) {
   if(m_cursor.peek_next() == '!') {
     token->extend(advance_cursor());
     token->kind = TokenKind::Readable;
-  } else {
-    if(
-      token->value == "func"   ||
-      token->value == "endf"   ||
-      token->value == "let"    ||
-      token->value == "if"     ||
-      token->value == "else"   ||
-      token->value == "return" ||
+    return;
+  }
 
-      token->value == "int"    ||
-      token->value == "float"  ||
-      token->value == "ch"     ||
-      token->value == "String" ||
-      token->value == "bool"   ||
-      token->value == "ref"
-    ) {
-      token->kind = TokenKind::Keyword;
-    } else {
-      token->kind = TokenKind::Identifier;
-    }
+  if(
+    token->value == "func"   ||
+    token->value == "endf"   ||
+    token->value == "let"    ||
+    token->value == "if"     ||
+    token->value == "else"   ||
+    token->value == "return" ||
+
+    token->value == "int"    ||
+    token->value == "float"  ||
+    token->value == "ch"     ||
+    token->value == "String" ||
+    token->value == "bool"   ||
+    token->value == "ref"
+  ) {
+    token->kind = TokenKind::Keyword;
+  } else {
+    token->kind = TokenKind::Identifier;
   }
 }
 
@@ -96,6 +97,7 @@ void Lexer::lex_symbol(unique_ptr<Token>& token) {
     case ':': assign_token(token, ":", TokenKind::Colon);        break;
     case ';': assign_token(token, ";", TokenKind::SemiColon);    break;
     case ',': assign_token(token, ",", TokenKind::Comma);        break;
+    case '.': assign_token(token, ".", TokenKind::Dot);          break;
     case '+': assign_token(token, "+", TokenKind::Plus);         break;
     default: break;
   }
@@ -152,23 +154,7 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
     while (!m_cursor.reached_eof() && CharUtils::is_digit(m_cursor.peek_next())) {
       token->extend(advance_cursor());
     }
-
-    //! try to lex a float.
-    if (m_cursor.peek_next() == '.') {
-      if (!CharUtils::is_digit(m_cursor.peek_next())) {
-        return;
-      }
-  
-      token->extend(advance_cursor());
-      while (!m_cursor.reached_eof() && CharUtils::is_digit(m_cursor.peek_next())) {
-        token->extend(advance_cursor());
-      }
-
-      token->kind = TokenKind::LiteralFloat; // Float literal.
-      return;
-    }
-
-    token->kind = TokenKind::LiteralInt;
+    token->kind = TokenKind::LiteralNum;
   };
 
   //! Lexes a string literal.
@@ -240,14 +226,15 @@ void Lexer::lex_literal(unique_ptr<Token>& token) {
   // Lexes a char literal (e.g. 'a' or '\n').
   auto lex_char_literal = [&]() {
     advance_cursor();
-    if (m_cursor.peek_next() == '\'') {
+
+    if (m_cursor.current == '\'') {
       advance_cursor();
       token->kind = TokenKind::LiteralChar;
       token->value = "";
       return;
     }
     
-    token->extend(advance_cursor());
+    token->extend(m_cursor.current);
 
     if (m_cursor.peek_next() == '\'') {
       advance_cursor();

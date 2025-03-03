@@ -14,8 +14,7 @@ using std::shared_ptr, std::make_shared;
 enum class TokenKind {
     //!
     //! Literals
-    LiteralInt,
-    LiteralFloat,
+    LiteralNum,
     LiteralString,
     LiteralChar,
     LiteralBoolean, 
@@ -58,7 +57,8 @@ enum class TokenKind {
     CloseAngle,         // Symbol for '<'
     Colon,              // Symbol for ':'
     SemiColon,          // Symbol for ';'
-    Comma,              // Symbol for ';'
+    Comma,              // Symbol for ','
+    Dot,                // Symbol for ','
     Bang,               // Symbol for '!'
 
     Whitespace,         // Sequence of non-meaningful characters like spaces or tabs

@@ -46,10 +46,10 @@ std::string kind_to_str(const TokenKind& kind) {
       return "Semi_Colon";   
     case TokenKind::Comma:
       return "Semi_Colon";   
-    case TokenKind::LiteralInt:    
-      return "Literal_INTEGER";
-    case TokenKind::LiteralFloat:    
-      return "Literal_FLOAT";
+    case TokenKind::Dot:
+      return "Dot";   
+    case TokenKind::LiteralNum:    
+      return "Literal_NUMBER";
     case TokenKind::LiteralString:    
       return "Literal_STRING";
     case TokenKind::LiteralChar:    
