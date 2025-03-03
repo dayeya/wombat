@@ -63,13 +63,6 @@ public:
     bool caught_early_diagnostics();
 
     void register_diagnostic_rendering(const Diagnostic& diag);
-
-private:
-    //! Starting point of every session. 
-    //! Behavior is a closure that defines how the session should run.
-    State _session(std::function<State()> behavior) {
-        return behavior();
-    }
 };
 
 void init_build_session(
