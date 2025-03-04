@@ -6,20 +6,24 @@ project(
     LANGUAGES C CXX
 )
 
-add_executable(
-    wombat 
-    main.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_cli/interface.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_cli/args.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_cutil/cutil.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_errors/diagnostic.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_callback/callback.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_files/io_file.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/session.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/lex.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/token.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/parser.cpp
-    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/readables.cpp
+add_executable(wombat)
+
+target_sources(
+    wombat
+    PRIVATE main.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_cli/interface.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_cli/args.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_cutil/cutil.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_errors/diagnostic.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_callback/callback.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_files/io_file.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/session.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/lex.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer/token.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/parser.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/expr.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/ast.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/readables.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -41,3 +45,5 @@ target_include_directories(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser
 )
+
+add_subdirectory(tests)
