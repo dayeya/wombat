@@ -3,82 +3,51 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 using std::unique_ptr, std::make_unique;
 using std::shared_ptr, std::make_shared;
 
 /**
- * @enum TokenKind.
- * @brief Contains all kinds of possible and allowed tokens within the lexial bounderies of the language.
+ * @enum TokenKind
+ * @brief Defines all possible tokens within the lexical boundaries of Wombat.
  */
 enum class TokenKind {
-    //!
     //! Literals
     LiteralNum,
     LiteralString,
     LiteralChar,
-    LiteralBoolean, 
+    LiteralBoolean,
 
-    //!
-    //! Identifier can be either of two options: user-defined or keyword.
-    //!
-    Identifier,         // Represents user-defined data, data-types and behavior. e.g variable-name, functions and structs.
-    Keyword,            // Words that represent a meaningful behavior/feature in the language. e.g 'let', 'func' and so on and so forth.
-    
-    //!
-    //! Readables!, wombat offers a core-syntax language feature! 
-    //! See [readables] in wombat-docs.
-    //!
-    //! Briefly, readables make developers code cleaner and readable code!
-    //! They operate on a single-argument and they are notated by the '!' symbol.
-    //! e.g:
-    //! 
-    //! let x: int = 8;
-    //! let p_x: ref<int> = &x 
-    //!
-    //! For wombat, this code is *not* readable.
-    //! Wombat proposes the following:
-    //! 
-    //! let x: int = 8; 
-    //! let p_x: ref<int> = address! { x };
-    //!
-    Readable,
+    //! Identifiers & Keywords
+    Identifier, // User-defined symbols like variable names, functions, structs.
+    Keyword,    // Reserved words like 'let', 'func', etc.
 
-    //! 
+    //! Readables! - A core syntax feature in Wombat.
+    Readable, // Notated with `!`, e.g., `address! { x }`.
+
     //! Punctuators
-    //!
-    OpenParen,          // Symbol for '('
-    CloseParen,         // Symbol for ')'
-    OpenBracket,        // Symbol for '['
-    CloseBracket,       // Symbol for ']'
-    OpenCurly,          // Symbol for '{'
-    CloseCurly,         // Symbol for '}'
-    OpenAngle,          // Symbol for '>'
-    CloseAngle,         // Symbol for '<'
-    Colon,              // Symbol for ':'
-    SemiColon,          // Symbol for ';'
-    Comma,              // Symbol for ','
-    Dot,                // Symbol for ','
-    Bang,               // Symbol for '!'
+    OpenParen, CloseParen, OpenBracket, CloseBracket,
+    OpenCurly, CloseCurly, OpenAngle, CloseAngle,
+    Colon, SemiColon, Comma, Dot, Bang,
 
-    Whitespace,         // Sequence of non-meaningful characters like spaces or tabs
+    Whitespace,  // Spaces, tabs, etc.
+    ReturnSymbol, // '->' for function return types
 
-    ReturnSymbol,       // Return type indicator for functions, '->'
-    Plus,               // Arithmetic addition symbol,          '+'
-    Minus,              // Arithmetic subtraction symbol,       '-'
-    Lt,                 // Less than symbol,                    '<'
-    Gt,                 // Greater than symbol,                 '>'
-    DoubleEq,           // Equality operator,                   '=='
-    Eq,                 // Assignment operator,                 '='
-    Le,                 // Less than or equal to operator,      '<='
-    Ge,                 // Greater than or equal to operator,   '>='
-    Eof,                // End of file marker
+    //! Operators
+    Plus, Minus, Lt, Gt, DoubleEq, Eq, Le, Ge,
 
-    LineComment,        // Single-line comment, '//'
-    Foreign,            // Unknown or invalid token for the language
-    None                // Indicator for an empty token
+    Eof,         // End of file marker
+    LineComment, // Single-line comment (`//`)
+    Foreign,     // Unknown or invalid token
+    None         // Empty token indicator
 };
 
+/**
+ * @brief Converts a TokenKind to its string representation.
+ * @param kind The token kind.
+ * @return The corresponding string.
+ */
 std::string kind_to_str(const TokenKind& kind);
 
 /**
@@ -91,89 +60,85 @@ struct Token {
     std::pair<int, int> pos; // [line, col] - start of the token.
 
     Token() 
-      : value(""), 
-        kind(TokenKind::None), 
-        pos(std::make_pair(-1, -1)) {};
-    
-    Token(
-        TokenKind k, 
-        std::string v, 
-        std::pair<int, int> p
-    ) 
-      : value(std::move(v)), 
-        kind(k), 
-        pos(p) {};
+        : kind(TokenKind::None), pos{-1, -1} {}
+
+    Token(TokenKind k, std::string v, std::pair<int, int> p)
+        : kind(k), value(std::move(v)), pos(p) {}
 
     void token_to_str() const;
 
     /**
-     * @brief Flushes the buffer of 'value' and sets the kind to 'TokenKind::None'.
+     * @brief Resets the token to an empty state.
      */
     void clean() {
-        value = std::string();
+        value.clear();
         kind = TokenKind::None;
-        pos = std::make_pair(-1, -1);
+        pos = {-1, -1};
     }
 
     /**
-     * @brief Extends the 'value' field by one character by appending it to the end.
-     * @param ch The character to append to the token's value.
+     * @brief Appends a character to the token's value.
      */
     void extend(char ch) {
         value += ch;
     }
 
     /**
-     * @brief Compares the token's kind with the provided kind.
-     * @param kind The kind to compare with the token's kind.
-     * @return True if the token's kind matches the provided kind, false otherwise.
+     * @brief Checks if the token's kind matches the given kind.
      */
-    bool compare_kind(const TokenKind& cmp_kind) {
+    bool compare_kind(const TokenKind& cmp_kind) const {
         return kind == cmp_kind;
     }
 
-    void fill_with(
-        std::string v, 
-        TokenKind k, 
-        uint32_t line, 
-        uint32_t col
-    ) {
-        set_value(v);
-        set_kind(k);
-        set_pos(line, col);
+    /**
+     * @brief Sets the token's properties.
+     */
+    void fill_with(std::string v, TokenKind k, int line = -1, int col = -1) {
+        value = std::move(v);
+        kind = k;
+        pos = {line, col};
     }
 
-    void fill_with_no_pos(std::string v, TokenKind k) {
-        set_value(v);
-        set_kind(k);
+    void set_value(std::string&& v) {
+        value = std::move(v);
     }
 
-    void set_value(std::string& v) {
-        value = v;
-    }
-
-    void set_kind(TokenKind& k) {
+    /**
+     * @brief Sets the token's kind.
+     */
+    void set_kind(TokenKind k) {
         kind = k;
     }
 
-    void set_pos(uint32_t line, uint32_t col) {
-        pos = std::make_pair(line, col);
+    /**
+     * @brief Sets the token's position.
+     */
+    void set_pos(int line, int col) {
+        pos = {line, col};
     }
-
 };
 
+/**
+ * @struct LazyTokenStream
+ * @brief A stream of tokens supporting lazy evaluation.
+ */
 struct LazyTokenStream {
     unique_ptr<Token> m_current_token;
     std::vector<unique_ptr<Token>> m_tokens;
 
     LazyTokenStream()
-        : m_current_token(std::make_unique<Token>()), m_tokens() {}; 
+        : m_current_token(std::make_unique<Token>()) {}
 
-    inline bool reached_end_of_stream() {
-        auto& last_token = m_tokens.back();
-        return last_token->compare_kind(TokenKind::Eof); 
+    /**
+     * @brief Checks if the token stream has reached the end.
+     */
+    bool reached_end_of_stream() const {
+        return !m_tokens.empty() && m_tokens.back()->compare_kind(TokenKind::Eof);
     }
-    
+
+    /**
+     * @brief Advances the stream with a new token.
+     */
     void advance_with_token(unique_ptr<Token> token);
 };
 

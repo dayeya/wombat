@@ -22,18 +22,14 @@ void Lexer::lex_foreign(unique_ptr<Token>& token, char ch) {
 }
 
 void Lexer::lex_line_comment(unique_ptr<Token>& token) {
-  token->set_pos(m_cursor.current_line, m_cursor.current_col);
-
-  token->extend(m_cursor.current);
-  token->extend(advance_cursor());
-
+  //! Eat double forward slash.
+  advance_cursor();
   advance_cursor();
 
+  //! Until we reached end of line we stop.
   while(!m_cursor.reached_eof() && !m_cursor.reached_new_line()) {
-    token->extend(advance_cursor());
+    auto _ = advance_cursor();
   }
-
-  token->kind = TokenKind::LineComment;
 }
 
 void Lexer::lex_word(unique_ptr<Token>& token) {
@@ -79,17 +75,17 @@ void Lexer::lex_symbol(unique_ptr<Token>& token) {
   token->set_pos(m_cursor.current_line, m_cursor.current_col);
 
   switch (m_cursor.current) {
-    case '(': token->fill_with_no_pos("(", TokenKind::OpenParen);    break;
-    case ')': token->fill_with_no_pos(")", TokenKind::CloseParen);   break;
-    case '{': token->fill_with_no_pos("{", TokenKind::OpenCurly);    break;
-    case '}': token->fill_with_no_pos("}", TokenKind::CloseCurly);   break;
-    case '[': token->fill_with_no_pos("[", TokenKind::OpenBracket);  break;
-    case ']': token->fill_with_no_pos("]", TokenKind::CloseBracket); break;
-    case ':': token->fill_with_no_pos(":", TokenKind::Colon);        break;
-    case ';': token->fill_with_no_pos(";", TokenKind::SemiColon);    break;
-    case ',': token->fill_with_no_pos(",", TokenKind::Comma);        break;
-    case '.': token->fill_with_no_pos(".", TokenKind::Dot);          break;
-    case '+': token->fill_with_no_pos("+", TokenKind::Plus);         break;
+    case '(': token->fill_with("(", TokenKind::OpenParen);    break;
+    case ')': token->fill_with(")", TokenKind::CloseParen);   break;
+    case '{': token->fill_with("{", TokenKind::OpenCurly);    break;
+    case '}': token->fill_with("}", TokenKind::CloseCurly);   break;
+    case '[': token->fill_with("[", TokenKind::OpenBracket);  break;
+    case ']': token->fill_with("]", TokenKind::CloseBracket); break;
+    case ':': token->fill_with(":", TokenKind::Colon);        break;
+    case ';': token->fill_with(";", TokenKind::SemiColon);    break;
+    case ',': token->fill_with(",", TokenKind::Comma);        break;
+    case '.': token->fill_with(".", TokenKind::Dot);          break;
+    case '+': token->fill_with("+", TokenKind::Plus);         break;
     default: break;
   }
 
@@ -102,38 +98,38 @@ void Lexer::lex_symbol(unique_ptr<Token>& token) {
   {
     case '<':
       if (m_cursor.peek_next() == '=') {
-        token->fill_with_no_pos("<=", TokenKind::Le);
+        token->fill_with("<=", TokenKind::Le);
         advance_cursor();
       } else {
-        token->fill_with_no_pos("<", TokenKind::OpenAngle);
+        token->fill_with("<", TokenKind::OpenAngle);
       }
       break;
     case '>':
       if (m_cursor.peek_next() == '=') {
-        token->fill_with_no_pos(">=", TokenKind::Ge);
+        token->fill_with(">=", TokenKind::Ge);
         advance_cursor();
       } else {
-        token->fill_with_no_pos(">", TokenKind::CloseAngle);
+        token->fill_with(">", TokenKind::CloseAngle);
       }
       break;
     case '-':
       if (m_cursor.peek_next() == '>') {
-        token->fill_with_no_pos("->", TokenKind::ReturnSymbol);
+        token->fill_with("->", TokenKind::ReturnSymbol);
         advance_cursor();
       } else {
-        token->fill_with_no_pos("-", TokenKind::Minus);
+        token->fill_with("-", TokenKind::Minus);
       }
       break;
     case '=':
       if (m_cursor.peek_next() == '=') {
-        token->fill_with_no_pos("==", TokenKind::DoubleEq);
+        token->fill_with("==", TokenKind::DoubleEq);
         advance_cursor();
       } else {
-        token->fill_with_no_pos("=", TokenKind::Eq);
+        token->fill_with("=", TokenKind::Eq);
       }
       break;
     default:
-      token->fill_with_no_pos(
+      token->fill_with(
         std::string{m_cursor.current}, 
         TokenKind::Foreign
       );

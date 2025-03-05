@@ -46,8 +46,6 @@ void Renderer::render_pretty_print(const Diagnostic& diag) const {
     } else { 
         std::cout << "\n";
     }
-
-    std::cout << "\n";
 }
 
 void Renderer::render_short(const Diagnostic& diag) const {
@@ -63,6 +61,4 @@ void Renderer::render_short(const Diagnostic& diag) const {
     } else { 
         std::cout << "\n";
     }
-
-    std::cout << "\n";
 }
