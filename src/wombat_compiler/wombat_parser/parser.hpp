@@ -7,7 +7,7 @@ using AST = void;
 
 class Parser {
 public: 
-    auto parse_to_AST() -> AST;
+    auto parse_to_AST() -> AST; 
 private:
     std::unique_ptr<LazyTokenStream> tr;
 };
