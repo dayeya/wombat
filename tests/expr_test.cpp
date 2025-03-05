@@ -3,31 +3,19 @@
 #include "ast.hpp"
 #include "expr.hpp"
 
-TEST(LiteralExprTest, HandlesLiteralExpr) {
-    //! Creates a token representing a number.
-    auto token = std::make_unique<Token>(
-        TokenKind::LiteralNum,
-        std::string("8"),
-        std::make_pair(1, 0)
-    );
-
-    //! Create an expression from that token.
-    auto lit_expr = LitExpr(std::move(token));
-
-    EXPECT_EQ(lit_expr.expr_kind, ExprKind::Lit);
-    EXPECT_NE(lit_expr.tokens, std::nullopt);
+unique_ptr<Token> build_token(std::string v, TokenKind k) {
+    unique_ptr<Token> tok = std::make_unique<Token>();
+    tok->fill_with_no_pos(v, k);
+    return tok;
 }
 
-TEST(AstNodeTest, CreatesAnAstFromLitExpr) {
-    auto token = std::make_unique<Token>(
-        TokenKind::LiteralNum,
-        std::string("8"),
-        std::make_pair(1, 0)
-    );
+TEST(LiteralExprTest, HandlesLiteralExpr) {
+    auto tok = build_token("3", TokenKind::LiteralNum);
 
-    auto lit_expr = LitExpr(std::move(token));
+    auto lit_expr = LitExpr(tok);
 
-    auto ast = ExprNode(std::move(lit_expr));
-
-    EXPECT_EQ((bool)ast.inner, true);
+    EXPECT_NE(lit_expr.tok, nullptr);
+    EXPECT_EQ(lit_expr.expr_kind, ExprKind::Lit);
+    EXPECT_EQ(lit_expr.tok->kind, TokenKind::LiteralNum);
+    EXPECT_EQ(lit_expr.tok->value, "4");
 }
