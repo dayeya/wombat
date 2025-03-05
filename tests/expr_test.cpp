@@ -1,13 +1,7 @@
 #include <gtest/gtest.h>
-#include "token.hpp"
+#include "test_help.hpp"
 #include "ast.hpp"
 #include "expr.hpp"
-
-unique_ptr<Token> build_token(std::string v, TokenKind k) {
-    unique_ptr<Token> tok = std::make_unique<Token>();
-    tok->fill_with_no_pos(v, k);
-    return tok;
-}
 
 TEST(LiteralExprTest, HandlesLiteralExpr) {
     auto tok = build_token("3", TokenKind::LiteralNum);
