@@ -13,34 +13,67 @@ using std::shared_ptr, std::make_shared;
  * @brief Defines all possible tokens within the lexical boundaries of Wombat.
  */
 enum class TokenKind {
+    //!
     //! Literals
     LiteralNum,
     LiteralString,
     LiteralChar,
-    LiteralBoolean,
-
-    //! Identifiers & Keywords
-    Identifier, // User-defined symbols like variable names, functions, structs.
-    Keyword,    // Reserved words like 'let', 'func', etc.
-
-    //! Readables! - A core syntax feature in Wombat.
-    Readable, // Notated with `!`, e.g., `address! { x }`.
+    LiteralBoolean, 
+    //!
+    //! Identifier can be either of two options: user-defined or keyword.
+    //!
+    Identifier,         // Represents user-defined data, data-types and behavior. e.g variable-name, functions and structs.
+    Keyword,            // Words that represent a meaningful behavior/feature in the language. e.g 'let', 'func' and so on and so forth.
+    //!
+    //! Readables!, wombat offers a core-syntax language feature! 
+    //! See [readables] in wombat-docs.
+    //!
+    //! Briefly, readables make developers code cleaner and readable code!
+    //! They operate on a single-argument and they are notated by the '!' symbol.
+    //! e.g:
+    //! 
+    //! let x: int = 8;
+    //! let p_x: ref<int> = &x 
+    //!
+    //! For wombat, this code is *not* readable.
+    //! Wombat proposes the following:
+    //! 
+    //! let x: int = 8; 
+    //! let p_x: ref<int> = address! { x };
+    //!
+    Readable,
 
     //! Punctuators
-    OpenParen, CloseParen, OpenBracket, CloseBracket,
-    OpenCurly, CloseCurly, OpenAngle, CloseAngle,
-    Colon, SemiColon, Comma, Dot, Bang,
+    OpenParen,          // Symbol for '('
+    CloseParen,         // Symbol for ')'
+    OpenBracket,        // Symbol for '['
+    CloseBracket,       // Symbol for ']'
+    OpenCurly,          // Symbol for '{'
+    CloseCurly,         // Symbol for '}'
+    OpenAngle,          // Symbol for '>'
+    CloseAngle,         // Symbol for '<'
+    Colon,              // Symbol for ':'
+    SemiColon,          // Symbol for ';'
+    Comma,              // Symbol for ','
+    Dot,                // Symbol for ','
+    Bang,               // Symbol for '!'
 
-    Whitespace,  // Spaces, tabs, etc.
-    ReturnSymbol, // '->' for function return types
+    Whitespace,         // Sequence of non-meaningful characters like spaces or tabs
 
-    //! Operators
-    Plus, Minus, Lt, Gt, DoubleEq, Eq, Le, Ge,
+    ReturnSymbol,       // Return type indicator for functions, '->'
+    Plus,               // Arithmetic addition symbol,          '+'
+    Minus,              // Arithmetic subtraction symbol,       '-'
+    Lt,                 // Less than symbol,                    '<'
+    Gt,                 // Greater than symbol,                 '>'
+    DoubleEq,           // Equality operator,                   '=='
+    Eq,                 // Assignment operator,                 '='
+    Le,                 // Less than or equal to operator,      '<='
+    Ge,                 // Greater than or equal to operator,   '>='
+    Eof,                // End of file marker
 
-    Eof,         // End of file marker
-    LineComment, // Single-line comment (`//`)
-    Foreign,     // Unknown or invalid token
-    None         // Empty token indicator
+    LineComment,        // Single-line comment, '//'
+    Foreign,            // Unknown or invalid token for the language
+    None                // Indicator for an empty token
 };
 
 /**
