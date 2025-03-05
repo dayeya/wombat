@@ -58,19 +58,8 @@ enum class ExprKind {
 //!
 struct Expr {
     ExprKind expr_kind;
-    std::optional<LazyTokenStream> tokens;   
 
-    Expr(ExprKind ek)
-        : expr_kind(ek), 
-          tokens(std::make_optional<LazyTokenStream>()) {} 
-
-    void expand_with(unique_ptr<Token> t) {
-        if(!tokens) {
-            std::cout << "[Expr::expand_with] could not expand with nullopt";
-            return;
-        }
-        tokens->advance_with_token(std::move(t));
-    }
+    Expr(ExprKind ek) : expr_kind(ek) {}
 };
 
 //! @brief Wraps the value of Literal tokens with extended expr parsing api.
@@ -83,12 +72,11 @@ struct Expr {
 //!              ^   ^
 //!              LitExpr
 //!
-struct LitExpr : Expr {
-    std::string val_as_str;
+struct LitExpr : public Expr {
+    unique_ptr<Token> tok;
 
-    LitExpr(unique_ptr<Token> tok) : Expr(ExprKind::Lit), val_as_str("") {
-        expand_with(std::move(tok));
-    }
+    LitExpr(unique_ptr<Token>& t) 
+        : Expr(ExprKind::Lit), tok(std::move(t)) {}
 };
 
 #endif // EXPR_HPP_

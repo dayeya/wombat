@@ -131,6 +131,35 @@ struct Token {
     bool compare_kind(const TokenKind& cmp_kind) {
         return kind == cmp_kind;
     }
+
+    void fill_with(
+        std::string v, 
+        TokenKind k, 
+        uint32_t line, 
+        uint32_t col
+    ) {
+        set_value(v);
+        set_kind(k);
+        set_pos(line, col);
+    }
+
+    void fill_with_no_pos(std::string v, TokenKind k) {
+        set_value(v);
+        set_kind(k);
+    }
+
+    void set_value(std::string& v) {
+        value = v;
+    }
+
+    void set_kind(TokenKind& k) {
+        kind = k;
+    }
+
+    void set_pos(uint32_t line, uint32_t col) {
+        pos = std::make_pair(line, col);
+    }
+
 };
 
 struct LazyTokenStream {

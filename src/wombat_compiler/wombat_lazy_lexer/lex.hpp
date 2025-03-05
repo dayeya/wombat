@@ -116,8 +116,6 @@ private:
 
     inline char advance_cursor() { return m_cursor.advance_self(); }
 
-    void assign_token(unique_ptr<Token>& token, std::string value, TokenKind kind);
-
     void lex_eof(unique_ptr<Token>& token);
     void lex_foreign(unique_ptr<Token>& token, char ch);
     void lex_line_comment(unique_ptr<Token>& token);

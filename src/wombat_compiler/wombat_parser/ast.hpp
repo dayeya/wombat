@@ -8,29 +8,53 @@
 using std::unique_ptr, std::optional;
 
 enum class NodeKind {
+    //! An expression node.
+    //! See [expr.hpp -> enum ExprKind]
+    //! 
+    //! A node of this kind can have left and right children.
     Expr,
+
+    //! A statement node.
+    //! See [stmt.hpp -> StmtKind]
+    //!
+    //! A node of this kind will hold the statement kind within the root.
+    //! *must have children*
     Stmt
 }; 
 
-// Base class for all AST nodes
 class AstNode {
 public:
-    std::unique_ptr<AstNode> left;
-    std::unique_ptr<AstNode> right;
+    unique_ptr<AstNode> left;
+    unique_ptr<AstNode> right;
 
-    AstNode()
-        : left(nullptr), 
-          right(nullptr) {}
+    AstNode(unique_ptr<AstNode> lhs, unique_ptr<AstNode> rhs)
+        : left(std::move(lhs)), 
+          right(std::move(rhs)) {}
 
     virtual ~AstNode() = default;
 };
 
-class ExprNode : AstNode {
+
+//! A node that represents an expression.
+//! *in most cases* It is a leaf.
+class ExprNode : public AstNode {
 public:
     optional<Expr> inner;
 
-    ExprNode() : AstNode(), inner(std::nullopt) {}
-    ExprNode(Expr expr) : AstNode(), inner(std::move(expr)) {}
+    ExprNode() : AstNode(nullptr, nullptr), inner(std::nullopt) {}
+    ExprNode(Expr expr) : AstNode(nullptr, nullptr), inner(std::move(expr)) {}   
 };
+
+//! A binary operation node, *must have children*; 
+class BinOpNode : public AstNode {
+public:
+    BinOp operation;
+
+    BinOpNode(
+        BinOp op_kind,
+        unique_ptr<AstNode> lhs, 
+        unique_ptr<AstNode> rhs
+    ) : AstNode(std::move(lhs), std::move(rhs)), operation(op_kind) {} 
+};   
 
 #endif // AST_HPP_

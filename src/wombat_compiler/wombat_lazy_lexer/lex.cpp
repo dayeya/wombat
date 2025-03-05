@@ -10,15 +10,6 @@
 #include "cutil.hpp"
 #include "lex.hpp"
 
-void Lexer::assign_token(
-  unique_ptr<Token>& token, 
-  std::string value, 
-  TokenKind kind
-) {
-  token->value = value;
-  token->kind = kind;
-}
-
 void Lexer::lex_eof(unique_ptr<Token>& token) {
   token->kind = TokenKind::Eof;
   token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
@@ -31,7 +22,7 @@ void Lexer::lex_foreign(unique_ptr<Token>& token, char ch) {
 }
 
 void Lexer::lex_line_comment(unique_ptr<Token>& token) {
-  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+  token->set_pos(m_cursor.current_line, m_cursor.current_col);
 
   token->extend(m_cursor.current);
   token->extend(advance_cursor());
@@ -46,7 +37,7 @@ void Lexer::lex_line_comment(unique_ptr<Token>& token) {
 }
 
 void Lexer::lex_word(unique_ptr<Token>& token) {
-  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+  token->set_pos(m_cursor.current_line, m_cursor.current_col);
   token->extend(m_cursor.current);  
 
   while(
@@ -85,20 +76,20 @@ void Lexer::lex_word(unique_ptr<Token>& token) {
 }
 
 void Lexer::lex_symbol(unique_ptr<Token>& token) {
-  token->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+  token->set_pos(m_cursor.current_line, m_cursor.current_col);
 
   switch (m_cursor.current) {
-    case '(': assign_token(token, "(", TokenKind::OpenParen);    break;
-    case ')': assign_token(token, ")", TokenKind::CloseParen);   break;
-    case '{': assign_token(token, "{", TokenKind::OpenCurly);    break;
-    case '}': assign_token(token, "}", TokenKind::CloseCurly);   break;
-    case '[': assign_token(token, "[", TokenKind::OpenBracket);  break;
-    case ']': assign_token(token, "]", TokenKind::CloseBracket); break;
-    case ':': assign_token(token, ":", TokenKind::Colon);        break;
-    case ';': assign_token(token, ";", TokenKind::SemiColon);    break;
-    case ',': assign_token(token, ",", TokenKind::Comma);        break;
-    case '.': assign_token(token, ".", TokenKind::Dot);          break;
-    case '+': assign_token(token, "+", TokenKind::Plus);         break;
+    case '(': token->fill_with_no_pos("(", TokenKind::OpenParen);    break;
+    case ')': token->fill_with_no_pos(")", TokenKind::CloseParen);   break;
+    case '{': token->fill_with_no_pos("{", TokenKind::OpenCurly);    break;
+    case '}': token->fill_with_no_pos("}", TokenKind::CloseCurly);   break;
+    case '[': token->fill_with_no_pos("[", TokenKind::OpenBracket);  break;
+    case ']': token->fill_with_no_pos("]", TokenKind::CloseBracket); break;
+    case ':': token->fill_with_no_pos(":", TokenKind::Colon);        break;
+    case ';': token->fill_with_no_pos(";", TokenKind::SemiColon);    break;
+    case ',': token->fill_with_no_pos(",", TokenKind::Comma);        break;
+    case '.': token->fill_with_no_pos(".", TokenKind::Dot);          break;
+    case '+': token->fill_with_no_pos("+", TokenKind::Plus);         break;
     default: break;
   }
 
@@ -111,38 +102,41 @@ void Lexer::lex_symbol(unique_ptr<Token>& token) {
   {
     case '<':
       if (m_cursor.peek_next() == '=') {
-        assign_token(token, "<=", TokenKind::Le);
+        token->fill_with_no_pos("<=", TokenKind::Le);
         advance_cursor();
       } else {
-        assign_token(token, "<", TokenKind::OpenAngle);
+        token->fill_with_no_pos("<", TokenKind::OpenAngle);
       }
       break;
     case '>':
       if (m_cursor.peek_next() == '=') {
-        assign_token(token, ">=", TokenKind::Ge);
+        token->fill_with_no_pos(">=", TokenKind::Ge);
         advance_cursor();
       } else {
-        assign_token(token, ">", TokenKind::CloseAngle);
+        token->fill_with_no_pos(">", TokenKind::CloseAngle);
       }
       break;
     case '-':
       if (m_cursor.peek_next() == '>') {
-        assign_token(token, "->", TokenKind::ReturnSymbol);
+        token->fill_with_no_pos("->", TokenKind::ReturnSymbol);
         advance_cursor();
       } else {
-        assign_token(token, "-", TokenKind::Minus);
+        token->fill_with_no_pos("-", TokenKind::Minus);
       }
       break;
     case '=':
       if (m_cursor.peek_next() == '=') {
-        assign_token(token, "==", TokenKind::DoubleEq);
+        token->fill_with_no_pos("==", TokenKind::DoubleEq);
         advance_cursor();
       } else {
-        assign_token(token, "=", TokenKind::Eq);
+        token->fill_with_no_pos("=", TokenKind::Eq);
       }
       break;
     default:
-      assign_token(token, std::string{m_cursor.current}, TokenKind::Foreign);
+      token->fill_with_no_pos(
+        std::string{m_cursor.current}, 
+        TokenKind::Foreign
+      );
       break;
   }
 }
