@@ -94,6 +94,15 @@ struct Token {
       : value(""), 
         kind(TokenKind::None), 
         pos(std::make_pair(-1, -1)) {};
+    
+    Token(
+        TokenKind k, 
+        std::string v, 
+        std::pair<int, int> p
+    ) 
+      : value(std::move(v)), 
+        kind(k), 
+        pos(p) {};
 
     void token_to_str() const;
 
@@ -131,7 +140,7 @@ struct LazyTokenStream {
     LazyTokenStream()
         : m_current_token(std::make_unique<Token>()), m_tokens() {}; 
 
-    inline bool reached_end_of_stream() { 
+    inline bool reached_end_of_stream() {
         auto& last_token = m_tokens.back();
         return last_token->compare_kind(TokenKind::Eof); 
     }

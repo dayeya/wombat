@@ -1,21 +1,7 @@
-func convert_to_int(c: char) -> int
-    return int_converter! c;
-endf
+//
+// Expression parsing!
+//
+// expression := expression
 
-func main() -> free
-    let five: int = 0;
-    let seven: char = '7';
-    let w: String = "wombat!";
-
-    if x == 5 {
-        write("name: {}", wombat);
-    }
-
-    loop {
-        if(five != 0) break;
-        five += 7 + 5 * 2;
-        five -= 4;
-    }
-
-    write("five: {}", five);
-endf
+let k: int = 1;
+let a: int = f + 3;
