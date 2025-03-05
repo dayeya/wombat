@@ -7,6 +7,7 @@ include(GoogleTest)
 
 add_executable(
     wtests
+    ${PROJECT_SOURCE_DIR}/tests/test_help.cpp
     ${PROJECT_SOURCE_DIR}/tests/expr_test.cpp
     ${PROJECT_SOURCE_DIR}/tests/ast_test.cpp
 )
@@ -22,6 +23,7 @@ target_include_directories(
     wtests
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser
+    PRIVATE ${PROJECT_SOURCE_DIR}/tests
 )
 
 gtest_discover_tests(wtests)

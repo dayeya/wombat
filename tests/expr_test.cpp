@@ -11,5 +11,5 @@ TEST(LiteralExprTest, HandlesLiteralExpr) {
     EXPECT_NE(lit_expr.tok, nullptr);
     EXPECT_EQ(lit_expr.expr_kind, ExprKind::Lit);
     EXPECT_EQ(lit_expr.tok->kind, TokenKind::LiteralNum);
-    EXPECT_EQ(lit_expr.tok->value, "4");
+    EXPECT_EQ(lit_expr.tok->value, "3");
 }
