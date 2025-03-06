@@ -68,8 +68,8 @@ void Session::flush_if_caught_diagnostics() {
 }
 
 void init_build_session(
-    unique_ptr<Session> sess, 
-    std::function<State(unique_ptr<Session>&)> behavior
+    SmartPtr<Session> sess, 
+    std::function<State(SmartPtr<Session>&)> behavior
 ) {
     auto compilation_result = behavior(sess);
 

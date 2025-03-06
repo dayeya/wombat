@@ -55,7 +55,7 @@ void Interface::run(int argc, char** argv) {
             return State::Stopped;
         } else {
             for(const auto& tok : lazy_token_stream.m_tokens) {
-                tok->token_to_str();
+                tok.out();
             }
         }
 

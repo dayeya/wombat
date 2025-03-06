@@ -6,7 +6,7 @@
 #include <queue>
 #include <functional>
 
-#include "argp.h"
+#include "args.hpp"
 #include "io_file.hpp"
 #include "lex.hpp"
 #include "token.hpp"
@@ -66,8 +66,8 @@ public:
 };
 
 void init_build_session(
-    unique_ptr<Session> sess, 
-    std::function<State(unique_ptr<Session>&)> behavior
+    SmartPtr<Session> sess, 
+    std::function<State(SmartPtr<Session>&)> behavior
 );
 
 #endif // SESSION_HPP_

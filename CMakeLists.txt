@@ -35,6 +35,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 target_include_directories(
     wombat 
     PRIVATE ${PROJECT_SOURCE_DIR}/src
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_runtime
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_cli
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_callback
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_errors

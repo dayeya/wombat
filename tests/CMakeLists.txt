@@ -23,6 +23,7 @@ target_include_directories(
     wtests
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_runtime
     PRIVATE ${PROJECT_SOURCE_DIR}/tests
 )
 

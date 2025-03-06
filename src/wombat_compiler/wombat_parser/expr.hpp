@@ -7,7 +7,7 @@
 
 #include "token.hpp"
 
-enum LogicalOp {
+enum class LogicalOp {
     And,
     Or, 
     Not
@@ -73,9 +73,9 @@ struct Expr {
 //!              LitExpr
 //!
 struct LitExpr : public Expr {
-    unique_ptr<Token> tok;
+    SmartPtr<Token> tok;
 
-    LitExpr(unique_ptr<Token>& t) 
+    LitExpr(SmartPtr<Token>& t)
         : Expr(ExprKind::Lit), tok(std::move(t)) {}
 };
 
