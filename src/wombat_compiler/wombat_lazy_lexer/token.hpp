@@ -2,11 +2,9 @@
 #define TOKEN_HPP_
 
 #include <vector>
-#include <memory>
 #include <string>
 
-using std::unique_ptr, std::make_unique;
-using std::shared_ptr, std::make_shared;
+#include "wtypes.hpp"
 
 /**
  * @enum TokenKind
@@ -66,6 +64,7 @@ enum class TokenKind {
     Lt,                 // Less than symbol,                    '<'
     Gt,                 // Greater than symbol,                 '>'
     DoubleEq,           // Equality operator,                   '=='
+    NotEq,           // Equality operator,                   '!='
     Eq,                 // Assignment operator,                 '='
     Le,                 // Less than or equal to operator,      '<='
     Ge,                 // Greater than or equal to operator,   '>='
@@ -74,6 +73,13 @@ enum class TokenKind {
     LineComment,        // Single-line comment, '//'
     Foreign,            // Unknown or invalid token for the language
     None                // Indicator for an empty token
+};
+
+//! Token stream state.
+enum class TState {
+    NotYet,
+    Traversing,
+    Ended
 };
 
 /**
@@ -92,13 +98,13 @@ struct Token {
     std::string value;
     std::pair<int, int> pos; // [line, col] - start of the token.
 
-    Token() 
-        : kind(TokenKind::None), pos{-1, -1} {}
+    Token()
+        : kind(TokenKind::None), value(""), pos{-1, -1} {}
 
     Token(TokenKind k, std::string v, std::pair<int, int> p)
         : kind(k), value(std::move(v)), pos(p) {}
 
-    void token_to_str() const;
+    void out() const;
 
     /**
      * @brief Resets the token to an empty state.
@@ -156,23 +162,48 @@ struct Token {
  * @brief A stream of tokens supporting lazy evaluation.
  */
 struct LazyTokenStream {
-    unique_ptr<Token> m_current_token;
-    std::vector<unique_ptr<Token>> m_tokens;
+    //! token buffer.
+    std::vector<Token> m_tokens;
 
-    LazyTokenStream()
-        : m_current_token(std::make_unique<Token>()) {}
+    //! index of the current token.
+    size_t cur = -1;
 
-    /**
-     * @brief Checks if the token stream has reached the end.
-     */
-    bool reached_end_of_stream() const {
-        return !m_tokens.empty() && m_tokens.back()->compare_kind(TokenKind::Eof);
+    //! State of the traversal.
+    //! Used in [parser.hpp].
+    TState state = TState::NotYet;
+
+    LazyTokenStream() : m_tokens() {}
+
+    inline bool reached_eof() const {
+        return (
+            !m_tokens.empty() &&
+            m_tokens.back().compare_kind(TokenKind::Eof)
+        );
     }
 
-    /**
-     * @brief Advances the stream with a new token.
-     */
-    void advance_with_token(unique_ptr<Token> token);
+    //! Checks if the stream reached its end.
+    inline bool has_next() const {
+        return (
+            !m_tokens.empty() &&
+            cur < m_tokens.size() &&
+            !reached_eof() &&
+            state != TState::Ended
+        );
+    }
+
+    //! Pushes `token` into `m_tokens` while updating `m_current_token`.
+    void feed(const Token& token) {
+        m_tokens.push_back(token);
+    }
+
+    //! Consumes a token from the stream.
+    Token eat_one_token() {
+        if(!has_next()) {
+            return Token();
+        } else {
+            return m_tokens.at(++cur);
+        }
+    }
 };
 
 #endif // TOKEN_HPP_

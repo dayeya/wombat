@@ -31,9 +31,11 @@ std::string kind_to_str(const TokenKind& kind) {
     case TokenKind::Plus:            
       return "Plus_Operator";
     case TokenKind::DoubleEq:  
-      return "Equals_Assigment";
+      return "Equality_Operator";
+    case TokenKind::NotEq:  
+      return "Equality_Operator";
     case TokenKind::Eq: 
-      return "Equals_Statement";
+      return "Equals_Assignment";
     case TokenKind::Le:              
       return "Less_Then_Or_Equal_To";
     case TokenKind::Ge:              
@@ -68,7 +70,7 @@ std::string kind_to_str(const TokenKind& kind) {
   return "Foreign_Token";
 }
 
-void Token::token_to_str() const {
+void Token::out() const {
   std::cout << "Token {" << "\n"
             << "  " << "kind: TokenKind::" << kind_to_str(kind) << "," << "\n"
             << "  " << "value: \"" << value << "\"," << "\n"
@@ -77,9 +79,4 @@ void Token::token_to_str() const {
             << "    " << "column: " << pos.second << "\n"
             << "  " << "}" << "\n"
             << "}" << "\n";
-}
-
-void LazyTokenStream::advance_with_token(std::unique_ptr<Token> token) {
-  m_tokens.push_back(std::move(token)); 
-  m_current_token = std::make_unique<Token>();
 }

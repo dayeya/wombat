@@ -106,23 +106,30 @@ public:
     std::vector<Diagnostic> diagnostics;
 
     explicit Lexer(std::string native_path) 
-        : m_cursor(native_path) {}
+        : m_cursor(native_path), 
+          tok(std::make_unique<Token>()) {}
 
     bool open_and_populate_cursor();
+    
     LazyTokenStream lex_source();
 
 private:
+    SmartPtr<Token> tok;
     Cursor m_cursor;
 
-    inline char advance_cursor() { return m_cursor.advance_self(); }
+    inline char advance_cursor() { 
+        return m_cursor.advance_self(); 
+    }
 
-    void lex_eof(unique_ptr<Token>& token);
-    void lex_foreign(unique_ptr<Token>& token, char ch);
-    void lex_line_comment(unique_ptr<Token>& token);
+    bool ident_matches_kw(std::string& ident);
 
-    void lex_word(unique_ptr<Token>& token_stream);
-    void lex_literal(unique_ptr<Token>& token_stream);
-    void lex_symbol(unique_ptr<Token>& token_stream);
+    void lex_eof();
+    void lex_foreign(char ch);
+    void lex_line_comment();
+
+    void lex_word();
+    void lex_literal();
+    void lex_symbol();
     void next_token(LazyTokenStream& token_stream);
 
     void register_warning_diagnostic_pretty(
