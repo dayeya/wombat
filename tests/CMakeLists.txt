@@ -10,6 +10,8 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/tests/test_help.cpp
     ${PROJECT_SOURCE_DIR}/tests/expr_test.cpp
     ${PROJECT_SOURCE_DIR}/tests/ast_test.cpp
+    ${PROJECT_SOURCE_DIR}/tests/parse_test.cpp
+    ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/parser.cpp
 )
 
 target_link_libraries(

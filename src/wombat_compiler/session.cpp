@@ -44,9 +44,9 @@ void Session::validate_arg_span(Args arg_span) {
 }
 
 void Session::register_diagnostic_rendering(const Diagnostic& diag) {
-    auto rendering_scheme = (!diag.labels.empty()) ? &Renderer::render_pretty_print : &Renderer::render_short;
+    auto rendering_scheme = !diag.labels.empty() ? &Renderer::render_pretty_print : &Renderer::render_short;
 
-    Callback diagnostic_rendering_callback {
+    auto diagnostic_rendering_callback = Callback {
         CallbackId::DiagnosticRendering,
         std::bind_front(rendering_scheme, &renderer), diag
     };

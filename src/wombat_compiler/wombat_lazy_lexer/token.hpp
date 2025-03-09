@@ -125,7 +125,7 @@ struct Token {
     /**
      * @brief Checks if the token's kind matches the given kind.
      */
-    bool compare_kind(const TokenKind& cmp_kind) const {
+    bool compare_kind(TokenKind cmp_kind) const {
         return kind == cmp_kind;
     }
 
@@ -166,13 +166,17 @@ struct LazyTokenStream {
     std::vector<Token> m_tokens;
 
     //! index of the current token.
-    size_t cur = -1;
+    int cur = -1;
 
     //! State of the traversal.
     //! Used in [parser.hpp].
     TState state = TState::NotYet;
 
     LazyTokenStream() : m_tokens() {}
+
+    inline int self_size() const {
+        return static_cast<int>(m_tokens.size());
+    }
 
     inline bool reached_eof() const {
         return (
@@ -183,25 +187,20 @@ struct LazyTokenStream {
 
     //! Checks if the stream reached its end.
     inline bool has_next() const {
-        return (
-            !m_tokens.empty() &&
-            cur < m_tokens.size() &&
-            !reached_eof() &&
-            state != TState::Ended
-        );
+        return !m_tokens.empty() && cur < self_size() && !reached_eof();
     }
 
-    //! Pushes `token` into `m_tokens` while updating `m_current_token`.
+    //! Pushes `token` into `m_tokens`.
     void feed(const Token& token) {
         m_tokens.push_back(token);
     }
 
     //! Consumes a token from the stream.
-    Token eat_one_token() {
+    Option<Token> eat_one_token() {
         if(!has_next()) {
-            return Token();
+            return std::nullopt;
         } else {
-            return m_tokens.at(++cur);
+            return std::make_optional<Token>(m_tokens.at(++cur));
         }
     }
 };

@@ -1,4 +1,3 @@
-#include <iostream>
 #include "parser.hpp"
 
 bool Parser::ntok_for(int ntok, Closure<bool, Token&> condition) {
@@ -15,7 +14,5 @@ void Parser::eat() {
     if(!tok_cur.can_advance()) {
         return;
     }
-    return tok_cur.next();
+    tok_cur.next();
 }
-
-auto Parser::parse_expr() {}

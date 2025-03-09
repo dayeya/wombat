@@ -40,7 +40,6 @@ target_include_directories(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_callback
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_errors
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_lexer
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_files
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_cutil
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer

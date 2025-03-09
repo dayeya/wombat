@@ -18,10 +18,13 @@ struct TokenCursor {
     //! Total size of tokens inside 'stream'.
     size_t stream_size = 0;
 
-    explicit TokenCursor(SmartPtr<LazyTokenStream> s)
-        : stream(std::move(s)), stream_size(stream->m_tokens.size()), cur(nullptr), prev(nullptr) {}
+    explicit TokenCursor(LazyTokenStream s)
+        : stream(std::make_unique<LazyTokenStream>(s)), 
+          stream_size(stream->m_tokens.size()), 
+          cur(nullptr), 
+          prev(nullptr) {}
 
-    inline size_t pos() {
+    inline int pos() {
         return stream->cur;
     }
 
@@ -29,7 +32,12 @@ struct TokenCursor {
         if(cur) {
             prev = std::move(cur);
         }
-        cur = std::make_unique<Token>(stream->eat_one_token());
+        if(auto nxt = stream->eat_one_token(); nxt) {
+            cur = std::make_unique<Token>(nxt.value());
+        } else {
+            cur = nullptr;
+            stream->state = TState::Ended;
+        }
     }
 
     bool can_advance() {
@@ -42,8 +50,8 @@ public:
     TokenCursor tok_cur;
 
     explicit Parser(
-        LazyTokenStream stream
-    ) : tok_cur(std::make_unique<LazyTokenStream>(stream)) {};
+        const LazyTokenStream& stream
+    ) : tok_cur(std::move(stream)) {};
 
     //! The whole given token stream into an Ast.
     auto parse() -> AST;
