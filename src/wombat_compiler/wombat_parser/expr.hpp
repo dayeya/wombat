@@ -4,79 +4,93 @@
 #include <iostream>
 #include <optional>
 #include <expected>
+#include <cassert>
 
+#include "common.hpp"
 #include "token.hpp"
 
-enum class LogicalOp {
-    And,
-    Or, 
-    Not
+enum class LiteralKind {
+    // Literal representing integers. e.g '3'.
+    Int, 
+    // Literal representing floats. e.g '3.14'.
+    Float,
+    // Literal representing chars. e.g 'a'.
+    Char,
+    // Literal representing strings. e.g 'Hello, Wombat!'.
+    Str,
+    // Boolean
+    Bool
 };
 
-enum class BinOp {
-    Plus, 
-    Minus, 
-    Multi,
-    Division,
+enum class BinaryOperator {
+    // Addition
+    Add, 
+    // Subtraction
+    Sub,
+    // Multiplication
+    Mul, 
+    // Division
+    Div,
+    // Modulus
     Mod
 };
 
-enum class UnaryOp {
-    Inc, 
-    Dec,
-    LogicalNot
-};
-
 enum class ExprKind {
+    // A value expression maps to Expr::Value.
     Lit,
-    BinExpr,
-    UnExpr
+    // A binary expression maps to Expr::BinExpr.
+    Binary,
+    // A function call expression. Expr::FnCall
+    FnCall
 };
 
+LiteralKind specify_literal_kind(const TokenKind& kind); 
+BinaryOperator specify_bin_op(const TokenKind& kind);
 
-//! Context free grammar part of wombats `cfg`:
-//! 
-//! lit ::= number
-//!       | float
-//!       | char
-//!       | string -> could be boolean literal
-//!
-//! bin_op ::= '+' 
-//!          | '-' 
-//!          | '*' 
-//!          | '/' 
-//!          | '%'
-//!
-//! expr ::= lit
-//!        | "(" expr ")"
-//!        | expr + [bin_op | logical_op] + expr
-//! 
-//! Examples:
-//! 
-//! e1 = 1 + 2;
-//! e2 = (1 + 2) + 5;
-//!
+std::string lit_kind_to_str(const LiteralKind& kind);
+std::string bin_op_kind_to_str(const BinaryOperator& kind);
+
+// Base struct for expressions.
+struct BaseExpr {
+    ExprKind kind;
+
+    BaseExpr(ExprKind k) : kind(k) {}
+    virtual ~BaseExpr() = default;
+
+    
+    inline bool matches(ExprKind ek) const {
+        return kind == ek;
+    } 
+};
+
 struct Expr {
-    ExprKind expr_kind;
+    struct Value : public BaseExpr {
+        LiteralKind lit_kind;
+        std::string val;
+        Location loc = SINGULARITY;
 
-    Expr(ExprKind ek) : expr_kind(ek) {}
-};
+        explicit Value() : BaseExpr(ExprKind::Lit) {}
 
-//! @brief Wraps the value of Literal tokens with extended expr parsing api.
-//! 
-//! Examples:
-//!
-//!              BinExpr
-//!              ~~~~~
-//! let c: int = 4 + 4;
-//!              ^   ^
-//!              LitExpr
-//!
-struct LitExpr : public Expr {
-    SmartPtr<Token> tok;
+        explicit Value(const Token& t): BaseExpr(ExprKind::Lit) {
+            lit_kind = specify_literal_kind(t.kind);
+            val = t.value;
+            loc = t.loc;
+        }
+    };
 
-    LitExpr(SmartPtr<Token>& t)
-        : Expr(ExprKind::Lit), tok(std::move(t)) {}
+    struct BinExpr : public BaseExpr {
+        BinaryOperator op;
+        Ptr<BaseExpr> lhs;
+        Ptr<BaseExpr> rhs;
+
+        explicit BinExpr() : BaseExpr(ExprKind::Binary) {}
+
+        explicit BinExpr(
+            BinaryOperator op, 
+            Ptr<BaseExpr> lhs, 
+            Ptr<BaseExpr> rhs
+        ) : BaseExpr(ExprKind::Binary), op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    };
 };
 
 #endif // EXPR_HPP_
