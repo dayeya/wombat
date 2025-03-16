@@ -8,10 +8,10 @@ TEST(AstNodeTest, CreatesAnAstFromLitExpr) {
     auto t1 = build_token("3", TokenKind::LiteralNum);
     auto t2 = build_token("4", TokenKind::LiteralNum);
 
-    SmartPtr<ExprNode> left = std::make_unique<ExprNode>(LitExpr(t1));
-    SmartPtr<ExprNode> right = std::make_unique<ExprNode>(LitExpr(t2));
+    Ptr<ValueNode> left = std::make_unique<ValueNode>(Expr::Value(*t1));
+    Ptr<ValueNode> right = std::make_unique<ValueNode>(Expr::Value(*t2));
 
-    auto bin_op = BinOp::Plus;
+    auto bin_op = BinaryOperator::Add;
 
     auto ast_node = BinOpNode(
         bin_op,
@@ -23,8 +23,8 @@ TEST(AstNodeTest, CreatesAnAstFromLitExpr) {
     EXPECT_NE(ast_node.right, nullptr);
     EXPECT_EQ(ast_node.match(BinOp::Plus), true);
     
-    auto casted_left = dynamic_cast<ExprNode*>(ast_node.left.get());
-    auto casted_right = dynamic_cast<ExprNode*>(ast_node.right.get());
+    auto casted_left = dynamic_cast<ValueNode*>(ast_node.left.get());
+    auto casted_right = dynamic_cast<ValueNode*>(ast_node.right.get());
 
     ASSERT_NE(casted_left->expr_exists(), false);
     ASSERT_EQ(casted_left->match(ExprKind::Lit), true);
@@ -37,8 +37,8 @@ TEST(TraversalTest, TraversesAnAst) {
     auto t1 = build_token("3", TokenKind::LiteralNum);
     auto t2 = build_token("4", TokenKind::LiteralNum);
 
-    SmartPtr<ExprNode> left = std::make_unique<ExprNode>(LitExpr(t1));
-    SmartPtr<ExprNode> right = std::make_unique<ExprNode>(LitExpr(t2));
+    Ptr<ValueNode> left = std::make_unique<ValueNode>(Expr::Value(*t1));
+    Ptr<ValueNode> right = std::make_unique<ValueNode>(Expr::Value(*t2));
 
     auto bin_op = BinOp::Plus;
 

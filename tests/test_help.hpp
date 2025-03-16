@@ -3,6 +3,6 @@
 
 #include "token.hpp"
 
-SmartPtr<Token> build_token(std::string v, TokenKind k);
+Ptr<Token> build_token(std::string v, TokenKind k);
 
 #endif // TEST_HELP_HPP_

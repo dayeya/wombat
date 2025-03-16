@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.0)
 
-enable_testing() 
+enable_testing()
 
 find_package(GTest REQUIRED)
 include(GoogleTest)
@@ -14,6 +14,10 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser/parser.cpp
 )
 
+# Ensure wtests uses C++23 for std::expected
+set_property(TARGET wtests PROPERTY CXX_STANDARD 23)
+set_property(TARGET wtests PROPERTY CXX_STANDARD_REQUIRED ON)
+
 target_link_libraries(
     wtests 
     GTest::gtest 
@@ -25,7 +29,7 @@ target_include_directories(
     wtests
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_lazy_lexer
     PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_compiler/wombat_parser
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_runtime
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/wombat_common
     PRIVATE ${PROJECT_SOURCE_DIR}/tests
 )
 
