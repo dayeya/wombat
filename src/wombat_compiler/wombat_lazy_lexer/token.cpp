@@ -30,10 +30,16 @@ std::string kind_to_str(const TokenKind& kind) {
       return "Minus_Operator";
     case TokenKind::Plus:            
       return "Plus_Operator";
+    case TokenKind::Star:
+      return "Multiplication_Operator";
+    case TokenKind::Div:            
+      return "Division_Operator";
+    case TokenKind::Precent:            
+      return "Modulus_Operator";
     case TokenKind::DoubleEq:  
       return "Equality_Operator";
     case TokenKind::NotEq:  
-      return "Equality_Operator";
+      return "Not_Equality_Operator";
     case TokenKind::Eq: 
       return "Equals_Assignment";
     case TokenKind::Le:              
@@ -47,7 +53,7 @@ std::string kind_to_str(const TokenKind& kind) {
     case TokenKind::SemiColon:
       return "Semi_Colon";   
     case TokenKind::Comma:
-      return "Semi_Colon";   
+      return "Comma";   
     case TokenKind::Dot:
       return "Dot";   
     case TokenKind::LiteralNum:    
@@ -74,9 +80,9 @@ void Token::out() const {
   std::cout << "Token {" << "\n"
             << "  " << "kind: TokenKind::" << kind_to_str(kind) << "," << "\n"
             << "  " << "value: \"" << value << "\"," << "\n"
-            << "  " << "pos: {" << "\n"
-            << "    " << "line: " << pos.first << "\n"
-            << "    " << "column: " << pos.second << "\n"
+            << "  " << "loc: {" << "\n"
+            << "    " << "line: " << loc.line << "\n"
+            << "    " << "column: " << loc.col << "\n"
             << "  " << "}" << "\n"
             << "}" << "\n";
 }

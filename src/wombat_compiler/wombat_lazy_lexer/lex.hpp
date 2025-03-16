@@ -15,23 +15,24 @@
 
 namespace fs = std::filesystem;
 
-struct Cursor {
+struct SourceCursor {
     std::string file_name;
     std::vector<std::string> source;
+    Location cur_loc = SINGULARITY;
     char current = 0;
-    int current_line = 0;
-    int current_col = 0;
     int total_lines = 0;
     bool eof = false;
 
-    explicit Cursor(std::string filename) 
+    explicit SourceCursor(std::string filename) 
         : file_name(std::move(filename)), source() {}
 
+    // Advances the cursor, using pre-increments.
+    // This is makes peeking easier just by using [cur_loc.col] instead of incrementing once again.
     char advance_self() {
-        if (current_col == source[current_line].size()) {
-            if (current_line + 1 < total_lines) {
-                current_line++;
-                current_col = 0;
+        if (cur_loc.col == source[cur_loc.line].size()) {
+            if (cur_loc.line + 1 < total_lines) {
+                cur_loc.line++;
+                cur_loc.col = 0;
                 current = '\n';
                 return current;
             } else {
@@ -39,26 +40,26 @@ struct Cursor {
                 return '\0';
             }
         } else {
-            current = source[current_line][current_col++];
+            current = source[cur_loc.line][cur_loc.col++];
             return current;
         }
     }
 
-    //! Peeks the next character safely.
+    // Peeks the next character safely.
     char peek_next() {
-        if (current_col < source[current_line].size()) {
-            return source[current_line][current_col];
+        if (cur_loc.col < source[cur_loc.line].size()) {
+            return source[cur_loc.line][cur_loc.col];
         }
         
-        if (current_line + 1 < total_lines && !source[current_line + 1].empty()) {
-            return source[current_line + 1][0];
+        if (cur_loc.line + 1 < total_lines && !source[cur_loc.line + 1].empty()) {
+            return source[cur_loc.line + 1][0];
         }
         return '\0';
     }
 
     void skip_whitespace() {
         while (
-            !reached_eof() && 
+            !reached_eof() &&
             std::isspace(static_cast<unsigned char>(peek_next()))
         ) {
             advance_self();
@@ -76,7 +77,7 @@ struct Cursor {
     std::vector<std::string> one_lined_region(int line = -1) {
         std::vector<std::string> region(1, "");
 
-        int target_line = (line == -1) ? current_line : line;
+        int target_line = (line == -1) ? cur_loc.line : line;
 
         if (target_line >= 0 && target_line < total_lines) {
             region[0] = source[target_line];
@@ -95,8 +96,8 @@ struct Cursor {
     }
 
     //! Returns the human-readable (1-based) line number.
-    int humanized_current_line() const {
-        return current_line + 1;
+    int humanized() const {
+        return cur_loc.line + 1;
     }
 };
 
@@ -109,19 +110,24 @@ public:
         : m_cursor(native_path), 
           tok(std::make_unique<Token>()) {}
 
+    SourceCursor& get_cursor() {
+        return m_cursor;
+    }    
+
     bool open_and_populate_cursor();
     
     LazyTokenStream lex_source();
 
 private:
-    SmartPtr<Token> tok;
-    Cursor m_cursor;
+    Ptr<Token> tok;
+    SourceCursor m_cursor;
 
     inline char advance_cursor() { 
         return m_cursor.advance_self(); 
     }
 
     bool ident_matches_kw(std::string& ident);
+    bool ident_matches_boolean(std::string& ident);
 
     void lex_eof();
     void lex_foreign(char ch);
@@ -137,13 +143,9 @@ private:
         std::string hint,
         std::vector<Label> labels
     ) {
-        diagnostics.emplace_back(Diagnostic(
-            Level::Warning, 
-            Phase::Lexer, 
-            message, 
-            hint, 
-            labels
-        ));
+        diagnostics.emplace_back(
+            Diagnostic(Level::Warning, Phase::Lexer, message, hint, labels)
+        );
     }
 
     void register_critical_diagnostic_pretty(
@@ -151,33 +153,21 @@ private:
         std::string hint,
         std::vector<Label> labels
     ) {
-        diagnostics.emplace_back(Diagnostic(
-            Level::Critical, 
-            Phase::Lexer, 
-            message, 
-            hint, 
-            labels
-        ));
+        diagnostics.emplace_back(
+            Diagnostic(Level::Critical, Phase::Lexer, message, hint, labels)
+        );
     }
 
     void register_critical_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(Diagnostic(
-            Level::Critical, 
-            Phase::Lexer, 
-            message, 
-            hint, 
-            {}
-        ));
+        diagnostics.emplace_back(
+            Diagnostic(Level::Critical, Phase::Lexer, message, hint, {})
+        );
     }
       
     void register_warning_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(Diagnostic(
-            Level::Warning, 
-            Phase::Lexer, 
-            message, 
-            hint, 
-            {}
-        ));
+        diagnostics.emplace_back(
+            Diagnostic(Level::Warning, Phase::Lexer, message, hint, {})
+        );
     }
 };
 

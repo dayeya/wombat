@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 
 #include "wtypes.hpp"
 
@@ -14,8 +15,9 @@ enum class TokenKind {
     //!
     //! Literals
     LiteralNum,
-    LiteralString,
+    LiteralFloat,
     LiteralChar,
+    LiteralString,
     LiteralBoolean, 
     //!
     //! Identifier can be either of two options: user-defined or keyword.
@@ -37,7 +39,7 @@ enum class TokenKind {
     //! Wombat proposes the following:
     //! 
     //! let x: int = 8; 
-    //! let p_x: ref<int> = address! { x };
+    //! let p_x: ref<int> = mem! x;
     //!
     Readable,
 
@@ -58,13 +60,16 @@ enum class TokenKind {
 
     Whitespace,         // Sequence of non-meaningful characters like spaces or tabs
 
-    ReturnSymbol,       // Return type indicator for functions, '->'
     Plus,               // Arithmetic addition symbol,          '+'
     Minus,              // Arithmetic subtraction symbol,       '-'
+    Star,               // Arithmetic multiplication symbol,    '*'
+    Div,                // Arithmetic division symbol,          '/'
+    Precent,            // Arithmetic modulu-op symbol,         '%'
     Lt,                 // Less than symbol,                    '<'
     Gt,                 // Greater than symbol,                 '>'
+    ReturnSymbol,       // Return type indicator for functions, '->'
     DoubleEq,           // Equality operator,                   '=='
-    NotEq,           // Equality operator,                   '!='
+    NotEq,              // Equality operator,                   '!='
     Eq,                 // Assignment operator,                 '='
     Le,                 // Less than or equal to operator,      '<='
     Ge,                 // Greater than or equal to operator,   '>='
@@ -75,19 +80,23 @@ enum class TokenKind {
     None                // Indicator for an empty token
 };
 
-//! Token stream state.
-enum class TState {
-    NotYet,
-    Traversing,
-    Ended
-};
-
 /**
  * @brief Converts a TokenKind to its string representation.
  * @param kind The token kind.
  * @return The corresponding string.
  */
 std::string kind_to_str(const TokenKind& kind);
+
+struct Location {
+    int line;
+    int col;
+
+    Location(int l, int c) 
+        : line(l), col(c) {}
+};
+
+// A singularity point, represents the start position of any file.
+const Location SINGULARITY = Location(0, 0);
 
 /**
  * @struct Token
@@ -96,65 +105,72 @@ std::string kind_to_str(const TokenKind& kind);
 struct Token {
     TokenKind kind;
     std::string value;
-    std::pair<int, int> pos; // [line, col] - start of the token.
+    Location loc;
 
     Token()
-        : kind(TokenKind::None), value(""), pos{-1, -1} {}
+        : kind{TokenKind::None}, value{""}, loc{SINGULARITY} {}
 
-    Token(TokenKind k, std::string v, std::pair<int, int> p)
-        : kind(k), value(std::move(v)), pos(p) {}
+    Token(TokenKind k, std::string v, int l, int c)
+        : kind{k}, value{std::move(v)}, loc(l, c) {}
 
+    // Pretty-prints the token to 'stdout'.
     void out() const;
 
-    /**
-     * @brief Resets the token to an empty state.
-     */
+    // Resets the token to an empty state.
     void clean() {
         value.clear();
         kind = TokenKind::None;
-        pos = {-1, -1};
+        loc = SINGULARITY;
     }
 
-    /**
-     * @brief Appends a character to the token's value.
-     */
+    // Appends a character to the token's value.
     void extend(char ch) {
         value += ch;
     }
 
-    /**
-     * @brief Checks if the token's kind matches the given kind.
-     */
-    bool compare_kind(TokenKind cmp_kind) const {
-        return kind == cmp_kind;
+    // Compares kind to another 'TokenKind'. 
+    bool match(TokenKind k) const {
+        return kind == k;
     }
 
-    /**
-     * @brief Sets the token's properties.
-     */
-    void fill_with(std::string v, TokenKind k, int line = -1, int col = -1) {
+    // Matches every kinds in 'kinds' with the inner kind.
+    template<typename... Kind>
+    bool matches_any(Kind... kinds) const {
+        std::vector<TokenKind> vk = {kinds...};
+        return std::find(vk.begin(), vk.end(), kind) != vk.end();
+    }
+
+    void fill_with(
+        std::string v, 
+        TokenKind k, 
+        int line = -1, 
+        int col = -1
+    ) {
         value = std::move(v);
         kind = k;
-        pos = {line, col};
+        loc.line = line;
+        loc.col = col;
     }
 
     void set_value(std::string&& v) {
         value = std::move(v);
     }
 
-    /**
-     * @brief Sets the token's kind.
-     */
     void set_kind(TokenKind k) {
         kind = k;
     }
 
-    /**
-     * @brief Sets the token's position.
-     */
-    void set_pos(int line, int col) {
-        pos = {line, col};
+    void set_loc(int line, int col) {
+        loc.line = line;
+        loc.col = col;
     }
+};
+
+//! Token stream state.
+enum class TState {
+    NotYet,
+    Traversing,
+    Ended
 };
 
 /**
@@ -174,33 +190,43 @@ struct LazyTokenStream {
 
     LazyTokenStream() : m_tokens() {}
 
+    void reset() {
+        cur = -1;
+    }
+
     inline int self_size() const {
         return static_cast<int>(m_tokens.size());
     }
 
-    inline bool reached_eof() const {
+    inline bool reached_eof(int k) const {
+        // means we want to check the first token. 
+        if (k == -1) {
+            k++;
+        }
         return (
             !m_tokens.empty() &&
-            m_tokens.back().compare_kind(TokenKind::Eof)
+            m_tokens.at(k).match(TokenKind::Eof)
         );
     }
 
-    //! Checks if the stream reached its end.
+    // Checks if the stream reached its end.
     inline bool has_next() const {
-        return !m_tokens.empty() && cur < self_size() && !reached_eof();
+        return !reached_eof(cur);
     }
 
-    //! Pushes `token` into `m_tokens`.
+    // Pushes `token` into `m_tokens`.
     void feed(const Token& token) {
+        cur++;
         m_tokens.push_back(token);
     }
 
-    //! Consumes a token from the stream.
+    // Consumes a token from the stream.
     Option<Token> eat_one_token() {
         if(!has_next()) {
             return std::nullopt;
         } else {
-            return std::make_optional<Token>(m_tokens.at(++cur));
+            if(cur == -1) cur++;
+            return std::make_optional<Token>(m_tokens.at(cur++));
         }
     }
 };

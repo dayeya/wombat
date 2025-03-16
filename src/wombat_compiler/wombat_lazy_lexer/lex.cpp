@@ -13,35 +13,32 @@
 
 bool Lexer::ident_matches_kw(std::string& ident) {
   return (
-    ident == "func"   ||
+    ident == "fn"     ||
     ident == "endf"   ||
     ident == "let"    ||
     ident == "if"     ||
     ident == "else"   ||
-    ident == "return" ||
-
-    ident == "int"    ||
-    ident == "float"  ||
-    ident == "ch"     ||
-    ident == "String" ||
-    ident == "ref"
+    ident == "return"
   );
+}
+
+bool Lexer::ident_matches_boolean(std::string& ident) {
+  return ident == "true" || ident == "false";
 }
 
 void Lexer::lex_eof() {
   tok->kind = TokenKind::Eof;
-  tok->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
 }
 
 void Lexer::lex_foreign(char ch) {
   tok->extend(ch);
   tok->kind = TokenKind::Foreign;
-  tok->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
 }
 
 void Lexer::lex_line_comment() {
-  //! Eat double forward slash.
-  advance_cursor();
+  //! Eat hashtag.
   advance_cursor();
 
   //! Until we reached end of line we stop.
@@ -51,7 +48,7 @@ void Lexer::lex_line_comment() {
 }
 
 void Lexer::lex_word() {
-  tok->set_pos(m_cursor.current_line, m_cursor.current_col);
+  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
   tok->extend(m_cursor.current);  
 
   while(
@@ -68,7 +65,9 @@ void Lexer::lex_word() {
     return;
   }
 
-  if(ident_matches_kw(tok->value)) {
+  if(ident_matches_boolean(tok->value)) {
+    tok->kind = TokenKind::LiteralBoolean;
+  } else if(ident_matches_kw(tok->value)) {
     tok->kind = TokenKind::Keyword;
   } else {
     tok->kind = TokenKind::Identifier;
@@ -76,7 +75,7 @@ void Lexer::lex_word() {
 }
 
 void Lexer::lex_symbol() {
-  tok->set_pos(m_cursor.current_line, m_cursor.current_col);
+  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
 
   switch (m_cursor.current) {
     case '(': tok->fill_with("(", TokenKind::OpenParen);    break;
@@ -182,8 +181,8 @@ void Lexer::lex_literal() {
 
               auto region = Region {
                 m_cursor.file_name,
-                m_cursor.current_line,
-                m_cursor.current_col,
+                m_cursor.cur_loc.line,
+                m_cursor.cur_loc.col,
                 m_cursor.one_lined_region(),
               };
 
@@ -212,9 +211,9 @@ void Lexer::lex_literal() {
 
     auto region = Region {
       m_cursor.file_name,
-      m_cursor.current_line,
-      tok->pos.second,
-      m_cursor.one_lined_region(tok->pos.first),
+      m_cursor.cur_loc.line,
+      tok->loc.col,
+      m_cursor.one_lined_region(tok->loc.line),
     };
 
     std::vector<Label> labels{Label{
@@ -244,12 +243,12 @@ void Lexer::lex_literal() {
     } else {
       auto region = Region {
         m_cursor.file_name,
-        m_cursor.current_line,
-        tok->pos.second,
-        m_cursor.one_lined_region(tok->pos.first),
+        m_cursor.cur_loc.line,
+        tok->loc.col,
+        m_cursor.one_lined_region(tok->loc.line),
       };
       
-      std::vector<Label> labels{
+      std::vector<Label> labels {
         Label{"", std::vector<Region>{region}}
       }; 
 
@@ -257,7 +256,7 @@ void Lexer::lex_literal() {
     }
   };
 
-  tok->pos = std::make_pair(m_cursor.current_line, m_cursor.current_col);
+  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
 
   //! If m_cursor.current is not a opening [string/char] literal is it necessarily a digit. 
   if (m_cursor.current == '"')  lex_string_literal();
@@ -273,10 +272,7 @@ void Lexer::next_token(LazyTokenStream& token_stream) {
 
   if(m_cursor.reached_new_line()) return;
 
-  if(
-    m_cursor.current == '/' && 
-    m_cursor.peek_next() == '/'
-  ) {
+  if(m_cursor.current == '#') {
     lex_line_comment();
     return;
   }
@@ -336,7 +332,7 @@ auto Lexer::lex_source() -> LazyTokenStream {
 
   do {
     next_token(token_stream);
-  } while(!token_stream.reached_eof());
+  } while(token_stream.has_next());
 
   return token_stream;
 }
