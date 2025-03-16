@@ -26,6 +26,8 @@ BinaryOperator specify_bin_op(const TokenKind& kind) {
         case TokenKind::Star: 
             return BinaryOperator::Mul;
         case TokenKind::Div: 
+            return BinaryOperator::Div;
+        case TokenKind::Precent:
             return BinaryOperator::Mod;
         default:
             WOMBAT_ASSERT(false, "undefined token for conversion");
@@ -59,7 +61,7 @@ std::string bin_op_kind_to_str(const BinaryOperator& kind) {
             return "Multiplication";
         case BinaryOperator::Div:  
             return "Division";
-        case BinaryOperator::Mod:       
+        case BinaryOperator::Mod:    
             return "Modulus";
         default:
             WOMBAT_ASSERT(false, "undefined binary operator kind");

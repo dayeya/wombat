@@ -89,11 +89,14 @@ void Lexer::lex_symbol() {
     case ',': tok->fill_with(",", TokenKind::Comma);        break;
     case '.': tok->fill_with(".", TokenKind::Dot);          break;
     case '+': tok->fill_with("+", TokenKind::Plus);         break;
+    case '*': tok->fill_with("*", TokenKind::Star);         break;
+    case '/': tok->fill_with("/", TokenKind::Div);          break;
+    case '%': tok->fill_with("%", TokenKind::Precent);      break;
     default: break;
   }
 
   //! If token was assigned with a value in the above switch statement, we exit.
-  if(tok->kind != TokenKind::None) {
+  if(!tok->match(TokenKind::None)) {
     return;
   }
 
