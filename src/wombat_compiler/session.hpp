@@ -4,14 +4,41 @@
 #include <iostream>
 #include <expected>
 #include <queue>
+#include <variant>
 #include <functional>
 
 #include "args.hpp"
-#include "io_file.hpp"
 #include "lex.hpp"
 #include "token.hpp"
 #include "diagnostic.hpp"
 #include "callback.hpp"
+
+namespace fs = std::filesystem;
+
+struct SessFile {
+    fs::path file;
+    fs::perms file_perms;
+
+    SessFile() = default;
+    SessFile(std::string path) : file(path), file_perms(fs::perms::none) {};
+
+    inline std::string as_str() { 
+        return file.native(); 
+    }
+    
+    auto can_read() -> bool;
+    auto can_write() -> bool;
+
+    auto validate(
+        const std::string& extension, 
+        bool for_read, 
+        bool for_write
+    ) -> Result<std::monostate, Diagnostic>;
+};
+
+//! Aliasing types for cleaner code.
+using InputFile = SessFile;
+using OutputFile = SessFile;
 
 struct SessionCallbacks {
     std::queue<Callback> q;
@@ -66,8 +93,8 @@ public:
 };
 
 void init_build_session(
-    SmartPtr<Session> sess, 
-    std::function<State(SmartPtr<Session>&)> behavior
+    Ptr<Session> sess, 
+    Closure<State, Ptr<Session>&> behavior
 );
 
 #endif // SESSION_HPP_
