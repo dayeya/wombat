@@ -42,7 +42,7 @@ void Interface::run(int argc, char** argv) {
         return;
     }
 
-    init_build_session(std::move(current_session), [](unique_ptr<Session>& sess) -> State {
+    init_build_session(std::move(current_session), [](Ptr<Session>& sess) -> State {
         sess->c_state = State::Running;
 
         auto lexer = Lexer(sess->source.as_str());
@@ -53,13 +53,16 @@ void Interface::run(int argc, char** argv) {
                 sess->register_diagnostic_rendering(diag);
             }
             return State::Stopped;
-        } else {
-            for(const auto& tok : lazy_token_stream.m_tokens) {
-                tok.out();
-            }
         }
 
-        // auto parser = Parser(lazy_token_stream);
+        lazy_token_stream.reset();
+
+        Parser parser(lexer.get_cursor(), lazy_token_stream);
+        AST ast = parser.parse();
+
+        PrettyPrintVisitor pp_visitor;
+
+        ast.traverse(pp_visitor);
 
         return State::Completed;
     });
