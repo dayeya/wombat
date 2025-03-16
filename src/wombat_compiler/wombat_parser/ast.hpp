@@ -92,7 +92,7 @@ public:
 
         out << top_level_ident << "BinaryNode: " << "\n"
             << children_level_ident << "op: " << bin_op_kind_to_str(op) << "\n"
-            << children_level_ident << "left: " << "\n" << left->pretty_print(ident + 2) << "\n"
+            << children_level_ident << "left: " << "\n" << left->pretty_print(ident + 2)
             << children_level_ident << "right: " << "\n" << right->pretty_print(ident + 2);
     
         return out.str();

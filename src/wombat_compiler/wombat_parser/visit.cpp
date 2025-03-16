@@ -4,9 +4,9 @@
 #include <iostream>
 
 void PrettyPrintVisitor::visit(ValueNode& vn) {
-    std::cout << vn.pretty_print(0) << std::endl;
+    std::cout << vn.pretty_print(0);
 }
 
 void PrettyPrintVisitor::visit(BinOpNode& bn) {
-    std::cout << bn.pretty_print(0) << std::endl;
+    std::cout << bn.pretty_print(0);
 }

@@ -7,4 +7,4 @@ BUILD_DIR="../build"
 
 cd $BUILD_DIR
 
-$EXEC --build ../examples/main.wo
+$EXEC --build ../examples/test.wo

@@ -9,32 +9,6 @@
 #include "common.hpp"
 #include "token.hpp"
 
-enum class LiteralKind {
-    // Literal representing integers. e.g '3'.
-    Int, 
-    // Literal representing floats. e.g '3.14'.
-    Float,
-    // Literal representing chars. e.g 'a'.
-    Char,
-    // Literal representing strings. e.g 'Hello, Wombat!'.
-    Str,
-    // Boolean
-    Bool
-};
-
-enum class BinaryOperator {
-    // Addition
-    Add, 
-    // Subtraction
-    Sub,
-    // Multiplication
-    Mul, 
-    // Division
-    Div,
-    // Modulus
-    Mod
-};
-
 enum class ExprKind {
     // A value expression maps to Expr::Value.
     Lit,
@@ -44,7 +18,7 @@ enum class ExprKind {
     FnCall
 };
 
-LiteralKind specify_literal_kind(const TokenKind& kind); 
+LiteralKind specify_literal_kind(const TokenKind& kind);
 BinaryOperator specify_bin_op(const TokenKind& kind);
 
 std::string lit_kind_to_str(const LiteralKind& kind);
