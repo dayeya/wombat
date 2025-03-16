@@ -1,0 +1,11 @@
+from std.readables import {
+    write,
+    formatter
+}
+
+fn main() -> free
+    loop with i: int = 0 {
+        if i >= 10 stop;
+        write! formatter("{}, this is wombat-lang", i + 1);
+    }
+end

@@ -1,0 +1,25 @@
+from std.readables import {
+    write,
+    terminate
+}
+from std import String
+from std.err import MaybeErr
+from std.net import {
+    Socket,
+    SockError
+}
+
+fn connectTo(ip: String, port: int) -> MaybeErr<SockError>
+    mark! "NOT IMPLEMENTED";
+end
+
+fn startClient(sock: ref<Socket>) -> free
+    mark! "NOT IMPLEMENTED!;
+end
+
+fn main() -> free
+    match connectTo("127.0.0.1", 50000) with
+    | Some(_) => startClient(mem! sock);
+    | SockError.NotAlive => terminate! "ERROR: 127.0.0.1:50000 is not alive";
+    end
+end

@@ -1,6 +1,1 @@
-from std import write
-
-fn main() -> free
-    let x: int = 5;
-    write! x;
-end
+1 + 2 + 3 + 4 + 5
