@@ -80,6 +80,55 @@ enum class TokenKind {
     None                // Indicator for an empty token
 };
 
+enum class Keyword {
+    // 'fn' denotes either function declaration, implementation or a function pointer via ref<fn ...>
+    Fn, 
+    // 'return' denotes the return value of a function.
+    Return,
+    // 'end' denotes an end of a scope, either with function bodies or match blocks.
+    End,
+    // 'let' statement, denotes a declaration of an identifier.
+    Let,
+    // flow-control - if, else.
+    // 'if' denotes an if block, 'else' denotes an else block. 
+    // note: scopes are denoted by curly braces as opposed to function and match blocks.
+    If, 
+    Else,
+    // flow-control - loops.
+    // 'loop' denotes a block using curly braces that will repeat itself.
+    // 'stop' - breaks out of a loop.
+    // 'with' - introduces a unique resource that bounds only to the scope of the loop.
+    Loop,
+    Stop,
+    With
+};
+
+enum class LiteralKind {
+    // Literal representing integers. e.g '3'.
+    Int, 
+    // Literal representing floats. e.g '3.14'.
+    Float,
+    // Literal representing chars. e.g 'a'.
+    Char,
+    // Literal representing strings. e.g 'Hello, Wombat!'.
+    Str,
+    // Boolean
+    Bool
+};
+
+enum class BinaryOperator {
+    // Addition
+    Add, 
+    // Subtraction
+    Sub,
+    // Multiplication
+    Mul, 
+    // Division
+    Div,
+    // Modulus
+    Mod
+};
+
 /**
  * @brief Converts a TokenKind to its string representation.
  * @param kind The token kind.

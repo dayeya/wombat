@@ -14,10 +14,11 @@
 bool Lexer::ident_matches_kw(std::string& ident) {
   return (
     ident == "fn"     ||
-    ident == "endf"   ||
+    ident == "end"    ||
     ident == "let"    ||
     ident == "if"     ||
     ident == "else"   ||
+    ident == "loop"   ||
     ident == "return"
   );
 }

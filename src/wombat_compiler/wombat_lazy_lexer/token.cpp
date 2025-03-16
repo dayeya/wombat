@@ -2,9 +2,9 @@
 
 #include "token.hpp"
 
-std::string kind_to_str(const TokenKind& kind) {
+constexpr std::string kind_to_str(const TokenKind& kind) {
   switch (kind) {
-    case TokenKind::OpenParen:       
+    case TokenKind::OpenParen:
       return "Open_Paren";
     case TokenKind::CloseParen:      
       return "Close_Paren";
@@ -72,8 +72,9 @@ std::string kind_to_str(const TokenKind& kind) {
       return "Whitespace";
     case TokenKind::LineComment:
       return "Single_Line_Comment";
+    default:
+      return "Foreign_Token";
   }
-  return "Foreign_Token";
 }
 
 void Token::out() const {
