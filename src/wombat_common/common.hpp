@@ -15,7 +15,7 @@ namespace Wombat {
         std::cerr << "at " 
                   << loc.file_name() << ":"  
                   << loc.line()      << ":"
-                  << loc.column()    << ":"
+                  << loc.column()    << ": "
                   << msg << "\n";
         exit(1);
     }

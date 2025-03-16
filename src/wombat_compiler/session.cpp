@@ -112,7 +112,7 @@ void Session::validate_arg_span(Args arg_span) {
         }
     } else if(arg_span.is_present(AvailOpt::OutFile)) {
         auto supposed_out_path = arg_span.get_option_value(AvailOpt::OutFile);
-        OutputFile ofl(supposed_out_path);
+        SessOutFile ofl(supposed_out_path);
 
         if(auto res = ofl.validate(".o", false, true); !res) {
             register_diagnostic_rendering(res.error());

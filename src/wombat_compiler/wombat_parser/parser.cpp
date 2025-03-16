@@ -3,6 +3,19 @@
 auto Parser::parse_primary() -> Ptr<BaseExpr> {
     auto cur = cur_tok();
 
+    if(cur.match(TokenKind::OpenParen)) {
+        // Eat the open paren.
+        eat();
+        auto expr = parse_expr();
+        if(cur_tok().match(TokenKind::CloseParen)) {
+            // Eat the open paren.
+            eat();
+            return expr;
+        } else {
+            WOMBAT_ASSERT(false, "EXPECTED CLOSING PAREN");
+        }
+    }
+
     if(cur.matches_any(
         TokenKind::LiteralNum, 
         TokenKind::LiteralChar, 

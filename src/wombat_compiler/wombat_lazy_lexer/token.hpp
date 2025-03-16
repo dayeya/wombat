@@ -134,7 +134,7 @@ enum class BinaryOperator {
  * @param kind The token kind.
  * @return The corresponding string.
  */
-std::string kind_to_str(const TokenKind& kind);
+constexpr std::string kind_to_str(const TokenKind& kind);
 
 struct Location {
     int line;
