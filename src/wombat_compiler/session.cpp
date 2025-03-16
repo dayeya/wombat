@@ -95,7 +95,7 @@ bool Session::caught_early_diagnostics() {
 
 void Session::validate_arg_span(Args arg_span) {
     if(arg_span.is_present(AvailOpt::Build)) {
-        InputFile ifl(arg_span.get_option_value(AvailOpt::Build));
+        SessInFile ifl(arg_span.get_option_value(AvailOpt::Build));
         
         if(auto res = ifl.validate(".wo", true, false); !res) {
             register_diagnostic_rendering(res.error());
@@ -103,7 +103,7 @@ void Session::validate_arg_span(Args arg_span) {
             source = std::move(ifl);
         }
     } else if(arg_span.is_present(AvailOpt::Run)) {
-        InputFile ifl(arg_span.get_option_value(AvailOpt::Run));
+        SessInFile ifl(arg_span.get_option_value(AvailOpt::Run));
 
         if(auto res = ifl.validate(".wo", true, false); !res) {
             register_diagnostic_rendering(res.error());

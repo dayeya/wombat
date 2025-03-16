@@ -37,8 +37,8 @@ struct SessFile {
 };
 
 //! Aliasing types for cleaner code.
-using InputFile = SessFile;
-using OutputFile = SessFile;
+using SessInFile = SessFile;
+using SessOutFile = SessFile;
 
 struct SessionCallbacks {
     std::queue<Callback> q;
@@ -69,12 +69,14 @@ enum class State {
 class Session {
 public:
     Renderer renderer;
-    InputFile source;
-    OutputFile executable;
+    SessInFile source;
+    SessOutFile executable;
     SessionCallbacks session_callbacks;
 
     State c_state;
     Phase c_phase;
+
+    static constexpr int DIAGNOSTIC_CAPACITY = 10;
 
     Session()
         : renderer(), 
