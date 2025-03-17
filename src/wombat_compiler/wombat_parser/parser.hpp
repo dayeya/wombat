@@ -138,9 +138,12 @@ private:
             TokenKind::Plus, 
             TokenKind::Minus, 
             TokenKind::Star, 
-            TokenKind::Div
+            TokenKind::Div,
+            TokenKind::Precent
         );
     }
+
+    void eat_and_expect(Closure<bool, Token&> condition, std::string expect);
 
     // Returns a reference to the previous token. 
     inline Token& prev_tok() { 

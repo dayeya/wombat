@@ -1,5 +1,11 @@
 #include "parser.hpp"
 
+void Parser::eat_and_expect(Closure<bool, Token&> condition, std::string expect) {
+    eat();
+    if(condition(cur_tok())) return;
+    WOMBAT_ASSERT(false, expect);
+}
+
 auto Parser::parse_primary() -> Ptr<BaseExpr> {
     auto cur = cur_tok();
 
@@ -57,11 +63,11 @@ auto Parser::convert_expr_to_ast_node(Ptr<BaseExpr>& expr_ref) -> Ptr<AstNode> {
 
     switch(expr_ref->kind) {
         case ExprKind::Lit: {
-            auto* val_expr = dynamic_cast<Expr::Value*>(expr_ref.get()); 
+            auto* val_expr = dynamic_cast<RawPtr<Expr::Value>>(expr_ref.get()); 
             return mk_ptr<ValueNode>(ValueNode(*val_expr));
         }
         case ExprKind::Binary: {
-            auto* bin_expr = dynamic_cast<Expr::BinExpr*>(expr_ref.get());
+            auto* bin_expr = dynamic_cast<RawPtr<Expr::BinExpr>>(expr_ref.get());
             auto lhs = convert_expr_to_ast_node(bin_expr->lhs);
             auto rhs = convert_expr_to_ast_node(bin_expr->rhs);
             return mk_ptr<BinOpNode>(

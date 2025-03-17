@@ -12,6 +12,9 @@ using Closure = std::function<Ret(Args...)>;
 template<typename T>
 using Ptr = std::unique_ptr<T>;
 
+template<typename T>
+using RawPtr = T*;
+
 template<typename T> 
 Ptr<T> mk_ptr(T&& v) {
     return std::make_unique<T>(std::forward<T>(v));
