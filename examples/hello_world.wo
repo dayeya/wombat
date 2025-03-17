@@ -1,6 +1,4 @@
-from std.readables import {
-    write
-}
+import std
 
 fn main() -> free
     write! "Hello, World!";

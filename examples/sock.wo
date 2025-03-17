@@ -1,8 +1,4 @@
-from std.readables import {
-    write,
-    terminate
-}
-from std import String
+import std
 from std.err import MaybeErr
 from std.net import {
     Socket,
