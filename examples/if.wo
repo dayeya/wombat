@@ -1,0 +1,13 @@
+import std
+
+fn main() -> free
+    let mut seed: int = std.rand.seed();
+
+    if not seed {
+        terminate! "Could not generate seed";
+    }
+
+    seed = 7 + seed * (seed % (-2));
+
+    write! "{}", std.rand.from_seed(seed);
+end
