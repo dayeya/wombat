@@ -1,69 +1,47 @@
 #include "expr.hpp"
 
-LiteralKind specify_literal_kind(const TokenKind& kind) {
-    switch(kind) {
-        case TokenKind::LiteralNum: 
-            return LiteralKind::Int;
-        case TokenKind::LiteralFloat: 
-            return LiteralKind::Float;
-        case TokenKind::LiteralChar: 
-            return LiteralKind::Char;
-        case TokenKind::LiteralString: 
-            return LiteralKind::Str;
-        case TokenKind::LiteralBoolean: 
-            return LiteralKind::Bool;
+using Expr::Precedence;
+using Expr::Associativity;
+
+Option<Precedence> Expr::prec_from_bin_op(const BinOpKind& bin_op) {
+    switch (bin_op) {
+        case BinOpKind::Add:        return Precedence::Sum;
+        case BinOpKind::Sub:        return Precedence::Sum;
+        case BinOpKind::Mul:        return Precedence::Product;
+        case BinOpKind::Div:        return Precedence::Product;
+        case BinOpKind::FlooredDiv: return Precedence::Product;
+        case BinOpKind::Mod:        return Precedence::Product;
+        case BinOpKind::Pow:        return Precedence::Product;
+        case BinOpKind::BitAnd:     return Precedence::BitAnd;
+        case BinOpKind::BitOr:      return Precedence::BitOr;
+        case BinOpKind::BitXor:     return Precedence::BitXor;
+        case BinOpKind::Shl:        return Precedence::Shift;
+        case BinOpKind::Shr:        return Precedence::Shift;
+        case BinOpKind::Lt:         return Precedence::Compare;
+        case BinOpKind::Gt:         return Precedence::Compare;
+        case BinOpKind::Le:         return Precedence::Compare;
+        case BinOpKind::Ge:         return Precedence::Compare;
+        case BinOpKind::Eq:         return Precedence::Compare;
+        case BinOpKind::NotEq:      return Precedence::Compare;
+        case BinOpKind::And:        return Precedence::LogicalAnd;
+        case BinOpKind::Or:         return Precedence::LogicalOr;
         default:
-            WOMBAT_ASSERT(false, "undefined token for conversion");
+            return std::nullopt;
     }
 }
 
-BinaryOperator specify_bin_op(const TokenKind& kind) {
-    switch(kind) {
-        case TokenKind::Plus: 
-            return BinaryOperator::Add;
-        case TokenKind::Minus: 
-            return BinaryOperator::Sub;
-        case TokenKind::Star: 
-            return BinaryOperator::Mul;
-        case TokenKind::Div: 
-            return BinaryOperator::Div;
-        case TokenKind::Precent:
-            return BinaryOperator::Mod;
-        default:
-            WOMBAT_ASSERT(false, "undefined token for conversion");
-    }
+Precedence Expr::prec_for_un_op(const UnOpKind& un_op) {
+    return Precedence::Prefix;
 }
 
-std::string lit_kind_to_str(const LiteralKind& kind) {
-    switch (kind) {
-        case LiteralKind::Int:
-            return "Integer";
-        case LiteralKind::Float:  
-            return "Float";
-        case LiteralKind::Char:     
-            return "Char";
-        case LiteralKind::Str:  
-            return "String";
-        case LiteralKind::Bool:       
-            return "Boolean";
-        default:
-            WOMBAT_ASSERT(false, "undefined literal kind");
+
+Associativity Expr::assoc_from_bin_op(const BinOpKind& bin_op) {
+    if(bin_op == BinOpKind::Pow) {
+        return Associativity::Right;
     }
+    return Associativity::Left;
 }
 
-std::string bin_op_kind_to_str(const BinaryOperator& kind) {
-    switch (kind) {
-        case BinaryOperator::Add:
-            return "Addition";
-        case BinaryOperator::Sub:  
-            return "Subtraction";
-        case BinaryOperator::Mul:     
-            return "Multiplication";
-        case BinaryOperator::Div:  
-            return "Division";
-        case BinaryOperator::Mod:    
-            return "Modulus";
-        default:
-            WOMBAT_ASSERT(false, "undefined binary operator kind");
-    }
+Associativity Expr::assoc_from_un_op() {
+    return Associativity::Right;
 }

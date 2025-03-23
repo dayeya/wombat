@@ -7,7 +7,6 @@
 #include "expr.hpp"
 #include "ast.hpp"
 
-
 struct TokenCursor {
     //! Ptr to a token stream.
     //! See [token.hpp]
@@ -38,7 +37,7 @@ struct TokenCursor {
             cur = mk_ptr<Token>(std::move(nxt.value()));
         } else {
             cur = nullptr;
-            stream->state = TState::Ended;
+            stream->state = LazyTokenStream::TState::Ended;
         }
     }
 
@@ -61,15 +60,12 @@ public:
     auto parse() -> AST;
 
     // Parses a primary expression.
-    auto parse_primary() -> Ptr<BaseExpr>;
-
-    // Parses an expression.
-    auto parse_float() -> Ptr<BaseExpr>;
+    auto parse_primary() -> Ptr<Expr::BaseExpr>;
 
     // Parses an expression within a parenthesis.
-    auto parse_expr() -> Ptr<BaseExpr>;
+    auto parse_expr(Expr::Precedence min_prec) -> Ptr<Expr::BaseExpr>;
 
-    auto convert_expr_to_ast_node(Ptr<BaseExpr>& expr_ref) -> Ptr<AstNode>;
+    auto convert_expr_to_ast_node(Ptr<Expr::BaseExpr>& expr_ref) -> Ptr<AstNode>;
 
     // Moves forward one token.
     void eat() {
@@ -123,24 +119,16 @@ private:
     std::vector<Diagnostic> diagnostics;
 
     // Looks ahead `n` tokens from the current position, for a certain condition.
-    bool ntok_for(int ntok, Closure<bool, Token&> condition) {
+    // *defaults* to the next token in line;
+    bool ntok_for(Closure<bool, Token&> condition, int ntok = 1) {
         size_t ahead_pos = tok_cur.pos() + ntok;
 
+        // Reached EOF, finish parsing.
         if(ahead_pos >= tok_cur.stream_size) {
             WOMBAT_ASSERT(false, "LOOKAHEAD FAILED, OUT OF BOUNDS");
         }
     
         return condition(tok_cur.stream->m_tokens.at(ntok));
-    }
-
-    bool is_bin_op(const Token& tok) {
-        return tok.matches_any(
-            TokenKind::Plus, 
-            TokenKind::Minus, 
-            TokenKind::Star, 
-            TokenKind::Div,
-            TokenKind::Precent
-        );
     }
 
     void eat_and_expect(Closure<bool, Token&> condition, std::string expect);

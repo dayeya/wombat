@@ -10,8 +10,8 @@
 #include "visit.hpp"
 
 enum class NodeType {
-    Expr,
-    Stmt
+    Expr, // An expression is incoming.
+    Stmt  // A statement is incoming.
 };
 
 class AstNode {
@@ -60,7 +60,7 @@ public:
         std::stringstream out;
         
         out << top_level_ident << "ValueNode: " << "\n"
-            << children_level_ident << "kind: " << lit_kind_to_str(inner->lit_kind) << "\n"
+            << children_level_ident << "kind: " << Tokenizer::meaning_from_literal_kind(inner->lit_kind) << "\n"
             << children_level_ident << "value: " << inner->val << "\n";
     
         return out.str();
@@ -77,12 +77,12 @@ private:
 class BinOpNode : public AstNode {
 public:
     explicit BinOpNode(
-        BinaryOperator op_kind,
+        BinOpKind op_kind,
         Ptr<AstNode> lhs, 
         Ptr<AstNode> rhs
     ) : AstNode(NodeType::Expr), op(op_kind), left(std::move(lhs)), right(std::move(rhs)) {} 
 
-    bool match(BinaryOperator op) const { return op == op; }
+    bool match(BinOpKind op) const { return op == op; }
 
     std::string pretty_print(int ident = 0) override {
         std::stringstream out;
@@ -91,7 +91,7 @@ public:
         std::string children_level_ident((ident + 1) * 2, ' ');
 
         out << top_level_ident << "BinaryNode: " << "\n"
-            << children_level_ident << "op: " << bin_op_kind_to_str(op) << "\n"
+            << children_level_ident << "op: " << Tokenizer::meaning_from_bin_op_kind(op) << "\n"
             << children_level_ident << "left: " << "\n" << left->pretty_print(ident + 2)
             << children_level_ident << "right: " << "\n" << right->pretty_print(ident + 2);
     
@@ -104,10 +104,42 @@ public:
     }
 
 private:
-    BinaryOperator op;
+    BinOpKind op;
     Ptr<AstNode> left;
     Ptr<AstNode> right;
 };
+
+class UnaryOpNode : public AstNode {
+    public:
+        explicit UnaryOpNode(
+            UnOpKind op_kind,
+            Ptr<AstNode> lhs
+        ) : AstNode(NodeType::Expr), op(op_kind), left(std::move(lhs)) {} 
+    
+        bool match(BinOpKind op) const { return op == op; }
+    
+        std::string pretty_print(int ident = 0) override {
+            std::stringstream out;
+            
+            std::string top_level_ident(ident * 2, ' ');
+            std::string children_level_ident((ident + 1) * 2, ' ');
+    
+            out << top_level_ident << "UnaryNode: " << "\n"
+                << children_level_ident << "op: " << Tokenizer::meaning_from_un_op_kind(op) << "\n"
+                << children_level_ident << "left: " << "\n" << left->pretty_print(ident + 2);
+        
+            return out.str();
+        }
+        
+        void accept(Visitor& visitor) override {
+            visitor.visit(*this);
+        }
+    
+    private:
+        UnOpKind op;
+        Ptr<AstNode> left;
+    };
+    
 
 class AST {
 public:
