@@ -3,281 +3,368 @@
 
 #include <vector>
 #include <string>
+#include <variant>
+#include <unordered_map>
 #include <algorithm>
 
 #include "wtypes.hpp"
 
-/**
- * @enum TokenKind
- * @brief Defines all possible tokens within the lexical boundaries of Wombat.
- */
-enum class TokenKind {
-    //!
-    //! Literals
-    LiteralNum,
-    LiteralFloat,
-    LiteralChar,
-    LiteralString,
-    LiteralBoolean, 
-    //!
-    //! Identifier can be either of two options: user-defined or keyword.
-    //!
-    Identifier,         // Represents user-defined data, data-types and behavior. e.g variable-name, functions and structs.
-    Keyword,            // Words that represent a meaningful behavior/feature in the language. e.g 'let', 'func' and so on and so forth.
-    //!
-    //! Readables!, wombat offers a core-syntax language feature! 
-    //! See [readables] in wombat-docs.
-    //!
-    //! Briefly, readables make developers code cleaner and readable code!
-    //! They operate on a single-argument and they are notated by the '!' symbol.
-    //! e.g:
-    //! 
-    //! let x: int = 8;
-    //! let p_x: ref<int> = &x 
-    //!
-    //! For wombat, this code is *not* readable.
-    //! Wombat proposes the following:
-    //! 
-    //! let x: int = 8; 
-    //! let p_x: ref<int> = mem! x;
-    //!
-    Readable,
+namespace Tokenizer {
+    enum class TokenKind: int {
+        //!
+        //! Literals
+        LiteralNum,
+        LiteralFloat,
+        LiteralChar,
+        LiteralString,
+        LiteralBoolean, 
+        //!
+        //! Identifier can be either of two options: user-defined or keyword.
+        //!
+        Identifier,         // Represents user-defined data, data-types and behavior. e.g variable-name, functions and structs.
+        Keyword,            // Words that represent a meaningful behavior/feature in the language. e.g 'let', 'func' and so on and so forth.
+        //!
+        //! Readables!, wombat offers a core-syntax language feature! 
+        //! See [readables] in wombat-docs.
+        //!
+        //! Briefly, readables make developers code cleaner and readable code!
+        //! They operate on a single-argument and they are notated by the '!' symbol.
+        //! e.g:
+        //! 
+        //! let x: int = 8;
+        //! let p_x: ref<int> = &x 
+        //!
+        //! For wombat, this code is *not* readable.
+        //! Wombat proposes the following:
+        //! 
+        //! let x: int = 8; 
+        //! let p_x: ref<int> = mem! x;
+        //!
+        Readable,
 
-    //! Punctuators
-    OpenParen,          // Symbol for '('
-    CloseParen,         // Symbol for ')'
-    OpenBracket,        // Symbol for '['
-    CloseBracket,       // Symbol for ']'
-    OpenCurly,          // Symbol for '{'
-    CloseCurly,         // Symbol for '}'
-    OpenAngle,          // Symbol for '>'
-    CloseAngle,         // Symbol for '<'
-    Colon,              // Symbol for ':'
-    SemiColon,          // Symbol for ';'
-    Comma,              // Symbol for ','
-    Dot,                // Symbol for ','
-    Bang,               // Symbol for '!'
+        //! Punctuators
+        OpenParen,          // Symbol for '('
+        CloseParen,         // Symbol for ')'
+        OpenBracket,        // Symbol for '['
+        CloseBracket,       // Symbol for ']'
+        OpenCurly,          // Symbol for '{'
+        CloseCurly,         // Symbol for '}'
+        OpenAngle,          // Symbol for '>'
+        CloseAngle,         // Symbol for '<'
+        Colon,              // Symbol for ':'
+        SemiColon,          // Symbol for ';'
+        Comma,              // Symbol for ','
+        Dot,                // Symbol for ','
+        Bang,               // Symbol for '!'
+        Ampersand,          // Symbol for '&'
+        Pipe,               // Symbol for '|'
+        Hat,                // Symbol for '^'
+        Tilde,              // Symbol for '~'
 
-    Whitespace,         // Sequence of non-meaningful characters like spaces or tabs
+        Whitespace,         // Sequence of non-meaningful characters like spaces or tabs
 
-    Plus,               // Arithmetic addition symbol,          '+'
-    Minus,              // Arithmetic subtraction symbol,       '-'
-    Star,               // Arithmetic multiplication symbol,    '*'
-    Div,                // Arithmetic division symbol,          '/'
-    Precent,            // Arithmetic modulu-op symbol,         '%'
-    Lt,                 // Less than symbol,                    '<'
-    Gt,                 // Greater than symbol,                 '>'
-    ReturnSymbol,       // Return type indicator for functions, '->'
-    DoubleEq,           // Equality operator,                   '=='
-    NotEq,              // Equality operator,                   '!='
-    Eq,                 // Assignment operator,                 '='
-    Le,                 // Less than or equal to operator,      '<='
-    Ge,                 // Greater than or equal to operator,   '>='
-    Eof,                // End of file marker
+        Plus,               // Arithmetic addition symbol,          '+'
+        Minus,              // Arithmetic subtraction symbol,       '-'
+        Star,               // Arithmetic multiplication symbol,    '*'
+        DoubleStar,         // Arithmetic power symbol,    '**'
+        Slash,              // Arithmetic division symbol,          '/'
+        DoubleSlash,        // Arithmetic floor division,           '//'
+        ShiftRight,         // Arithmetic floor division,           '>>'
+        ShiftLeft,          // Arithmetic floor division,           '<<'
+        Precent,            // Arithmetic modulu-op symbol,         '%'
+        Eq,                 // Assignment operator,                 '='
+        StarAssign,         // Assignment operator,                 '*='
+        SlashAssign,        // Assignment operator,                 '/='
+        PrecentAssign,      // Assignment operator,                 '%='     
+        PlusAssign,         // Assignment operator,                 '+='
+        MinusAssign,        // Assignment operator,                 '-='
+        ShlAssign,          // Assignment operator,                 '<<='
+        ShrAssign,          // Assignment operator,                 '>>='
+        AmpersandAssign,    // Assignment operator,                 '&='
+        PipeAssign,         // Assignment operator,                 '|='
+        HatAssign,          // Assignment operator,                 '^='
+        Lt,                 // Less than symbol,                    '<'
+        Gt,                 // Greater than symbol,                 '>'
+        ReturnSymbol,       // Return type indicator for functions, '->'
+        DoubleEq,           // Equality operator,                   '=='
+        NotEq,              // reverse equality operator,           '!='
+        Le,                 // Less than or equal to operator,      '<='
+        Ge,                 // Greater than or equal to operator,   '>='
+        Eof,                // End of file marker
 
-    LineComment,        // Single-line comment, '//'
-    Foreign,            // Unknown or invalid token for the language
-    None                // Indicator for an empty token
-};
+        LineComment,        // Single-line comment, '//'
+        Foreign,            // Unknown or invalid token for the language
+        None                // Indicator for an empty token
+    };
 
-enum class Keyword {
-    // 'fn' denotes either function declaration, implementation or a function pointer via ref<fn ...>
-    Fn, 
-    // 'return' denotes the return value of a function.
-    Return,
-    // 'end' denotes an end of a scope, either with function bodies or match blocks.
-    End,
-    // 'let' statement, denotes a declaration of an identifier.
-    Let,
-    // flow-control - if, else.
-    // 'if' denotes an if block, 'else' denotes an else block. 
-    // note: scopes are denoted by curly braces as opposed to function and match blocks.
-    If, 
-    Else,
-    // flow-control - loops.
-    // 'loop' denotes a block using curly braces that will repeat itself.
-    // 'stop' - breaks out of a loop.
-    // 'with' - introduces a unique resource that bounds only to the scope of the loop.
-    Loop,
-    Stop,
-    With
-};
+    enum class Keyword: int {
+        // 'fn' denotes either function declaration, implementation or a function pointer via ref<fn ...>
+        Fn, 
+        // 'return' denotes the return value of a function.
+        Return,
+        // 'end' denotes an end of a scope, either with function bodies or match blocks.
+        End,
+        // 'let' statement, denotes a declaration of an identifier.
+        Let,
+        // 'mut' modifier
+        Mut,
+        // flow-control - if, else.
+        // 'if' denotes an if block, 'else' denotes an else block. 
+        // note: scopes are denoted by curly braces as opposed to function and match blocks.
+        If, 
+        Else,
+        // flow-control - loops.
+        // 'loop' denotes a block using curly braces that will repeat itself.
+        // 'stop' - breaks out of a loop.
+        // 'with' - introduces a unique resource that bounds only to the scope of the loop.
+        Loop,
+        Break,
+        With,
+        // Logical operations.
+        And, 
+        Or, 
+        Not 
+    };
 
-enum class LiteralKind {
-    // Literal representing integers. e.g '3'.
-    Int, 
-    // Literal representing floats. e.g '3.14'.
-    Float,
-    // Literal representing chars. e.g 'a'.
-    Char,
-    // Literal representing strings. e.g 'Hello, Wombat!'.
-    Str,
-    // Boolean
-    Bool
-};
+    enum class LiteralKind: int {
+        // Literal representing integers. e.g '3'.
+        Int, 
+        // Literal representing floats. e.g '3.14'.
+        Float,
+        // Literal representing chars. e.g 'a'.
+        Char,
+        // Literal representing strings. e.g 'Hello, Wombat!'.
+        Str,
+        // Boolean
+        Bool,
+        // Dummy value
+        None
+    };
 
-enum class BinaryOperator {
-    // Addition
-    Add, 
-    // Subtraction
-    Sub,
-    // Multiplication
-    Mul, 
-    // Division
-    Div,
-    // Modulus
-    Mod
-};
+    enum class BooleanKind: int {
+        True, False
+    };
 
-/**
- * @brief Converts a TokenKind to its string representation.
- * @param kind The token kind.
- * @return The corresponding string.
- */
-constexpr std::string kind_to_str(const TokenKind& kind);
+    enum class BinOpKind: int {
+        // The `+` operator (addition)
+        Add,
+        // The `-` operator (subtraction)
+        Sub,
+        // The `*` operator (multiplication)
+        Mul,
+        // The `**` operator (pow)
+        Pow,
+        // The `/` operator (division)
+        Div,
+        // The `//` operator (floor division)
+        FlooredDiv,
+        // The `%` operator (modulus)
+        Mod,
+        // The `and` operator (logical and)
+        And,
+        // The `or` operator (logical or)
+        Or,
+        // The `^` operator (bitwise xor)
+        BitXor,
+        // The `&` operator (bitwise and)
+        BitAnd,
+        // The `|` operator (bitwise or)
+        BitOr,
+        // The `<<` operator (shift left)
+        Shl,
+        // The `>>` operator (shift right)
+        Shr,
+        // The `==` operator (equality)
+        Eq,
+        // The `<` operator (less than)
+        Lt,
+        // The `<=` operator (less than or equal to)
+        Le,
+        // The `!=` operator (not equal to)
+        NotEq,
+        // The `>=` operator (greater than or equal to)
+        Ge,
+        // The `>` operator (greater than)
+        Gt
+    };
 
-struct Location {
-    int line;
-    int col;
+    enum class UnOpKind: int {
+        // Negation. e.g `-2`.
+        Neg,
+        // Logical not. for example:
+        // `loop {
+        //     if not found: ...
+        // }`
+        Not,
+        // A bitwise not. marked by '~'.
+        BitNot
+    };
 
-    Location(int l, int c) 
-        : line(l), col(c) {}
-};
+    // Converts the value of a token into a keyword.
+    // Returns an optional wrapping a `Tokenizer::Keyword` or an `std::nullopt`.
+    Option<Keyword> keyword_from_token(const std::string& lexeme);
 
-// A singularity point, represents the start position of any file.
-const Location SINGULARITY = Location(0, 0);
+    // Converts a `Tokenizer::TokenKind` into a `Tokenizer::LiteralKind`.
+    // Returns an optional wrapping a `Tokenizer::LiteralKind` or an `std::nullopt`.
+    Option<LiteralKind> literal_kind_from_token(const TokenKind& kind);
 
-/**
- * @struct Token
- * @brief Represents a token identified by the lexer.
- */
-struct Token {
-    TokenKind kind;
-    std::string value;
-    Location loc;
+    // Converts a `Tokenizer::TokenKind` into its string representation.
+    std::string meaning_from_kind(const TokenKind& kind);
 
-    Token()
-        : kind{TokenKind::None}, value{""}, loc{SINGULARITY} {}
+    // Converts a `Tokenizer::LiteralKind` into its string representation.
+    std::string meaning_from_literal_kind(const LiteralKind& kind);
 
-    Token(TokenKind k, std::string v, int l, int c)
-        : kind{k}, value{std::move(v)}, loc(l, c) {}
+    // Converts a `Tokenizer::BinOpKind` into its string representation.
+    std::string meaning_from_bin_op_kind(const BinOpKind& kind);
 
-    // Pretty-prints the token to 'stdout'.
-    void out() const;
+    // Converts a `Tokenizer::UnOpKind` into its string representation.
+    std::string meaning_from_un_op_kind(const UnOpKind& kind);
 
-    // Resets the token to an empty state.
-    void clean() {
-        value.clear();
-        kind = TokenKind::None;
-        loc = SINGULARITY;
-    }
+    /// @brief `Tokenizer::Location`
+    /// Is a struct wrapping the line and a column of a certain context within the source code.  
+    struct Location {
+        int line;
+        int col;
 
-    // Appends a character to the token's value.
-    void extend(char ch) {
-        value += ch;
-    }
+        Location(int l, int c) : line(l), col(c) {}  // Constructor
 
-    // Compares kind to another 'TokenKind'. 
-    bool match(TokenKind k) const {
-        return kind == k;
-    }
-
-    // Matches every kinds in 'kinds' with the inner kind.
-    template<typename... Kind>
-    bool matches_any(Kind... kinds) const {
-        std::vector<TokenKind> vk = {kinds...};
-        return std::find(vk.begin(), vk.end(), kind) != vk.end();
-    }
-
-    void fill_with(
-        std::string v, 
-        TokenKind k, 
-        int line = -1, 
-        int col = -1
-    ) {
-        value = std::move(v);
-        kind = k;
-        loc.line = line;
-        loc.col = col;
-    }
-
-    void set_value(std::string&& v) {
-        value = std::move(v);
-    }
-
-    void set_kind(TokenKind k) {
-        kind = k;
-    }
-
-    void set_loc(int line, int col) {
-        loc.line = line;
-        loc.col = col;
-    }
-};
-
-//! Token stream state.
-enum class TState {
-    NotYet,
-    Traversing,
-    Ended
-};
-
-/**
- * @struct LazyTokenStream
- * @brief A stream of tokens supporting lazy evaluation.
- */
-struct LazyTokenStream {
-    //! token buffer.
-    std::vector<Token> m_tokens;
-
-    //! index of the current token.
-    int cur = -1;
-
-    //! State of the traversal.
-    //! Used in [parser.hpp].
-    TState state = TState::NotYet;
-
-    LazyTokenStream() : m_tokens() {}
-
-    void reset() {
-        cur = -1;
-    }
-
-    inline int self_size() const {
-        return static_cast<int>(m_tokens.size());
-    }
-
-    inline bool reached_eof(int k) const {
-        // means we want to check the first token. 
-        if (k == -1) {
-            k++;
+        // A getter for a singularity location `{ line: 0, col: 0 }`
+        // Think of it as a dummy node for error parsing.
+        static inline auto Singularity() -> Location {
+            return { 0, 0 };
         }
-        return (
-            !m_tokens.empty() &&
-            m_tokens.at(k).match(TokenKind::Eof)
-        );
-    }
+    };
 
-    // Checks if the stream reached its end.
-    inline bool has_next() const {
-        return !reached_eof(cur);
-    }
+    /// @brief `Tokenizer::Token`
+    /// Is a struct that stores information about a specific lexeme found within the source code.
+    struct Token {
+        TokenKind kind;
+        std::string value;
+        Location loc;
 
-    // Pushes `token` into `m_tokens`.
-    void feed(const Token& token) {
-        cur++;
-        m_tokens.push_back(token);
-    }
+        Token() : kind{TokenKind::None}, value{}, loc{Location::Singularity()} {}
 
-    // Consumes a token from the stream.
-    Option<Token> eat_one_token() {
-        if(!has_next()) {
-            return std::nullopt;
-        } else {
-            if(cur == -1) cur++;
-            return std::make_optional<Token>(m_tokens.at(cur++));
+        Token(TokenKind k, std::string v, int l, int c)
+            : kind{k}, value{std::move(v)}, loc{l, c} {}
+
+        // Pretty-prints the tokens data.
+        void out() const;
+
+        // Resets the token.
+        void clean() {
+            value.clear();
+            kind = TokenKind::None;
+            loc = Location::Singularity();
         }
-    }
+
+        // Appends a character to the token's value.
+        void extend(char ch) {
+            value += ch;
+        }
+
+        // Checks if the token matches a specific `Tokenizer::TokenKind`.
+        // A single-match closure is used a lot within the compiler frontend, so we created a seperate function.
+        bool match_kind(TokenKind k) const {
+            return kind == k;
+        }
+
+        // Checks if the token's kind matches any of the provided token kinds.
+        template<typename... Kinds>
+        bool matches_any(Kinds... kinds) const {
+            return ((kind == kinds) || ...);
+        }
+        
+        // Checks if the token represents a keyword.
+        template<typename... Kw>
+        bool match_keyword(Kw... keywords) const {
+            auto keyword_match = Tokenizer::keyword_from_token(value);
+            return keyword_match.has_value() && ((keyword_match.value() == keywords) || ...);
+        }
+
+        // Populates the token with new values.
+        void fill_with(std::string v, TokenKind k, int line = -1, int col = -1) {
+            kind = k;
+            value = std::move(v);
+            loc = {line, col};
+        }
+
+        // Updates the tokens location in the source code.
+        void update_location(int line, int col) {
+            loc = {line, col};
+        }
+    };
+
+    /// @brief `Tokenizer::LazyTokenStream`
+    /// Is a struct that stores the token-stream buffer, meant for travesing and parsing.
+    struct LazyTokenStream {
+        // `Tokenizer::TState` indicates the traversel state of a token stream.
+        enum class TState: int {
+            NotYet,
+            Traversing,
+            Ended
+        };
+
+        TState state = TState::NotYet;
+        std::vector<Token> m_tokens;
+        int cur = -1;
+
+        LazyTokenStream() : m_tokens() {}
+
+        // Resets the cursors position.
+        void reset() {
+            cur = -1;
+        }
+
+        // Size casting, from `std::size_t` to a primitive int.
+        inline int self_size() const {
+            return static_cast<int>(m_tokens.size());
+        }
+
+        // Checks wether the token stream holds an End-of-file token.
+        inline bool reached_eof(int k) const {
+            // means we want to check the first token. 
+            if (k == -1) {
+                k++;
+            }
+            return (
+                !m_tokens.empty() &&
+                m_tokens.at(k).match_kind(TokenKind::Eof)
+            );
+        }
+
+        // Checks if the stream reached its end.
+        inline bool has_next() const {
+            return !reached_eof(cur);
+        }
+
+        // Pushes a token into the buffer.
+        void feed(const Token& token) {
+            cur++;
+            m_tokens.push_back(token);
+        }
+
+        // Consumes a token from the stream.
+        Option<Token> eat_one_token() {
+            if(!has_next()) {
+                return std::nullopt;
+            } else {
+                if(cur == -1) cur++;
+                return std::make_optional<Token>(m_tokens.at(cur++));
+            }
+        }
+    };
+
+    // Converts a 'Tokenizer::TokenKind` into a `Tokenizer::BinOpKind`.
+    // Returns an optional wrapping a `Tokenizer::BinOpKind` or an `std::nullopt`.
+    Option<BinOpKind> bin_op_from_token(const Token& tok);
+
+    // Converts a 'Tokenizer::TokenKind` into a `Tokenizer::UnOpKind`.
+    // Returns an optional wrapping a `Tokenizer::UnOpKind` or an `std::nullopt`.
+    Option<UnOpKind> un_op_from_token(const Token& tok); 
+
+    // Converts a 'Tokenizer::TokenKind` into a `Tokenizer::BooleanKind`.
+    // Returns an optional wrapping a `Tokenizer::BooleanKind` or an `std::nullopt`.
+    Option<BooleanKind> bool_from_token(const Token& tok);
 };
 
 #endif // TOKEN_HPP_

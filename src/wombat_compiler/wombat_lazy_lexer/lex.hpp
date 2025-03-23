@@ -13,12 +13,16 @@
 #include "token.hpp"
 #include "diagnostic.hpp"
 
+using Tokenizer::Token;
+using Tokenizer::Location;
+using Tokenizer::LazyTokenStream;
+
 namespace fs = std::filesystem;
 
 struct SourceCursor {
     std::string file_name;
     std::vector<std::string> source;
-    Location cur_loc = SINGULARITY;
+    Location cur_loc = Location::Singularity();
     char current = 0;
     int total_lines = 0;
     bool eof = false;
@@ -125,9 +129,6 @@ private:
     inline char advance_cursor() { 
         return m_cursor.advance_self(); 
     }
-
-    bool ident_matches_kw(std::string& ident);
-    bool ident_matches_boolean(std::string& ident);
 
     void lex_eof();
     void lex_foreign(char ch);

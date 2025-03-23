@@ -1,89 +1,198 @@
 #include <iostream>
-
+#include "common.hpp"
 #include "token.hpp"
 
-constexpr std::string kind_to_str(const TokenKind& kind) {
+using Tokenizer::Token;
+using Tokenizer::TokenKind;
+using Tokenizer::LiteralKind;
+using Tokenizer::Keyword;
+using Tokenizer::BinOpKind;
+using Tokenizer::UnOpKind;
+using Tokenizer::BooleanKind;
+
+Option<Keyword> Tokenizer::keyword_from_token(const std::string& lexeme) {
+  if(lexeme == "fn")    return Keyword::Fn;
+  if(lexeme == "end")   return Keyword::End;
+  if(lexeme == "if")    return Keyword::If;
+  if(lexeme == "else")  return Keyword::Else; 
+  if(lexeme == "let")   return Keyword::Let;
+  if(lexeme == "mut")   return Keyword::Mut;
+  if(lexeme == "loop")  return Keyword::Loop;
+  if(lexeme == "break") return Keyword::Break;
+  if(lexeme == "with")  return Keyword::With;
+  if(lexeme == "and")   return Keyword::And;
+  if(lexeme == "or")    return Keyword::Or;
+  if(lexeme == "Not")   return Keyword::Not;
+  return std::nullopt;
+}
+
+Option<LiteralKind> Tokenizer::literal_kind_from_token(const TokenKind& kind) {
   switch (kind) {
-    case TokenKind::OpenParen:
-      return "Open_Paren";
-    case TokenKind::CloseParen:      
-      return "Close_Paren";
-    case TokenKind::OpenBracket:     
-      return "Open_Bracket";
-    case TokenKind::CloseBracket:    
-      return "Close_Bracket";
-    case TokenKind::OpenCurly:       
-      return "Open_Curly";
-    case TokenKind::CloseCurly:
-      return "Close_Curly";
-    case TokenKind::OpenAngle:       
-      return "Open_Angle";
-    case TokenKind::CloseAngle:      
-      return "Close_Angle";
-    case TokenKind::Lt:              
-      return "Less_Then";
-    case TokenKind::Gt:              
-      return "Greater_Then";
-    case TokenKind::ReturnSymbol:           
-      return "Arrow";
-    case TokenKind::Minus:
-      return "Minus_Operator";
-    case TokenKind::Plus:            
-      return "Plus_Operator";
-    case TokenKind::Star:
-      return "Multiplication_Operator";
-    case TokenKind::Div:            
-      return "Division_Operator";
-    case TokenKind::Precent:            
-      return "Modulus_Operator";
-    case TokenKind::DoubleEq:  
-      return "Equality_Operator";
-    case TokenKind::NotEq:  
-      return "Not_Equality_Operator";
-    case TokenKind::Eq: 
-      return "Equals_Assignment";
-    case TokenKind::Le:              
-      return "Less_Then_Or_Equal_To";
-    case TokenKind::Ge:              
-      return "Greater_Then_Or_Equal_To";
-    case TokenKind::Eof:             
-      return "End_Of_File";
-    case TokenKind::Colon:
-      return "Colon";
-    case TokenKind::SemiColon:
-      return "Semi_Colon";   
-    case TokenKind::Comma:
-      return "Comma";   
-    case TokenKind::Dot:
-      return "Dot";   
-    case TokenKind::LiteralNum:    
-      return "Literal_NUMBER";
-    case TokenKind::LiteralString:    
-      return "Literal_STRING";
-    case TokenKind::LiteralChar:    
-      return "Literal_CHAR";
-    case TokenKind::Identifier:
-      return "Identifier";
-    case TokenKind::Keyword:
-      return "Keyword";
-    case TokenKind::Readable:
-      return "Readable[Maybe]";
-    case TokenKind::Whitespace:      
-      return "Whitespace";
-    case TokenKind::LineComment:
-      return "Single_Line_Comment";
-    default:
-      return "Foreign_Token";
+    case TokenKind::LiteralNum:     return LiteralKind::Int;
+    case TokenKind::LiteralFloat:   return LiteralKind::Float;
+    case TokenKind::LiteralChar:    return LiteralKind::Char;
+    case TokenKind::LiteralString:  return LiteralKind::Str;
+    case TokenKind::LiteralBoolean: return LiteralKind::Bool;
+    default: 
+      return std::nullopt; 
+  }
+}
+
+Option<BinOpKind> Tokenizer::bin_op_from_token(const Token& tok) {
+  switch (tok.kind) {
+    case TokenKind::Plus:         return BinOpKind::Add;
+    case TokenKind::Minus:        return BinOpKind::Sub;
+    case TokenKind::Star:         return BinOpKind::Mul;
+    case TokenKind::Slash:        return BinOpKind::Div;
+    case TokenKind::DoubleSlash:  return BinOpKind::FlooredDiv;
+    case TokenKind::Precent:      return BinOpKind::Mod;
+    case TokenKind::DoubleStar:   return BinOpKind::Pow;
+    case TokenKind::Ampersand:    return BinOpKind::BitAnd;
+    case TokenKind::Pipe:         return BinOpKind::BitOr;
+    case TokenKind::Hat:          return BinOpKind::BitXor;
+    case TokenKind::ShiftLeft:    return BinOpKind::Shl;
+    case TokenKind::ShiftRight:   return BinOpKind::Shr;  
+    case TokenKind::Lt:           return BinOpKind::Lt;
+    case TokenKind::Gt:           return BinOpKind::Gt;
+    case TokenKind::Le:           return BinOpKind::Le;
+    case TokenKind::Ge:           return BinOpKind::Ge;
+    case TokenKind::Eq:           return BinOpKind::Eq;
+    case TokenKind::NotEq:        return BinOpKind::NotEq;
+    default: {
+      auto keyword_match = keyword_from_token(tok.value);
+
+      if(!keyword_match.has_value()) {
+        return std::nullopt;
+      }
+
+      switch (keyword_match.value()) {
+        case Keyword::And:  return BinOpKind::And;
+        case Keyword::Or:   return BinOpKind::Or;
+        default: 
+          return std::nullopt;
+      }
+    }
+  }
+}
+
+Option<UnOpKind> Tokenizer::un_op_from_token(const Token& tok) {
+  switch (tok.kind) {
+    case TokenKind::Tilde:  return UnOpKind::BitNot;
+    case TokenKind::Minus:  return UnOpKind::Neg;
+    default: {
+      if(tok.match_keyword(Keyword::Not)) {
+        return UnOpKind::Not;
+      } else {
+        return std::nullopt;
+      }
+    }
+  }
+}
+
+Option<BooleanKind> Tokenizer::bool_from_token(const Token& tok) {
+  if(tok.value == "true")  return BooleanKind::True;
+  if(tok.value == "false") return BooleanKind::False;
+  return std::nullopt;
+}
+
+std::string Tokenizer::meaning_from_kind(const TokenKind& kind) {
+  switch (kind) {
+    case TokenKind::OpenParen:      return "Open_Paren";
+    case TokenKind::CloseParen:     return "Close_Paren";
+    case TokenKind::OpenBracket:    return "Open_Bracket";
+    case TokenKind::CloseBracket:   return "Close_Bracket";
+    case TokenKind::OpenCurly:      return "Open_Curly";
+    case TokenKind::CloseCurly:     return "Close_Curly";
+    case TokenKind::OpenAngle:      return "Open_Angle";
+    case TokenKind::CloseAngle:     return "Close_Angle";
+    case TokenKind::Lt:             return "Less_Than";
+    case TokenKind::Gt:             return "Greater_Than";
+    case TokenKind::ReturnSymbol:   return "Arrow";
+    case TokenKind::Minus:          return "Minus_Operator";
+    case TokenKind::Plus:           return "Plus_Operator";
+    case TokenKind::Star:           return "Multiplication_Operator";
+    case TokenKind::Slash:          return "Division_Operator";
+    case TokenKind::Precent:        return "Modulus_Operator";
+    case TokenKind::DoubleEq:       return "Equality_Operator";
+    case TokenKind::NotEq:          return "Not_Equality_Operator";
+    case TokenKind::Eq:             return "Equals_Assignment";
+    case TokenKind::Le:             return "Less_Than_Or_Equal_To";
+    case TokenKind::Ge:             return "Greater_Than_Or_Equal_To";
+    case TokenKind::Eof:            return "End_Of_File";
+    case TokenKind::Colon:          return "Colon";
+    case TokenKind::SemiColon:      return "Semi_Colon";
+    case TokenKind::Comma:          return "Comma";
+    case TokenKind::Dot:            return "Dot";
+    case TokenKind::LiteralNum:     return "Literal_NUMBER";
+    case TokenKind::LiteralString:  return "Literal_STRING";
+    case TokenKind::LiteralChar:    return "Literal_CHAR";
+    case TokenKind::Identifier:     return "Identifier";
+    case TokenKind::Keyword:        return "Keyword";
+    case TokenKind::Readable:       return "Readable";
+    case TokenKind::Whitespace:     return "Whitespace";
+    case TokenKind::LineComment:    return "Single_Line_Comment";
+    default: {
+      WOMBAT_ASSERT(false, "Unreachable token kind");
+      return "Foreign";
+    }
+  }
+}
+
+std::string Tokenizer::meaning_from_literal_kind(
+  const LiteralKind& kind
+) {
+  switch (kind) {
+    case LiteralKind::Int:    return "Int_LITERAL";
+    case LiteralKind::Float:  return "Float_LITERAL";
+    case LiteralKind::Char:   return "Char_LITERAL";
+    case LiteralKind::Str:    return "Str_LITERAL";
+    case LiteralKind::Bool:   return "Bool_LITERAL";
+    default:                  return "undifined_LITERAL";
+  }
+}
+
+std::string Tokenizer::meaning_from_bin_op_kind(const BinOpKind& kind) {
+  switch (kind) {
+      case BinOpKind::Add:        return "Addition";
+      case BinOpKind::Sub:        return "Subtraction";
+      case BinOpKind::Mul:        return "Multiplication";
+      case BinOpKind::Pow:        return "Exponentiation";
+      case BinOpKind::Div:        return "Division";
+      case BinOpKind::FlooredDiv: return "Floor_Division";
+      case BinOpKind::Mod:        return "Modulus";
+      case BinOpKind::And:        return "Logical_And";
+      case BinOpKind::Or:         return "Logical_Or";
+      case BinOpKind::BitXor:     return "Bitwise_XOR";
+      case BinOpKind::BitAnd:     return "Bitwise_AND";
+      case BinOpKind::BitOr:      return "Bitwise_OR";
+      case BinOpKind::Shl:        return "Shift_Left";
+      case BinOpKind::Shr:        return "Shift_Right";
+      case BinOpKind::Eq:         return "Equality";
+      case BinOpKind::Lt:         return "Less_Than";
+      case BinOpKind::Le:         return "Less_Than_Equal_To";
+      case BinOpKind::NotEq:      return "Not_Equal_To";
+      case BinOpKind::Ge:         return "Greater_Than_Equal_To";
+      case BinOpKind::Gt:         return "Greater_Than";
+      default:                    return "undifined_BINARY_OP";
+  }
+}
+
+std::string Tokenizer::meaning_from_un_op_kind(const UnOpKind& kind) {
+  switch (kind) {
+      case UnOpKind::Neg:    return "Negation";
+      case UnOpKind::Not:    return "Logical_Not";
+      case UnOpKind::BitNot: return "Bitwise_Not";
+      default:               return "undifined_UN_OP";
   }
 }
 
 void Token::out() const {
-  std::cout << "Token {" << "\n"
-            << "  " << "kind: TokenKind::" << kind_to_str(kind) << "," << "\n"
-            << "  " << "value: \"" << value << "\"," << "\n"
-            << "  " << "loc: {" << "\n"
-            << "    " << "line: " << loc.line << "\n"
-            << "    " << "column: " << loc.col << "\n"
-            << "  " << "}" << "\n"
-            << "}" << "\n";
+  std::cout << "Token {\n"
+            << "  kind: TokenKind::" << meaning_from_kind(kind) << ",\n"
+            << "  value: \"" << value << "\",\n"
+            << "  loc: {\n"
+            << "    line: " << loc.line << ",\n"
+            << "    column: " << loc.col << "\n"
+            << "  }\n"
+            << "}\n";
 }

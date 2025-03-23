@@ -11,31 +11,18 @@
 #include "cutil.hpp"
 #include "lex.hpp"
 
-bool Lexer::ident_matches_kw(std::string& ident) {
-  return (
-    ident == "fn"     ||
-    ident == "end"    ||
-    ident == "let"    ||
-    ident == "if"     ||
-    ident == "else"   ||
-    ident == "loop"   ||
-    ident == "return"
-  );
-}
-
-bool Lexer::ident_matches_boolean(std::string& ident) {
-  return ident == "true" || ident == "false";
-}
+using Tokenizer::Token;
+using Tokenizer::TokenKind;
 
 void Lexer::lex_eof() {
   tok->kind = TokenKind::Eof;
-  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
+  tok->update_location(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
 }
 
 void Lexer::lex_foreign(char ch) {
   tok->extend(ch);
   tok->kind = TokenKind::Foreign;
-  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
+  tok->update_location(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
 }
 
 void Lexer::lex_line_comment() {
@@ -49,7 +36,7 @@ void Lexer::lex_line_comment() {
 }
 
 void Lexer::lex_word() {
-  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
+  tok->update_location(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
   tok->extend(m_cursor.current);  
 
   while(
@@ -66,9 +53,9 @@ void Lexer::lex_word() {
     return;
   }
 
-  if(ident_matches_boolean(tok->value)) {
+  if(Tokenizer::bool_from_token(*tok) != std::nullopt) {
     tok->kind = TokenKind::LiteralBoolean;
-  } else if(ident_matches_kw(tok->value)) {
+  } else if(Tokenizer::keyword_from_token(tok->value) != std::nullopt) {
     tok->kind = TokenKind::Keyword;
   } else {
     tok->kind = TokenKind::Identifier;
@@ -76,7 +63,7 @@ void Lexer::lex_word() {
 }
 
 void Lexer::lex_symbol() {
-  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
+  tok->update_location(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
 
   switch (m_cursor.current) {
     case '(': tok->fill_with("(", TokenKind::OpenParen);    break;
@@ -89,45 +76,122 @@ void Lexer::lex_symbol() {
     case ';': tok->fill_with(";", TokenKind::SemiColon);    break;
     case ',': tok->fill_with(",", TokenKind::Comma);        break;
     case '.': tok->fill_with(".", TokenKind::Dot);          break;
-    case '+': tok->fill_with("+", TokenKind::Plus);         break;
-    case '*': tok->fill_with("*", TokenKind::Star);         break;
-    case '/': tok->fill_with("/", TokenKind::Div);          break;
-    case '%': tok->fill_with("%", TokenKind::Precent);      break;
     default: break;
   }
 
   //! If token was assigned with a value in the above switch statement, we exit.
-  if(!tok->match(TokenKind::None)) {
+  if(!tok->match_kind(TokenKind::None)) {
     return;
   }
 
   switch (m_cursor.current)
   {
-    case '<':
-      if (m_cursor.peek_next() == '=') {
-        tok->fill_with("<=", TokenKind::Le);
+    case '+': {
+      if(m_cursor.peek_next() == '=') {
+        tok->fill_with("+=", TokenKind::PlusAssign);
         advance_cursor();
       } else {
-        tok->fill_with("<", TokenKind::OpenAngle);
+        tok->fill_with("+", TokenKind::Plus);
       }
       break;
-    case '>':
-      if (m_cursor.peek_next() == '=') {
-        tok->fill_with(">=", TokenKind::Ge);
+    }
+    case '-': {
+      if(m_cursor.peek_next() == '=') {
+        tok->fill_with("-=", TokenKind::MinusAssign);
         advance_cursor();
-      } else {
-        tok->fill_with(">", TokenKind::CloseAngle);
-      }
-      break;
-    case '-':
-      if (m_cursor.peek_next() == '>') {
+      } else if(m_cursor.peek_next() == '>') {
         tok->fill_with("->", TokenKind::ReturnSymbol);
         advance_cursor();
       } else {
         tok->fill_with("-", TokenKind::Minus);
       }
       break;
-    case '=':
+    }
+    case '*': {
+      if(m_cursor.peek_next() == '=') {
+        tok->fill_with("*=", TokenKind::StarAssign);
+        advance_cursor();
+      } else if(m_cursor.peek_next() == '*') {
+        tok->fill_with("**", TokenKind::DoubleStar);
+        advance_cursor();
+      } else {
+        tok->fill_with("*", TokenKind::Star);
+      }
+      break;
+    }
+    case '/': {
+      if(m_cursor.peek_next() == '=') {
+        tok->fill_with("/=", TokenKind::SlashAssign);
+        advance_cursor();
+      } else if(m_cursor.peek_next() == '/') {
+        tok->fill_with("/=", TokenKind::DoubleSlash);
+        advance_cursor();
+      } else {
+        tok->fill_with("/", TokenKind::Slash);
+      }
+      break;
+    }
+    case '%': {
+      if(m_cursor.peek_next() == '=') {
+        tok->fill_with("%=", TokenKind::PrecentAssign);
+        advance_cursor();
+      } else {
+        tok->fill_with("%", TokenKind::Precent);
+      }
+      break;
+    }
+    case '|': {
+      if(m_cursor.peek_next() == '=') {
+        tok->fill_with("|=", TokenKind::PipeAssign);
+        advance_cursor();
+      } else {
+        tok->fill_with("|", TokenKind::Pipe);
+      }
+      break;
+    }
+    case '^': {
+      if(m_cursor.peek_next() == '=') {
+        tok->fill_with("^=", TokenKind::HatAssign);
+        advance_cursor();
+      } else {
+        tok->fill_with("^", TokenKind::Hat);
+      }
+      break;
+    }
+    case '&': {
+      if(m_cursor.peek_next() == '=') {
+        tok->fill_with("&=", TokenKind::AmpersandAssign);
+        advance_cursor();
+      } else {
+        tok->fill_with("&", TokenKind::Ampersand);
+      }
+      break;
+    }
+    case '<': {
+      if (m_cursor.peek_next() == '=') {
+        tok->fill_with("<=", TokenKind::Le);
+        advance_cursor();
+      } else if(m_cursor.peek_next() == '<') {
+        tok->fill_with("<<", TokenKind::ShiftLeft);
+        advance_cursor();
+      } else {
+        tok->fill_with("<", TokenKind::OpenAngle);
+      }
+      break;
+    }
+    case '>': {
+      if (m_cursor.peek_next() == '=') {
+        tok->fill_with(">=", TokenKind::Ge);
+        advance_cursor();
+      } else if(m_cursor.peek_next() == '>') {
+        tok->fill_with(">>", TokenKind::ShiftRight);
+        advance_cursor();
+      } else {
+        tok->fill_with(">", TokenKind::CloseAngle);
+      }
+      break;
+    }
+    case '=': {
       if (m_cursor.peek_next() == '=') {
         tok->fill_with("==", TokenKind::DoubleEq);
         advance_cursor();
@@ -135,7 +199,8 @@ void Lexer::lex_symbol() {
         tok->fill_with("=", TokenKind::Eq);
       }
       break;
-    case '!':
+    }
+    case '!': {
       if (m_cursor.peek_next() == '=') {
         tok->fill_with("!=", TokenKind::NotEq);
         advance_cursor();
@@ -143,6 +208,7 @@ void Lexer::lex_symbol() {
         tok->fill_with("!", TokenKind::Bang);
       }
       break;
+    }
     default:
       tok->fill_with(
         std::string{m_cursor.current}, 
@@ -260,7 +326,7 @@ void Lexer::lex_literal() {
     }
   };
 
-  tok->set_loc(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
+  tok->update_location(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
 
   //! If m_cursor.current is not a opening [string/char] literal is it necessarily a digit. 
   if (m_cursor.current == '"')  lex_string_literal();
