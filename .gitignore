@@ -1,6 +1,6 @@
-.vscode/
 /build/
 /bin
+/docs
 /CmakeFiles/
 CMakeCache.txt
 *.o

@@ -139,7 +139,6 @@ struct Renderer {
         Region reg;
         std::string region_msg;
 
-
         Marker(int o, Region r, std::string m)
             : origin(o), reg(std::move(r)), region_msg(m) {}
 
@@ -153,8 +152,7 @@ struct Renderer {
             const auto& [trimmed_line, offset] = CharUtils::left_trim(reg.source_code.front());
 
             out << " |\n"
-                << "[" << cyan_bold << reg.location.first + 1 << reset << "] " 
-                << trimmed_line << "\n" 
+                << "[" << cyan_bold << reg.location.first + 1 << reset << "] " << trimmed_line << "\n" 
                 << " |";
 
             int caret_position = reg.location.second + 1 - offset;
@@ -165,10 +163,9 @@ struct Renderer {
             for (size_t k = 1; k < reg.source_code.size(); ++k) {
                 out << " |" << reg.source_code[k] << "\n";
             }
-        
+
             return out;
-        }
-            
+        }       
     };
 
     Renderer() {};

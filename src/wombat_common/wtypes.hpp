@@ -26,5 +26,4 @@ using Option = std::optional<T>;
 template<typename T, typename E>
 using Result = std::expected<T, E>;
 
-
 #endif // TYPES_HPP_
