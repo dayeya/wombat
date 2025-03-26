@@ -124,6 +124,7 @@ std::string Tokenizer::meaning_from_kind(const TokenKind& kind) {
     case TokenKind::Comma:          return "Comma";
     case TokenKind::Dot:            return "Dot";
     case TokenKind::LiteralNum:     return "Literal_NUMBER";
+    case TokenKind::LiteralFloat:   return "Literal_FLOAT";
     case TokenKind::LiteralString:  return "Literal_STRING";
     case TokenKind::LiteralChar:    return "Literal_CHAR";
     case TokenKind::Identifier:     return "Identifier";

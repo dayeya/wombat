@@ -10,6 +10,7 @@
 #include <expected>
 #include <sstream>
 
+#include "common.hpp"
 #include "token.hpp"
 #include "diagnostic.hpp"
 
@@ -31,7 +32,7 @@ struct SourceCursor {
         : file_name(std::move(filename)), source() {}
 
     // Advances the cursor, using pre-increments.
-    // This is makes peeking easier just by using [cur_loc.col] instead of incrementing once again.
+    // This is makes peeking easier just by using `cur_loc.col` instead of incrementing once again.
     char advance_self() {
         if (cur_loc.col == source[cur_loc.line].size()) {
             if (cur_loc.line + 1 < total_lines) {
@@ -50,15 +51,26 @@ struct SourceCursor {
     }
 
     // Peeks the next character safely.
-    char peek_next() {
-        if (cur_loc.col < source[cur_loc.line].size()) {
-            return source[cur_loc.line][cur_loc.col];
+    char peek_next(int step_size = 0) {
+        if (cur_loc.col + step_size < source[cur_loc.line].size()) {
+            return source[cur_loc.line][cur_loc.col + step_size];
         }
-        
-        if (cur_loc.line + 1 < total_lines && !source[cur_loc.line + 1].empty()) {
-            return source[cur_loc.line + 1][0];
+        if (cur_loc.line + 1 < total_lines) {
+            if (step_size < source[cur_loc.line + 1].size()) {
+                return source[cur_loc.line + 1][step_size];
+            }
         }
         return '\0';
+    }
+
+    // Rewinds the cursor `step_size` bytes back.
+    void rewind(int step_size) {
+        WOMBAT_ASSERT(step_size > 0, "Cannot rewind lexer.SourceCursor with a negative step_size");
+        if(cur_loc.col >= step_size) {
+            cur_loc.col -= step_size;
+        } else {
+            cur_loc.col = 0;
+        }
     }
 
     void skip_whitespace() {
@@ -139,36 +151,20 @@ private:
     void lex_symbol();
     void next_token(LazyTokenStream& token_stream);
 
-    void register_warning_diagnostic_pretty(
-        std::string message, 
-        std::string hint,
-        std::vector<Label> labels
-    ) {
-        diagnostics.emplace_back(
-            Diagnostic(Level::Warning, Phase::Lexer, message, hint, labels)
-        );
+    void register_warning_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
+        diagnostics.emplace_back(Diagnostic(Level::Warning, Phase::Lexer, message, hint, labels));
     }
 
-    void register_critical_diagnostic_pretty(
-        std::string message, 
-        std::string hint,
-        std::vector<Label> labels
-    ) {
-        diagnostics.emplace_back(
-            Diagnostic(Level::Critical, Phase::Lexer, message, hint, labels)
-        );
+    void register_critical_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
+        diagnostics.emplace_back(Diagnostic(Level::Critical, Phase::Lexer, message, hint, labels));
     }
 
     void register_critical_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(
-            Diagnostic(Level::Critical, Phase::Lexer, message, hint, {})
-        );
+        diagnostics.emplace_back(Diagnostic(Level::Critical, Phase::Lexer, message, hint, {}));
     }
       
     void register_warning_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(
-            Diagnostic(Level::Warning, Phase::Lexer, message, hint, {})
-        );
+        diagnostics.emplace_back(Diagnostic(Level::Warning, Phase::Lexer, message, hint, {}));
     }
 };
 

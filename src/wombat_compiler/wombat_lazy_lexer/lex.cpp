@@ -222,10 +222,31 @@ void Lexer::lex_literal() {
   // Lexes a numerical literal, either an integer or a float.
   auto lex_numerical_literal = [&]() -> void {
     tok->extend(m_cursor.current);
+
     while (!m_cursor.reached_eof() && CharUtils::is_digit(m_cursor.peek_next())) {
       tok->extend(advance_cursor());
     }
-    tok->kind = TokenKind::LiteralNum;
+
+    if(m_cursor.peek_next() == '.') {
+      // Eat the radix point.
+      advance_cursor();
+      std::string after_radix{""};
+      
+      while (!m_cursor.reached_eof() && CharUtils::is_digit(m_cursor.peek_next())) {
+        after_radix += advance_cursor();
+      }
+
+      if(after_radix != "") {
+        tok->extend('.');
+        tok->value.append(after_radix);
+        tok->kind = TokenKind::LiteralFloat;
+      } else {
+        m_cursor.rewind(1);
+        tok->kind = TokenKind::LiteralNum;
+      }
+    } else {
+      tok->kind = TokenKind::LiteralNum;
+    }
   };
 
   //! Lexes a string literal.
@@ -383,8 +404,7 @@ bool Lexer::open_and_populate_cursor() {
   }
   
   std::string line;
-  while (std::getline(ifs, line))
-  {
+  while (std::getline(ifs, line)) {
     m_cursor.source.push_back(line);
   }
   m_cursor.total_lines = m_cursor.source.size();

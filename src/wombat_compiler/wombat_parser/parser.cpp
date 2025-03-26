@@ -82,6 +82,7 @@ auto Parser::parse_primary() -> Ptr<Expr::BaseExpr> {
         }
     } else if(cur.matches_any(
         TokenKind::LiteralNum, 
+        TokenKind::LiteralFloat, 
         TokenKind::LiteralChar, 
         TokenKind::LiteralString, 
         TokenKind::LiteralBoolean)

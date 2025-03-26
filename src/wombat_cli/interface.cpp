@@ -53,6 +53,10 @@ void Interface::run(int argc, char** argv) {
                 sess->register_diagnostic_rendering(diag);
             }
             return State::Stopped;
+        } else {
+            for(const auto& tok : lazy_token_stream.m_tokens) {
+                tok.out();
+            }
         }
 
         lazy_token_stream.reset();
