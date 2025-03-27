@@ -210,10 +210,7 @@ void Lexer::lex_symbol() {
       break;
     }
     default:
-      tok->fill_with(
-        std::string{m_cursor.current}, 
-        TokenKind::Foreign
-      );
+      tok->fill_with(std::string{m_cursor.current}, TokenKind::Foreign);
       break;
   }
 }

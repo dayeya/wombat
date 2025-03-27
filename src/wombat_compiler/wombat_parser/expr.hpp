@@ -24,7 +24,7 @@ namespace Expr {
         // An unary expression, operator and the inner expression.
         Unary,
         // An expression within parenthesis.
-        Paren,
+        Group,
         // A function call expression. Expr::FnCall
         FnCall
     };
@@ -67,10 +67,10 @@ namespace Expr {
         ) : BaseExpr(ExprKind::Binary), op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
     };
 
-    struct ParenExpr : public BaseExpr {
+    struct GroupExpr : public BaseExpr {
         Ptr<BaseExpr> expr;
         
-        ParenExpr(Ptr<BaseExpr>& e) : BaseExpr(ExprKind::Paren), expr(std::move(e)) {} 
+        GroupExpr(Ptr<BaseExpr>& e) : BaseExpr(ExprKind::Group), expr(std::move(e)) {} 
     };
 
     struct UnaryExpr : public BaseExpr {
@@ -90,9 +90,10 @@ namespace Expr {
         BitAnd      = 6,  // &
         Shift       = 7,  // <<, >>
         Sum         = 8,  // +, -
-        Product     = 9,  // *, /, %, **, //
-        Prefix      = 10, // Unary -, `not`
-        Unambiguous = 11  // Function calls (highest precedence)
+        Product     = 9,  // *, /, %, //
+        Pow         = 10, // **
+        Prefix      = 11, // Unary -, `not`
+        Unambiguous = 12  // Function calls (highest precedence)
     };
     
     

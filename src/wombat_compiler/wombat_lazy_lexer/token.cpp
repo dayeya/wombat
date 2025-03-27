@@ -108,6 +108,7 @@ std::string Tokenizer::meaning_from_kind(const TokenKind& kind) {
     case TokenKind::Lt:             return "Less_Than";
     case TokenKind::Gt:             return "Greater_Than";
     case TokenKind::ReturnSymbol:   return "Arrow";
+    case TokenKind::DoubleStar:     return "Power_Operator";
     case TokenKind::Minus:          return "Minus_Operator";
     case TokenKind::Plus:           return "Plus_Operator";
     case TokenKind::Star:           return "Multiplication_Operator";

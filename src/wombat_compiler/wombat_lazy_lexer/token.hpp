@@ -66,7 +66,7 @@ namespace Tokenizer {
         Plus,               // Arithmetic addition symbol,          '+'
         Minus,              // Arithmetic subtraction symbol,       '-'
         Star,               // Arithmetic multiplication symbol,    '*'
-        DoubleStar,         // Arithmetic power symbol,    '**'
+        DoubleStar,         // Arithmetic power symbol,             '**'
         Slash,              // Arithmetic division symbol,          '/'
         DoubleSlash,        // Arithmetic floor division,           '//'
         ShiftRight,         // Arithmetic floor division,           '>>'
@@ -282,10 +282,9 @@ namespace Tokenizer {
         }
 
         // Populates the token with new values.
-        void fill_with(std::string v, TokenKind k, int line = -1, int col = -1) {
+        void fill_with(std::string v, TokenKind k) {
             kind = k;
             value = std::move(v);
-            loc = {line, col};
         }
 
         // Updates the tokens location in the source code.

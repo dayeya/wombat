@@ -76,7 +76,7 @@ auto Parser::parse_primary() -> Ptr<Expr::BaseExpr> {
         if(cur_tok().match_kind(TokenKind::CloseParen)) {
             // Eat the open paren.
             eat();
-            return mk_ptr<Expr::ParenExpr>(Expr::ParenExpr(expr));
+            return mk_ptr<Expr::GroupExpr>(Expr::GroupExpr(expr));
         } else {
             WOMBAT_ASSERT(false, "EXPECTED CLOSING PAREN");
         }
@@ -122,8 +122,8 @@ auto Parser::convert_expr_to_ast_node(Ptr<Expr::BaseExpr>& expr_ref) -> Ptr<AstN
             auto expr = convert_expr_to_ast_node(unary->expr);
             return mk_ptr<UnaryOpNode>(UnaryOpNode(unary->op, std::move(expr)));
         }
-        case ExprKind::Paren: {
-            auto* paren_expr = dynamic_cast<RawPtr<Expr::ParenExpr>>(expr_ref.get()); 
+        case ExprKind::Group: {
+            auto* paren_expr = dynamic_cast<RawPtr<Expr::GroupExpr>>(expr_ref.get()); 
             return convert_expr_to_ast_node(paren_expr->expr);
         }
         default: {
