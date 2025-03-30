@@ -26,27 +26,17 @@ fn main() -> free
 end
 ```
 
-Socket boilerplate - using wombat
-```
-import std
-from std.err import MaybeErr
-from std.net import { Socket, SockError }
+Please check ```/lang``` for more examples of wombats easy-to-understand syntax.
 
-fn connectTo(ip: String, port: int) -> MaybeErr<SockError>
-    mark! "NOT IMPLEMENTED";
-end
 
-fn startClient(sock: ref<Socket>) -> free
-    mark! "NOT IMPLEMENTED!;
-end
+# Den
+> [!CAUTION]
+> Den is under development - USE IT AT YOUR OWN RISKS.
+> Lives within wombats main repo. 
 
-fn main() -> free
-    match connectTo("127.0.0.1", 50000) with
-    | Some(_) -> startClient(mem! sock);
-    | SockError.NotAlive -> terminate! "ERROR: 127.0.0.1:50000 is not alive";
-    end
-end
-```
+Den, is a lightwieght build tool for wombats compiler offering various features for a basic project written in wombat.
+At this stage of development, Den acts as the CLI for the main compiler.
+
 
 # Ideas and contribution
 Wombat is in its baby steps, so be gentle. <br>

@@ -134,8 +134,7 @@ std::string Tokenizer::meaning_from_kind(const TokenKind& kind) {
     case TokenKind::Whitespace:     return "Whitespace";
     case TokenKind::LineComment:    return "Single_Line_Comment";
     default: {
-      WOMBAT_ASSERT(false, "Unreachable token kind");
-      return "Foreign";
+      UNREACHABLE();
     }
   }
 }
@@ -149,7 +148,9 @@ std::string Tokenizer::meaning_from_literal_kind(
     case LiteralKind::Char:   return "Char_LITERAL";
     case LiteralKind::Str:    return "Str_LITERAL";
     case LiteralKind::Bool:   return "Bool_LITERAL";
-    default:                  return "undifined_LITERAL";
+    default: {
+      UNREACHABLE();
+    } 
   }
 }
 
@@ -175,7 +176,9 @@ std::string Tokenizer::meaning_from_bin_op_kind(const BinOpKind& kind) {
       case BinOpKind::NotEq:      return "Not_Equal_To";
       case BinOpKind::Ge:         return "Greater_Than_Equal_To";
       case BinOpKind::Gt:         return "Greater_Than";
-      default:                    return "undifined_BINARY_OP";
+      default: {
+        UNREACHABLE();
+      }
   }
 }
 
@@ -184,7 +187,9 @@ std::string Tokenizer::meaning_from_un_op_kind(const UnOpKind& kind) {
       case UnOpKind::Neg:    return "Negation";
       case UnOpKind::Not:    return "Logical_Not";
       case UnOpKind::BitNot: return "Bitwise_Not";
-      default:               return "undifined_UN_OP";
+      default: {
+        UNREACHABLE();
+      } 
   }
 }
 

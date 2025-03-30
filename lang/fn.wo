@@ -3,19 +3,17 @@ import std.string
 import std.mem
 
 struct Den {
-    mut! lib_manager: ptr<Array<Library>>;
+    mut lib_manager: ptr<Array<Library>>;
 
     fn ship_lib(lib: String);
 }
 
-impl Den {
-    fn ship_lib(lib: String)
-        mark! "NOT IMPLEMENTED";
-    end
-}
+fn Den.ship_lib(lib: String)
+    mark! "NOT IMPLEMENTED";
+end
 
 fn modify_to_upper(s: ptr<String>) -> free
-    mem_set! { 
+    mem_set! {
         s_ptr, 
         to_upper(deref! s_ptr) 
     };

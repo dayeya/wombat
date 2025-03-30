@@ -7,8 +7,7 @@
 #include <cstring>
 #include <string>
 
-#include "wtypes.hpp"
-#include "cutil.hpp"
+#include "common.hpp"
 #include "lex.hpp"
 
 using Tokenizer::Token;
@@ -41,7 +40,7 @@ void Lexer::lex_word() {
 
   while(
     !m_cursor.reached_eof() &&
-    CharUtils::is_alnum(m_cursor.peek_next()) || m_cursor.peek_next() == '_'
+    is_alnum(m_cursor.peek_next()) || m_cursor.peek_next() == '_'
   ) {
     tok->extend(advance_cursor());
   }
@@ -220,7 +219,7 @@ void Lexer::lex_literal() {
   auto lex_numerical_literal = [&]() -> void {
     tok->extend(m_cursor.current);
 
-    while (!m_cursor.reached_eof() && CharUtils::is_digit(m_cursor.peek_next())) {
+    while (!m_cursor.reached_eof() && is_digit(m_cursor.peek_next())) {
       tok->extend(advance_cursor());
     }
 
@@ -229,7 +228,7 @@ void Lexer::lex_literal() {
       advance_cursor();
       std::string after_radix{""};
       
-      while (!m_cursor.reached_eof() && CharUtils::is_digit(m_cursor.peek_next())) {
+      while (!m_cursor.reached_eof() && is_digit(m_cursor.peek_next())) {
         after_radix += advance_cursor();
       }
 
@@ -358,33 +357,20 @@ void Lexer::next_token(LazyTokenStream& token_stream) {
   m_cursor.skip_whitespace();
   advance_cursor();
 
-  if(m_cursor.reached_new_line()) return;
-
-  if(m_cursor.current == '#') {
+  if(m_cursor.reached_new_line()) {
+    return;
+  } else if(m_cursor.current == '#') {
     lex_line_comment();
     return;
-  }
-
-  if(m_cursor.reached_eof()) {
+  } else if(m_cursor.reached_eof()) { 
     lex_eof();
-  }
-  else if(
-    CharUtils::is_alpha(m_cursor.current) || 
-    m_cursor.current == '_'
-  ) {
+  } else if(is_alpha(m_cursor.current) || m_cursor.current == '_') {
     lex_word();
-  }
-  else if(
-    CharUtils::is_digit(m_cursor.current) || 
-    m_cursor.current == '"' || 
-    m_cursor.current == '\''
-  ) {
+  } else if(is_digit(m_cursor.current) || m_cursor.current == '"' || m_cursor.current == '\'') {
     lex_literal();
-  }
-  else if(CharUtils::is_symbol(m_cursor.current)) {
+  } else if(is_symbol(m_cursor.current)) {
     lex_symbol();
-  }
-  else { 
+  } else { 
     lex_foreign(m_cursor.current); 
   };
 

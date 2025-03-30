@@ -1,0 +1,8 @@
+import std
+
+fn main() -> free
+    let numbers: Scope => {
+        let PI: int = 3.1459;
+    };
+    write! "{}", numbers.PI;
+end

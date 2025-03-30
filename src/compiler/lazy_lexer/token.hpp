@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <algorithm>
 
-#include "wtypes.hpp"
+#include "common.hpp"
 
 namespace Tokenizer {
     enum class TokenKind: int {

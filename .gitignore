@@ -1,9 +1,13 @@
+# dirs
 .vscode/
 /build/
 /bin
 /docs
+debug/
+scripts/
 /CmakeFiles/
-CMakeCache.txt
+
+# files
 *.o
 *.exe
 *.out
@@ -12,3 +16,5 @@ CMakeCache.txt
 *.dylib
 *.log
 *.swp
+CMakeCache.txt
+CMakePresets.json

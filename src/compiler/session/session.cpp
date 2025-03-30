@@ -5,14 +5,6 @@
 #include "args.hpp"
 #include "session.hpp"
 
-auto SessFile::can_read() -> bool {
-    return (file_perms & fs::perms::owner_read) != fs::perms::none;
-}
-
-auto SessFile::can_write() -> bool {
-    return (file_perms & fs::perms::owner_write) != fs::perms::none;
-}
-
 auto SessFile::validate(
     const std::string& extension, 
     bool for_read, 
@@ -84,7 +76,7 @@ auto SessFile::validate(
 }
 
 bool Session::caught_early_diagnostics() {
-    if(c_state == State::Running) {
+    if(state == State::Running) {
         // early diagnostics occur before loading the "main" function
         // which executes the users command.
         return false;

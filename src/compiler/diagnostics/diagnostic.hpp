@@ -9,7 +9,7 @@
 #include <string>
 #include <expected>
 
-#include "cutil.hpp"
+#include "strch.hpp"
 
 enum class Phase {
     Precomp,
@@ -89,12 +89,20 @@ struct Diagnostic {
     constexpr auto phase_to_str() const -> std::string;
 };
 
-constexpr std::string red_bold     {"\033[1;31m"};
-constexpr std::string green_bold   {"\033[1;32m"};
-constexpr std::string yellow_bold  {"\033[1;33m"};
-constexpr std::string blue_bold    {"\033[1;34m"};
-constexpr std::string cyan_bold    {"\033[1;36m"};
-constexpr std::string reset        {"\033[0m"};
+struct Diagnostics {
+    std::vector<Diagnostic> diags;
+
+    Diagnostics(int max_cap) : diags() {
+        diags.reserve(max_cap);
+    };
+};
+
+constexpr std::string RED_BOLD     {"\033[1;31m"};
+constexpr std::string GREEN_BOLD   {"\033[1;32m"};
+constexpr std::string YELLOW_BOLD  {"\033[1;33m"};
+constexpr std::string BLUE_BOLD    {"\033[1;34m"};
+constexpr std::string CYAN_BOLD    {"\033[1;36m"};
+constexpr std::string RESET        {"\033[0m"};
 
 /**
  * @brief Renderer defines the textual format of the Wombat diagnostic system.
@@ -127,9 +135,9 @@ struct Renderer {
         auto format() -> std::ostringstream {
             std::ostringstream formatted_header;
 
-            auto col = (level == "critical") ? red_bold : yellow_bold;
+            auto col = (level == "critical") ? RED_BOLD : YELLOW_BOLD;
 
-            formatted_header << col << level << reset << ": " << message;
+            formatted_header << col << level << RESET << ": " << message;
             return formatted_header;
         };
     };
@@ -149,10 +157,10 @@ struct Renderer {
                 << reg.location.first + 1 << ":"
                 << reg.location.second << "\n";
 
-            const auto& [trimmed_line, offset] = CharUtils::left_trim(reg.source_code.front());
+            const auto& [trimmed_line, offset] = left_trim(reg.source_code.front());
 
             out << " |\n"
-                << "[" << cyan_bold << reg.location.first + 1 << reset << "] " << trimmed_line << "\n" 
+                << "[" << CYAN_BOLD << reg.location.first + 1 << RESET << "] " << trimmed_line << "\n" 
                 << " |";
 
             int caret_position = reg.location.second + 1 - offset;
@@ -168,7 +176,7 @@ struct Renderer {
         }       
     };
 
-    Renderer() {};
+    Renderer() = default;
     
     void render_short(const Diagnostic& diag) const;
     void render_pretty_print(const Diagnostic& diag) const;

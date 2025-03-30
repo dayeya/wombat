@@ -1,4 +1,5 @@
 #include "expr.hpp"
+#include "common.hpp"
 
 using Expr::Precedence;
 using Expr::Associativity;

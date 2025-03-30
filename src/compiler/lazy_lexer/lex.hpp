@@ -10,7 +10,6 @@
 #include <expected>
 #include <sstream>
 
-#include "common.hpp"
 #include "token.hpp"
 #include "diagnostic.hpp"
 
@@ -65,7 +64,7 @@ struct SourceCursor {
 
     // Rewinds the cursor `step_size` bytes back.
     void rewind(int step_size) {
-        WOMBAT_ASSERT(step_size > 0, "Cannot rewind lexer.SourceCursor with a negative step_size");
+        ASSERT(step_size > 0, "Cannot rewind lexer.SourceCursor with a negative step_size");
         if(cur_loc.col >= step_size) {
             cur_loc.col -= step_size;
         } else {

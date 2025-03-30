@@ -1,5 +1,5 @@
-#ifndef TYPES_HPP_
-#define TYPES_HPP_
+#ifndef ALIAS_HPP_
+#define ALIAS_HPP_
 
 #include <functional>
 #include <memory>
@@ -15,15 +15,18 @@ using Ptr = std::unique_ptr<T>;
 template<typename T>
 using RawPtr = T*;
 
-template<typename T> 
-Ptr<T> mk_ptr(T&& v) {
-    return std::make_unique<T>(std::forward<T>(v));
-}
-
 template<typename T>
 using Option = std::optional<T>;
 
 template<typename T, typename E>
 using Result = std::expected<T, E>;
 
-#endif // TYPES_HPP_
+template<typename E>
+using ErrResult = std::unexpected<E>;
+
+template<typename T> 
+Ptr<T> mk_ptr(T&& v) {
+    return std::make_unique<T>(std::forward<T>(v));
+}
+
+#endif // ALIAS_HPP_
