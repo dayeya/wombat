@@ -110,36 +110,36 @@ private:
 };
 
 class UnaryOpNode : public AstNode {
-    public:
-        explicit UnaryOpNode(
-            UnOpKind op_kind,
-            Ptr<AstNode> lhs
-        ) : AstNode(NodeType::Expr), op(op_kind), left(std::move(lhs)) {} 
-    
-        bool match(BinOpKind op) const { return op == op; }
-    
-        std::string pretty_print(int ident = 0) override {
-            std::stringstream out;
-            
-            std::string top_level_ident(ident * 2, ' ');
-            std::string children_level_ident((ident + 1) * 2, ' ');
-    
-            out << top_level_ident << "UnaryNode: " << "\n"
-                << children_level_ident << "op: " << Tokenizer::meaning_from_un_op_kind(op) << "\n"
-                << children_level_ident << "left: " << "\n" << left->pretty_print(ident + 2);
+public:
+    explicit UnaryOpNode(
+        UnOpKind op_kind,
+        Ptr<AstNode> lhs
+    ) : AstNode(NodeType::Expr), op(op_kind), left(std::move(lhs)) {} 
+
+    bool match(BinOpKind op) const { return op == op; }
+
+    std::string pretty_print(int ident = 0) override {
+        std::stringstream out;
         
-            return out.str();
-        }
-        
-        void accept(Visitor& visitor) override {
-            visitor.visit(*this);
-        }
+        std::string top_level_ident(ident * 2, ' ');
+        std::string children_level_ident((ident + 1) * 2, ' ');
+
+        out << top_level_ident << "UnaryNode: " << "\n"
+            << children_level_ident << "op: " << Tokenizer::meaning_from_un_op_kind(op) << "\n"
+            << children_level_ident << "left: " << "\n" << left->pretty_print(ident + 2);
     
-    private:
-        UnOpKind op;
-        Ptr<AstNode> left;
-    };
+        return out.str();
+    }
     
+    void accept(Visitor& visitor) override {
+        visitor.visit(*this);
+    }
+
+private:
+    UnOpKind op;
+    Ptr<AstNode> left;
+};
+
 
 class AST {
 public:

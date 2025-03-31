@@ -9,6 +9,7 @@
 #include <string>
 #include <expected>
 
+#include "common.hpp"
 #include "str.hpp"
 
 enum class Level {
@@ -84,12 +85,12 @@ struct Diagnostics {
     };
 };
 
-constexpr std::string RED_BOLD     {"\033[1;31m"};
-constexpr std::string GREEN_BOLD   {"\033[1;32m"};
-constexpr std::string YELLOW_BOLD  {"\033[1;33m"};
-constexpr std::string BLUE_BOLD    {"\033[1;34m"};
-constexpr std::string CYAN_BOLD    {"\033[1;36m"};
-constexpr std::string RESET        {"\033[0m"};
+CONST std::string RED_BOLD     {"\033[1;31m"};
+CONST std::string GREEN_BOLD   {"\033[1;32m"};
+CONST std::string YELLOW_BOLD  {"\033[1;33m"};
+CONST std::string BLUE_BOLD    {"\033[1;34m"};
+CONST std::string CYAN_BOLD    {"\033[1;36m"};
+CONST std::string RESET        {"\033[0m"};
 
 /**
  * @brief Renderer defines the textual format of the Wombat diagnostic system.

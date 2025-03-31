@@ -3,7 +3,11 @@
 
 #include "common.hpp"
 
-CONST char* COMPILER_NAME = "wmc";
-CONST char* VERSION_NUMBER = "v0.1";
+CONST std::string COMPILER_NAME = "wmc";
+CONST std::string VERSION_NUMBER = "v0.1";
+
+CONST char* signature() {
+    return (COMPILER_NAME + " " + VERSION_NUMBER).c_str();
+}
 
 #endif // ENV_HPP_
