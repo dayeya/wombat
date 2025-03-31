@@ -148,19 +148,19 @@ private:
     void next_token(LazyTokenStream& token_stream);
 
     void register_warning_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
-        diagnostics.emplace_back(Diagnostic(Level::Warning, Phase::Lexer, message, hint, labels));
+        diagnostics.emplace_back(Diagnostic(Level::Warning, message, hint, labels));
     }
 
     void register_critical_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
-        diagnostics.emplace_back(Diagnostic(Level::Critical, Phase::Lexer, message, hint, labels));
+        diagnostics.emplace_back(Diagnostic(Level::Critical, message, hint, labels));
     }
 
     void register_critical_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(Diagnostic(Level::Critical, Phase::Lexer, message, hint, {}));
+        diagnostics.emplace_back(Diagnostic(Level::Critical, message, hint, {}));
     }
       
     void register_warning_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(Diagnostic(Level::Warning, Phase::Lexer, message, hint, {}));
+        diagnostics.emplace_back(Diagnostic(Level::Warning, message, hint, {}));
     }
 };
 

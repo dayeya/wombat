@@ -1,8 +1,6 @@
 #ifndef NODE_VISITOR_HPP_
 #define NODE_VISITOR_HPP_
 
-#include <wtypes.hpp>
-
 class ValueNode;
 class BinOpNode;
 class UnaryOpNode;

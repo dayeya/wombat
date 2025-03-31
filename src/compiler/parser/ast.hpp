@@ -51,7 +51,7 @@ public:
 
     std::string pretty_print(int ident = 0) override {
         if (!inner.has_value()) {
-            WOMBAT_ASSERT(false, "VALUE_NODE WITHOUT EXPR");
+            ASSERT(false, "VALUE_NODE WITHOUT EXPR");
         }
         
         std::string top_level_ident(ident * 2, ' ');

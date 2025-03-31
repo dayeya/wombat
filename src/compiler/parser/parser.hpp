@@ -1,7 +1,6 @@
 #ifndef PARSER_HPP_
 #define PARSER_HPP_
 
-#include "wtypes.hpp"
 #include "diagnostic.hpp"
 #include "lex.hpp"
 #include "expr.hpp"
@@ -81,36 +80,20 @@ public:
         src_cur.cur_loc.col = tok_cur.cur->loc.col;
     }
     
-    void register_warning_diagnostic_pretty(
-        std::string message, 
-        std::string hint,
-        std::vector<Label> labels
-    ) {
-        diagnostics.emplace_back(
-            Diagnostic(Level::Warning, Phase::Parser, message, hint, labels)
-        );
+    void register_warning_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
+        diagnostics.emplace_back(Diagnostic(Level::Warning, message, hint, labels));
     }
 
-    void register_critical_diagnostic_pretty(
-        std::string message,
-        std::string hint,
-        std::vector<Label> labels
-    ) {
-        diagnostics.emplace_back(
-            Diagnostic(Level::Critical, Phase::Parser, message, hint, labels)
-        );
+    void register_critical_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
+        diagnostics.emplace_back(Diagnostic(Level::Critical, message, hint, labels));
     }
 
     void register_critical_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(
-            Diagnostic(Level::Critical, Phase::Parser, message, hint, {})
-        );
+        diagnostics.emplace_back(Diagnostic(Level::Critical, message, hint, {}));
     }
       
     void register_warning_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(
-            Diagnostic(Level::Warning, Phase::Parser, message, hint, {})
-        );
+        diagnostics.emplace_back(Diagnostic(Level::Warning, message, hint, {}));
     }
 
 private:
@@ -125,7 +108,7 @@ private:
 
         // Reached EOF, finish parsing.
         if(ahead_pos >= tok_cur.stream_size) {
-            WOMBAT_ASSERT(false, "LOOKAHEAD FAILED, OUT OF BOUNDS");
+            ASSERT(false, "LOOKAHEAD FAILED: OUT OF BOUNDS");
         }
     
         return condition(tok_cur.stream->m_tokens.at(ntok));

@@ -5,7 +5,6 @@
 #include <optional>
 #include <expected>
 
-#include "common.hpp"
 #include "token.hpp"
 
 using Tokenizer::LiteralKind;
