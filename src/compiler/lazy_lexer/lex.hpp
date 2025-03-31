@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <memory>
-#include <filesystem>
 #include <string>
 #include <vector>
 #include <vector>
@@ -16,8 +15,6 @@
 using Tokenizer::Token;
 using Tokenizer::Location;
 using Tokenizer::LazyTokenStream;
-
-namespace fs = std::filesystem;
 
 struct SourceCursor {
     std::string file_name;

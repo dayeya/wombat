@@ -3,18 +3,6 @@
 
 #include "diagnostic.hpp"
 
-constexpr auto Diagnostic::phase_to_str() const -> std::string {
-    switch (phase) {
-        case Phase::Precomp:   return "precompilation";
-        case Phase::Lexer:     return "lexical analysis";
-        case Phase::Parser:    return "syntax and semantic analysis";
-        case Phase::CodeGen:   return "code generation";
-        case Phase::Optimize:  return "Code optimization";
-        default: 
-            return "unknown";
-    }
-}
-
 constexpr auto Diagnostic::level_to_str() const -> std::string {
     switch (level) {
         case Level::Warning:  return "warning";
@@ -27,7 +15,6 @@ constexpr auto Diagnostic::level_to_str() const -> std::string {
 
 void Renderer::render_pretty_print(const Diagnostic& diag) const {
     auto level = diag.level_to_str();
-    auto phase = diag.phase_to_str();
     auto header = Header { level, diag.message }; 
 
     std::cout << header.format().str() << "\n";

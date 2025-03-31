@@ -1,4 +1,4 @@
-#include "strch.hpp"
+#include "str.hpp"
 
 bool is_alnum(char c)  { 
     return std::isalnum(static_cast<unsigned char>(c)); 

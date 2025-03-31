@@ -6,12 +6,14 @@
 #include <string>
 #include <source_location>
 
-constexpr const char* ERROR_PREFIX = "ERROR";
-constexpr const char* WARNING_PREFIX = "WARNING";
-constexpr const char* FATAL_ERROR_PREFIX = "FATAL_ERROR";
-constexpr const char* ASSERT_PREFIX = "ASSERTION";
-constexpr const char* TODO_PREFIX = "TODO";
-constexpr const char* UNREACHABLE_PREFIX = "UNREACHABLE";
+#define CONST constexpr const
+
+CONST char* ERROR_PREFIX = "ERROR";
+CONST char* WARNING_PREFIX = "WARNING";
+CONST char* FATAL_ERROR_PREFIX = "FATAL_ERROR";
+CONST char* ASSERT_PREFIX = "ASSERTION";
+CONST char* TODO_PREFIX = "TODO";
+CONST char* UNREACHABLE_PREFIX = "UNREACHABLE";
 
 inline void ASSERT(
     bool cond, 

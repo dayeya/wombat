@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <expected>
+#include <variant>
 
 template<typename Ret, typename ...Args>
 using Closure = std::function<Ret(Args...)>;
@@ -22,11 +23,14 @@ template<typename T, typename E>
 using Result = std::expected<T, E>;
 
 template<typename E>
-using ErrResult = std::unexpected<E>;
+using ErrResult = Result<std::monostate, E>;
 
 template<typename T> 
 Ptr<T> mk_ptr(T&& v) {
     return std::make_unique<T>(std::forward<T>(v));
 }
+
+// Wrapper around std::string when we use file locations.
+using StrLoc = std::string;
 
 #endif // ALIAS_HPP_

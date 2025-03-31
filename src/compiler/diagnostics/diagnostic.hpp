@@ -9,16 +9,7 @@
 #include <string>
 #include <expected>
 
-#include "strch.hpp"
-
-enum class Phase {
-    Precomp,
-    Lexer,
-    Parser,
-    CodeGen,
-    Optimize,
-    SessInit
-};
+#include "str.hpp"
 
 enum class Level {
     Critical, Warning, Help
@@ -67,26 +58,22 @@ struct Label {
 
 struct Diagnostic {
     Level level;
-    Phase phase;
     std::string message;
     std::string hint;
     std::vector<Label> labels;
 
     Diagnostic(
         Level l, 
-        Phase p, 
         std::string msg, 
         std::string h,
         std::vector<Label> label_vec
     ) : level(l),
-        phase(p),
         message(msg),
         hint(h),
         labels(std::move(label_vec)) {}
 
     void pretty_print() const;
     constexpr auto level_to_str() const -> std::string;
-    constexpr auto phase_to_str() const -> std::string;
 };
 
 struct Diagnostics {
