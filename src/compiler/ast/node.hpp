@@ -127,9 +127,12 @@ struct LocalDeclNode : public Node {
         out << top_level_indent << "Local: " << "\n"
             << children_level_indent << "mutability: " << meaning_from_mutability(lhs->mut) << "\n"
             << children_level_indent << "type: " << meaning_from_primitive(lhs->type) << "\n"
-            << children_level_indent << "ident: " << lhs->ident.as_str() << "\n"
-            << children_level_indent << "initializer: \n"
-            << rhs->pretty_print(indent + 2);
+            << children_level_indent << "ident: " << lhs->ident.as_str() << "\n";
+
+        if(rhs != nullptr) {
+            out << children_level_indent << "initializer: \n"
+                << rhs->pretty_print(indent + 2);
+        }
     
         return out.str();
     }

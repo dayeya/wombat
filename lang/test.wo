@@ -1,1 +1,2 @@
-f: ptr = 4 + 3;
+mut f: int;
+let g: int = 5;

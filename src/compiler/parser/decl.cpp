@@ -3,9 +3,7 @@
 Option<Declaration::Initializer> Parser::parse_local_initializer(Mutability mut) {
     // If we encouter a semi-colon there is not initializer.
     // The parser checks this condition without bumping into the next token.
-    if(ntok_for([](Token& tok) { 
-        return tok.kind == TokenKind::SemiColon; 
-    })) {
+    if(cur_tok().match_kind(TokenKind::SemiColon)) {
         return std::nullopt;
     }
 
@@ -24,7 +22,7 @@ Option<Declaration::Initializer> Parser::parse_local_initializer(Mutability mut)
             TokenKind::HatAssign
         ),
         std::format(
-            "expected an assignment operator but got '{}'", 
+            "expected an assignment operator or a semi-colon but got '{}'", 
             Tokenizer::meaning_from_kind(cur_tok().kind)
         )
     );
