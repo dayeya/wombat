@@ -190,6 +190,31 @@ enum class BinOpKind: int {
     Gt
 };
 
+enum class AssignOp: int {
+    // The `=` operator (simple assignment)
+    Eq,
+    // The `*=` operator (multiply and assign)
+    Mul,
+    // The `/=` operator (divide and assign)
+    Div,
+    // The `%=` operator (modulus and assign)
+    Mod,
+    // The `+=` operator (add and assign)
+    Plus,
+    // The `-=` operator (subtract and assign)
+    Minus,
+    // The `<<=` operator (left shift and assign)
+    Shl,
+    // The `>>=` operator (right shift and assign)
+    Shr,
+    // The `&=` operator (bitwise and and assign)
+    And,
+    // The `|=` operator (bitwise or and assign)
+    Or,
+    // The `^=` operator (bitwise xor and assign)
+    Xor
+};
+
 enum class UnOpKind: int {
     // Negation. e.g `-2`.
     Neg,
@@ -279,6 +304,7 @@ struct Token {
     // Checks if the token represents a keyword.
     template<typename... Kw>
     bool match_keyword(Kw... keywords) const {
+        if(!match_kind(TokenKind::Keyword)) return false;
         auto keyword_match = Tokenizer::keyword_from_token(value);
         return keyword_match.has_value() && ((keyword_match.value() == keywords) || ...);
     }
@@ -298,16 +324,8 @@ struct Token {
 /// @brief `Tokenizer::LazyTokenStream`
 /// Is a struct that stores the token-stream buffer, meant for travesing and parsing.
 struct LazyTokenStream {
-    // `Tokenizer::TState` indicates the traversel state of a token stream.
-    enum class TState: int {
-        NotYet,
-        Traversing,
-        Ended
-    };
-
-    TState state = TState::NotYet;
-    std::vector<Token> m_tokens;
     int cur = -1;
+    std::vector<Token> m_tokens;
 
     LazyTokenStream() : m_tokens() {}
 
@@ -353,18 +371,22 @@ struct LazyTokenStream {
             return std::make_optional<Token>(m_tokens.at(cur++));
         }
     }
+
+    void dump() const {
+        for(const auto& tok : m_tokens) tok.out();
+    }
 };
 
 // Converts a 'Tokenizer::TokenKind` into a `Tokenizer::BinOpKind`.
-// Returns an optional wrapping a `Tokenizer::BinOpKind` or an `std::nullopt`.
 Option<BinOpKind> bin_op_from_token(const Token& tok);
 
 // Converts a 'Tokenizer::TokenKind` into a `Tokenizer::UnOpKind`.
-// Returns an optional wrapping a `Tokenizer::UnOpKind` or an `std::nullopt`.
 Option<UnOpKind> un_op_from_token(const Token& tok); 
 
+// Converts a 'Tokenizer::TokenKind` into a `Tokenizer::AssignOp`.
+Option<AssignOp> assign_op_from_token(const Token& tok);
+
 // Converts a 'Tokenizer::TokenKind` into a `Tokenizer::BooleanKind`.
-// Returns an optional wrapping a `Tokenizer::BooleanKind` or an `std::nullopt`.
 Option<BooleanKind> bool_from_token(const Token& tok);
 
 };

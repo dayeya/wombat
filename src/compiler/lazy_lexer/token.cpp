@@ -8,6 +8,7 @@ using Tokenizer::LiteralKind;
 using Tokenizer::Keyword;
 using Tokenizer::BinOpKind;
 using Tokenizer::UnOpKind;
+using Tokenizer::AssignOp;
 using Tokenizer::BooleanKind;
 
 Option<Keyword> Tokenizer::keyword_from_token(const std::string& lexeme) {
@@ -22,7 +23,7 @@ Option<Keyword> Tokenizer::keyword_from_token(const std::string& lexeme) {
   if(lexeme == "with")  return Keyword::With;
   if(lexeme == "and")   return Keyword::And;
   if(lexeme == "or")    return Keyword::Or;
-  if(lexeme == "Not")   return Keyword::Not;
+  if(lexeme == "not")   return Keyword::Not;
   return std::nullopt;
 }
 
@@ -86,6 +87,24 @@ Option<UnOpKind> Tokenizer::un_op_from_token(const Token& tok) {
         return std::nullopt;
       }
     }
+  }
+}
+
+Option<AssignOp> Tokenizer::assign_op_from_token(const Token& tok) {
+  switch (tok.kind) {
+    case TokenKind::Eq: return AssignOp::Eq;
+    case TokenKind::StarAssign: return AssignOp::Mul;
+    case TokenKind::SlashAssign: return AssignOp::Div;
+    case TokenKind::PrecentAssign: return AssignOp::Mod;
+    case TokenKind::PlusAssign: return AssignOp::Plus;
+    case TokenKind::MinusAssign: return AssignOp::Minus;
+    case TokenKind::ShlAssign: return AssignOp::Shl;
+    case TokenKind::ShrAssign: return AssignOp::Shr;
+    case TokenKind::AmpersandAssign: return AssignOp::And;
+    case TokenKind::PipeAssign: return AssignOp::Or;
+    case TokenKind::HatAssign: return AssignOp::Xor;
+    default: 
+      return std::nullopt;
   }
 }
 

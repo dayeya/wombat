@@ -1,0 +1,9 @@
+import std
+
+const! {
+    PI = 3.1459; 
+}
+
+fn free main()
+    write! "{}", PI;
+end

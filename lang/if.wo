@@ -1,6 +1,6 @@
 import std
 
-fn main() -> free
+fn free main()
     let mut seed: int = std.rand.seed();
 
     if not seed {

@@ -1,5 +1,5 @@
 import std
 
-fn main() -> free
+fn free main()
     write! "Hello, World!";
 end

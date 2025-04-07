@@ -7,17 +7,66 @@
 
 #include "token.hpp"
 
+/*
+-- Wombat BNF for expression rules:
+
+Expression := Literal
+            | Variable
+            | UnaryExpr
+            | BinaryExpr
+            | Grouping
+            | FnCallExpr
+
+Literal := int 
+         | float
+         | char
+         | string 
+         | bool
+
+Variable := Identifier
+
+UnaryExpr := UnaryOp Expression
+UnaryOp := -
+         | not 
+         | ~
+         | ptr
+
+BinaryExpr := Expression BinaryOp Expression
+BinaryOp := + 
+          | - 
+          | *
+          | **
+          | / 
+          | //
+          | % 
+          | == 
+          | != 
+          | < 
+          | <= 
+          | > 
+          | >=
+          | and 
+          | or
+
+Grouping := ( Expression )
+
+FnCallExpr := <Function_Idenfier>(ArgumentList?)
+ArgumentList := Expression (, Expression)*
+
+*/
+
 using Tokenizer::LiteralKind;
 using Tokenizer::BinOpKind;
 using Tokenizer::UnOpKind;
 
 using Tokenizer::Token;
 using Tokenizer::Location;
+using Tokenizer::literal_kind_from_token;
 
 namespace Expr {
 
 enum class ExprKind: int {
-    // A value expression maps to Expr::Value.
+    // A value expression maps to Expr::Literal.
     Lit,
     // A binary expression maps to Expr::BinExpr.
     Binary,
@@ -25,32 +74,57 @@ enum class ExprKind: int {
     Unary,
     // An expression within parenthesis.
     Group,
-    // A function call expression. Expr::FnCall
-    FnCall
+    // A function call expression. Expr::FnCall.
+    FnCall,
+    // A named variable.
+    Local
+};
+
+// A wrapper for `[std::string]`.
+struct Identifier {
+    std::string _ident;
+
+    Identifier() = default;
+    Identifier(std::string ident) : _ident(ident) {};
+    
+    std::string as_str() const noexcept {
+        return _ident;
+    }
+
+    bool matches(const std::string& s) const noexcept {
+        return _ident == s;
+    }
 };
 
 struct BaseExpr {
     ExprKind kind;
 
     BaseExpr(ExprKind k) : kind(k) {}
-
     virtual ~BaseExpr() = default;
     
-    inline bool matches(ExprKind ek) const { return kind == ek; } 
+    inline bool matches(ExprKind kind) const { 
+        return kind == kind; 
+    } 
 };
 
-struct Value : public BaseExpr {
-    LiteralKind lit_kind;
+struct Literal : public BaseExpr {
     std::string val;
+    LiteralKind kind;
     Location loc = Location::Singularity();
 
-    explicit Value() : BaseExpr(ExprKind::Lit) {}
+    explicit Literal() : BaseExpr(ExprKind::Lit) {}
 
-    explicit Value(const Token& t): BaseExpr(ExprKind::Lit) {
-        lit_kind = Tokenizer::literal_kind_from_token(t.kind).value_or(LiteralKind::None);
+    explicit Literal(const Token& t): BaseExpr(ExprKind::Lit) {
         val = t.value;
         loc = t.loc;
+        kind = literal_kind_from_token(t.kind).value_or(LiteralKind::None);
     }
+};
+
+struct Local : public BaseExpr {
+    Identifier ident;
+
+    Local() : BaseExpr(ExprKind::Local), ident() {};
 };
 
 struct BinExpr : public BaseExpr {
@@ -107,7 +181,7 @@ enum class Associativity: int {
 };
 
 // Returns the corresponding precedence of a binary operator.
-Option<Precedence> prec_from_bin_op(const BinOpKind& bin_op);
+Precedence prec_from_bin_op(const BinOpKind& bin_op);
 
 // Returns the corresponding precedence of an unary operator.
 Precedence prec_for_un_op(const UnOpKind& un_op);
@@ -117,6 +191,8 @@ Associativity assoc_from_bin_op(const BinOpKind& bin_op);
 
 // Returns the corresponding associativity for an unary operator.
 Associativity assoc_from_un_op();
+
+std::string meaning_from_expr_kind(const ExprKind& kind);
 
 };
 

@@ -9,6 +9,7 @@
 
 #include "common.hpp"
 #include "lex.hpp"
+#include "err.hpp"
 
 using Tokenizer::Token;
 using Tokenizer::TokenKind;
@@ -251,64 +252,36 @@ void Lexer::lex_literal() {
 		tok->extend(m_cursor.current);
 
 		while (!m_cursor.reached_eof()) {
-				char next_char = m_cursor.peek_next();
+			char next_char = m_cursor.peek_next();
 
-				if (next_char == '\\') {
-					tok->extend(advance_cursor());
-
-					char escaped_char = advance_cursor();
-
-					if (
-							escaped_char != 'n'  && 
-							escaped_char != '\\' && 
-							escaped_char != '"'
-						) {
-							std::string message("unexpected escape sequence: "); 
-							message += "'\\" + std::string(1, escaped_char) + "'";
-
-							auto region = Region {
-								m_cursor.file_name,
-								m_cursor.cur_loc.line,
-								m_cursor.cur_loc.col,
-								m_cursor.one_lined_region(),
-							};
-
-							std::vector<Label> labels{Label{
-								"invalid char", 
-								std::vector<Region>{region}
-							}}; 
-
-							register_critical_diagnostic_pretty(message, "", labels);
-					}
-					
-					tok->extend(escaped_char);
-					continue;
-				}
-
-				if (next_char == '"') {
-					tok->extend(advance_cursor());
-					tok->kind = TokenKind::LiteralString;
-					return;
-				}
-
+			if (next_char == '\\') {
 				tok->extend(advance_cursor());
+
+				char escaped_char = advance_cursor();
+
+				if (
+					escaped_char != 'n'  && 
+					escaped_char != '\\' && 
+					escaped_char != '"'
+				) {
+					ASSERT(false, std::format("unexpected escape sequence, got: '\\{}'", escaped_char));
+				}
+				
+				tok->extend(escaped_char);
+				continue;
+			}
+
+			if (next_char == '"') {
+				tok->extend(advance_cursor());
+				tok->kind = TokenKind::LiteralString;
+				return;
+			}
+
+			tok->extend(advance_cursor());
 		}
 
-		std::string message = "unterminated string literal";
-
-		auto region = Region {
-			m_cursor.file_name,
-			m_cursor.cur_loc.line,
-			tok->loc.col,
-			m_cursor.one_lined_region(tok->loc.line),
-		};
-
-		std::vector<Label> labels{Label{
-			"string starts here but is not terminated",
-			std::vector<Region>{region}
-		}}; 
-
-		register_critical_diagnostic_pretty(message, "", labels);
+		// If we reached this point, the string was not terminated.
+		ASSERT(false, "unterminated string literal");
 	};
 
 	// Lexes a char literal (e.g. 'a' or '\n').
@@ -316,31 +289,19 @@ void Lexer::lex_literal() {
 		advance_cursor();
 
 		if (m_cursor.current == '\'') {
-			advance_cursor();
 			tok->kind = TokenKind::LiteralChar;
 			tok->value = "";
+			advance_cursor();
 			return;
 		}
-		
+
 		tok->extend(m_cursor.current);
 
-		if (m_cursor.peek_next() == '\'') {
-			advance_cursor();
-			tok->kind = TokenKind::LiteralChar;
-		} else {
-			auto region = Region {
-				m_cursor.file_name,
-				m_cursor.cur_loc.line,
-				tok->loc.col,
-				m_cursor.one_lined_region(tok->loc.line),
-			};
-			
-			std::vector<Label> labels {
-				Label{"", std::vector<Region>{region}}
-			}; 
+		// force termination.
+		ASSERT(m_cursor.peek_next() == '\'', "unterminated char literal.");
 
-			register_critical_diagnostic_pretty("unterminated char literal", "close the literal with `\'`", labels);
-		}
+		advance_cursor();
+		tok->kind = TokenKind::LiteralChar;
 	};
 
 	tok->update_location(m_cursor.cur_loc.line, m_cursor.cur_loc.col);
@@ -381,16 +342,15 @@ void Lexer::next_token(LazyTokenStream& token_stream) {
 bool Lexer::open_and_populate_cursor() {
 	std::ifstream ifs(m_cursor.file_name, std::ios::in);
 
-	if(!ifs.is_open()) {  
-		register_critical_diagnostic_short("could not open: " + m_cursor.file_name, strerror(errno));
-		return false;
-	}
+	ASSERT(ifs.is_open(), "could not open: " + m_cursor.file_name, strerror(errno));
 	
 	std::string line;
 	while (std::getline(ifs, line)) {
 		m_cursor.source.push_back(line);
 	}
 	m_cursor.total_lines = m_cursor.source.size();
+
+	ASSERT(!m_cursor.source.empty(), "cannot lex an empty file.");
 
 	ifs.close();
 	return true;
@@ -407,5 +367,6 @@ auto Lexer::lex_source() -> LazyTokenStream {
 		next_token(token_stream);
 	} while(token_stream.has_next());
 
+	token_stream.reset();
 	return token_stream;
 }

@@ -1,26 +1,25 @@
 #ifndef PARSER_HPP_
 #define PARSER_HPP_
 
-#include "diagnostic.hpp"
+#include "diag.hpp"
 #include "lex.hpp"
 #include "expr.hpp"
+#include "stmt.hpp"
 #include "ast.hpp"
+#include "err.hpp"
+
+using Statement::StmtKind;
+using Declaration::Mutability;
 
 struct TokenCursor {
-    //! Ptr to a token stream.
-    //! See [token.hpp]
-    Ptr<LazyTokenStream> stream;
-
-    //! 'cur' and 'prev' serve for parsing purposes.
     Ptr<Token> cur;
     Ptr<Token> prev;
-
-    //! Total size of tokens inside 'stream'.
     size_t stream_size = 0;
+    SharedPtr<LazyTokenStream> stream;
 
-    explicit TokenCursor(LazyTokenStream s)
-        : stream(std::make_unique<LazyTokenStream>(s)), 
-          stream_size(stream->m_tokens.size()), 
+    explicit TokenCursor(const LazyTokenStream& stream)
+        : stream(std::make_shared<LazyTokenStream>(std::move(stream))), 
+          stream_size(stream.self_size()), 
           cur(nullptr), 
           prev(nullptr) {}
 
@@ -36,7 +35,6 @@ struct TokenCursor {
             cur = mk_ptr<Token>(std::move(nxt.value()));
         } else {
             cur = nullptr;
-            stream->state = LazyTokenStream::TState::Ended;
         }
     }
 
@@ -47,59 +45,26 @@ struct TokenCursor {
 
 class Parser {
 public:
-    explicit Parser(
-        const SourceCursor& cur,
-        const LazyTokenStream& stream
-    ) : tok_cur(std::move(stream)), src_cur(std::move(cur)) {
-        // Set the parser the the beginning of the stream.
-        eat();
-    }
+
+    static CONST int MAX_PARSE_DIAGS = 10;
+
+    explicit Parser(const LazyTokenStream& stream) 
+        : tok_cur(std::move(stream)), diags(MAX_PARSE_DIAGS) {}
 
     // The whole given token stream into an Ast.
-    auto parse() -> AST;
+    void parse(AST& ast); 
 
-    // Parses a primary expression.
-    auto parse_primary() -> Ptr<Expr::BaseExpr>;
-
-    // Parses an expression within a parenthesis.
-    auto parse_expr(Expr::Precedence min_prec) -> Ptr<Expr::BaseExpr>;
-
-    auto convert_expr_to_ast_node(Ptr<Expr::BaseExpr>& expr_ref) -> Ptr<AstNode>;
-
-    // Moves forward one token.
     void eat() {
         if(!tok_cur.can_advance()) {
             return;
         }
-
         // Bump into the next token.
         tok_cur.next();
-
-        // Set position for region parsing.
-        src_cur.cur_loc.line = tok_cur.cur->loc.line;
-        src_cur.cur_loc.col = tok_cur.cur->loc.col;
-    }
-    
-    void register_warning_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
-        diagnostics.emplace_back(Diagnostic(Level::Warning, message, hint, labels));
-    }
-
-    void register_critical_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
-        diagnostics.emplace_back(Diagnostic(Level::Critical, message, hint, labels));
-    }
-
-    void register_critical_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(Diagnostic(Level::Critical, message, hint, {}));
-    }
-      
-    void register_warning_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(Diagnostic(Level::Warning, message, hint, {}));
     }
 
 private:
     TokenCursor tok_cur;
-    SourceCursor src_cur;
-    std::vector<Diagnostic> diagnostics;
+    Diagnostics diags;
 
     // Looks ahead `n` tokens from the current position, for a certain condition.
     // *defaults* to the next token in line;
@@ -114,17 +79,63 @@ private:
         return condition(tok_cur.stream->m_tokens.at(ntok));
     }
 
-    void eat_and_expect(Closure<bool, Token&> condition, std::string expect);
+    void align_into_begining() {
+        if(tok_cur.cur != nullptr) {
+            ASSERT(false, "parser was already aligned.");
+        }
+        // Align the parser. 
+        // Meaning we just set it to the start of the program token stream.
+        eat(); 
+    }
 
-    // Returns a reference to the previous token. 
+    bool eat_and_expect(bool condition, std::string expect_err);
+    bool eat_and_expect_no_err(bool condition);
+
     inline Token& prev_tok() { 
         return *tok_cur.prev;
     }
 
-    // Returns a reference to the previous token. 
     inline Token& cur_tok() { 
         return *tok_cur.cur;
     }
+
+    inline bool unary() {
+        return Tokenizer::un_op_from_token(cur_tok()) != std::nullopt;
+    }
+
+    inline bool group_start() {
+        return cur_tok().match_kind(TokenKind::OpenParen);
+    }
+
+    inline bool group_end() {
+        return cur_tok().match_kind(TokenKind::CloseParen);
+    }
+
+    inline bool literal() {
+        return cur_tok().matches_any(
+            TokenKind::LiteralNum, 
+            TokenKind::LiteralFloat, 
+            TokenKind::LiteralChar, 
+            TokenKind::LiteralString, 
+            TokenKind::LiteralBoolean
+        );
+    }
+
+    Ptr<Expr::BaseExpr> parse_expr_without_recovery();
+    Ptr<Expr::BaseExpr> expr(Expr::Precedence min_prec);
+    Ptr<Expr::UnaryExpr> expr_unary();
+    Ptr<Expr::GroupExpr> expr_group();
+    Ptr<Expr::Literal> expr_literal();
+    Ptr<Expr::BaseExpr> expr_primary();
+    Expr::Precedence rhs_expr_precedence(Tokenizer::BinOpKind binary_op);
+
+    Ptr<Statement::Stmt> parse_stmt_without_recovery();
+    Ptr<Declaration::Fn> parse_fn_decl();
+    Ptr<Declaration::Var> parse_local_decl();
+    Option<Declaration::Initializer> parse_local_initializer(Mutability mut);
+
+    Ptr<Node> stmt_to_node(const Ptr<Statement::Stmt>& stmt_ref);
+    Ptr<Node> expr_to_node(const Ptr<Expr::BaseExpr>& expr_ref);
 };
 
 #endif // PARSER_HPP_

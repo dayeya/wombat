@@ -1,46 +1,31 @@
-#ifndef SESSION_HPP_
-#define SESSION_HPP_
+#ifndef COMPILER_HPP_
+#define COMPILER_HPP_
 
-#include <iostream>
-#include <expected>
-#include <queue>
-#include <variant>
-#include <functional>
-
+#include <filesystem>
 #include "alias.hpp"
 #include "builder.hpp"
-#include "diagnostic.hpp"
+#include "ctxt.hpp"
+#include "diag.hpp"
 
-enum class State {
-    // Indicates that the session has been completed.
-    Completed,
-    // Indicates that the session has been stopped.
-    Stopped,
-    // Indicates that the session is currently running.
-    Running,
-    // Indicates that the session is currently offline.
-    Offline
-};
+namespace fs = std::filesystem;
 
 class Compiler {
 public:
-    Renderer renderer;
+    Context ctxt;
+    // CodeGen backend;
     Diagnostics diagnostics;
-    State state;
 
-    static constexpr int MAX_OUTPUT_FILE = 100;
-    static constexpr int MAX_MODULES = 100;
-    static constexpr int MAX_DIAG_CAPACITY = 10;
+    static CONST int MAX_DIAG_CAPACITY = 10;
 
-    Compiler()
-        : renderer(), 
-          state{State::Offline}, 
-          diagnostics(Compiler::MAX_DIAG_CAPACITY) {}
-
-    void init_config(const BuildConfig& config);
-    void compile_target();
+    Compiler() 
+        : ctxt(), diagnostics(Compiler::MAX_DIAG_CAPACITY) {}
+    
+    void compile_target(const BuildConfig& build_config);
     
 private:
+    void lex(const BuildConfig& build_config);
+    void parse(const BuildConfig& build_config);
+    
     bool caught_diags();
     bool caught_early_diags();
 
@@ -49,4 +34,4 @@ private:
     void add_diagnostic(const Diagnostic& diag);
 };
 
-#endif // SESSION_HPP_
+#endif // COMPILER_HPP_

@@ -3,23 +3,23 @@ import std.string
 import std.mem
 
 struct Den {
-    mut lib_manager: ptr<Array<Library>>;
+    mut lib_manager: ptr<[]Library>;
 
-    fn ship_lib(lib: String);
+    fn free ship_lib(lib: String);
 }
 
-fn Den.ship_lib(lib: String)
+fn free Den.ship_lib(lib: String)
     mark! "NOT IMPLEMENTED";
 end
 
-fn modify_to_upper(s: ptr<String>) -> free
+fn free modify_to_upper(s: ptr<String>)
     mem_set! {
         s_ptr, 
         to_upper(deref! s_ptr) 
     };
 end
 
-fn main() -> free
+fn free main()
     let s: String = "wombat";
     modify_to_upper(mem! s);
     write! s;

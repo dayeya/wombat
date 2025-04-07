@@ -1,5 +1,5 @@
-#ifndef DEN_HPP_
-#define DEN_HPP_
+#ifndef BUILDER_HPP_
+#define BUILDER_HPP_
 
 #include <span>
 #include "alias.hpp"
@@ -20,14 +20,6 @@ enum class OpCode: int {
     NotEnoughArguments, // Empty shell.
     InvalidArgument,    // Tackeled an unsupported/unknown argument.
     NoInput             // No input was given for a command that requires input.
-};
-
-enum class Command: int {
-    Missing,    // Missing
-    Build,
-    Run,
-    Help,
-    Version
 };
 
 struct BuildConfig {
@@ -66,7 +58,6 @@ struct Builder {
     Builder() = default;
     void init(const std::string& parent_exec);
     void exit_builder(OpCode code);
-    void clean();
 
     int stdlib_status_from_op_code(const OpCode& code) const {
         return (code == OpCode::Success) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -86,4 +77,4 @@ struct Builder {
     Option<std::string> next(std::span<char*>& view, size_t& cur);
 };
 
-#endif // DEN_HPP_
+#endif // BUILDER_HPP_

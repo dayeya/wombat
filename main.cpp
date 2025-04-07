@@ -20,10 +20,14 @@ int main_linux(int argc, char** argv) {
     // This fills the 'config' of the builder.
     wombat_builder.parse_arguments(argc, argv + 1);
 
-    Compiler compiler = Compiler();
-    compiler.init_config(wombat_builder.config);
+    if(!wombat_builder.config.src) {
+        wombat_builder.dump_err_and_exit(OpCode::NotEnoughArguments, "missing target to compile.");
+    }
 
-    compiler.compile_target();
+    Compiler compiler = Compiler();
+
+    compiler.compile_target(wombat_builder.config);
+
     return 0;
 }
 

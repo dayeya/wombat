@@ -21,10 +21,10 @@ Here, you can find wombats visions.
 
 Hello, World! - using wombat
 ```
-import std
+import std.fmt;
 
-fn main() -> free
-    write! "Hello, World!";
+fn free main()
+    print "Hello, World!";
 end
 ```
 

@@ -2,11 +2,6 @@
 #include "file.hpp"
 #include "builder.hpp"
 
-void Builder::clean() {
-    // TODO("cleaning Builder.\n");
-    return;
-}
-
 Option<std::string> Builder::next(std::span<char*>& args, size_t& k) {
     if(args[k + 1]) {
         return args[k + 1];
@@ -147,7 +142,6 @@ void Builder::parse_arguments(int argc, char** argv) {
 }
 
 void Builder::exit_builder(OpCode code) {
-    clean();
     std::exit(stdlib_status_from_op_code(code));
 }
 
@@ -157,7 +151,7 @@ void Builder::suggest(const std::string& suggestion) const {
 
 void Builder::dump_err_and_exit(OpCode code, const std::string& description, const std::string& suggestion) {
     if(!description.empty()) {
-        std::fprintf(stderr, "[%s::err] %s\n", COMPILER_NAME, description.c_str());
+        std::fprintf(stderr, "[%s::err] %s\n", COMPILER_NAME.c_str(), description.c_str());
     }
     if(!suggestion.empty()) {
         suggest(suggestion);
@@ -184,5 +178,5 @@ void Builder::usage(const char* exec) const {
 }
 
 void Builder::version() const {
-    std::printf("%s - %s\n", COMPILER_NAME, VERSION_NUMBER);
+    std::printf("%s - %s\n", COMPILER_NAME.c_str(), VERSION_NUMBER.c_str());
 }

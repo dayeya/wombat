@@ -11,11 +11,18 @@ add_executable(wombat)
 target_sources(
     wombat
     PRIVATE main.cpp
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/core/compiler.cpp
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/diagnostics/diagnostic.cpp
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/build/builder.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/utils/str.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/utils/file.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/build/builder.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/core/compiler.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/lazy_lexer/lex.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/lazy_lexer/token.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser/parser.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser/expr.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser/stmt.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser/decl.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ast/visit.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/errors/diag.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -29,8 +36,9 @@ target_include_directories(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/build
     PRIVATE ${PROJECT_SOURCE_DIR}/src/utils
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/core
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/diagnostics
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/errors
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/lazy_lexer
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ast
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/codegen
 )

@@ -1,11 +1,12 @@
 import std
 import std.string
 
-fn main() -> free
+fn free main()
     loop with i: int = 0 {
         if i >= 10 { 
             break; 
-        };
+        }
         write! "{}, this is wombat-lang", i + 1;
+        i += 1;
     }
 end

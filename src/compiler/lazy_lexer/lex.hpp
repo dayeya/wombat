@@ -10,9 +10,10 @@
 #include <sstream>
 
 #include "token.hpp"
-#include "diagnostic.hpp"
+#include "diag.hpp"
 
 using Tokenizer::Token;
+using Tokenizer::TokenKind;
 using Tokenizer::Location;
 using Tokenizer::LazyTokenStream;
 
@@ -97,30 +98,17 @@ struct SourceCursor {
 
         return region;
     }
-
-    std::vector<std::string> multi_lined_region(int start_line, int end_line) {
-        start_line = std::max(0, start_line);
-        end_line = std::min(total_lines - 1, end_line);
-    
-        if (start_line >= total_lines || start_line > end_line) return {};
-    
-        return {source.begin() + start_line, source.begin() + end_line + 1};
-    }
-
-    //! Returns the human-readable (1-based) line number.
-    int humanized() const {
-        return cur_loc.line + 1;
-    }
 };
 
 
 class Lexer {
 public:
-    std::vector<Diagnostic> diagnostics;
+    Diagnostics diags;
+
+    static CONST int LEXER_MAX_DIAGS = 10;
 
     explicit Lexer(std::string native_path) 
-        : m_cursor(native_path), 
-          tok(std::make_unique<Token>()) {}
+        : m_cursor(native_path), tok(std::make_unique<Token>()), diags(Lexer::LEXER_MAX_DIAGS) {}
 
     SourceCursor& get_cursor() {
         return m_cursor;
@@ -147,21 +135,7 @@ private:
     void lex_symbol();
     void next_token(LazyTokenStream& token_stream);
 
-    void register_warning_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
-        diagnostics.emplace_back(Diagnostic(Level::Warning, message, hint, labels));
-    }
-
-    void register_critical_diagnostic_pretty(std::string message, std::string hint, std::vector<Label> labels) {
-        diagnostics.emplace_back(Diagnostic(Level::Critical, message, hint, labels));
-    }
-
-    void register_critical_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(Diagnostic(Level::Critical, message, hint, {}));
-    }
-      
-    void register_warning_diagnostic_short(std::string message, std::string hint) {
-        diagnostics.emplace_back(Diagnostic(Level::Warning, message, hint, {}));
-    }
+    inline void push_diagnostic(const Diagnostic& diag) { diags.push(diag); }
 };
 
 #endif // LEXER_HPP_

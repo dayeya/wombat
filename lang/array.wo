@@ -1,0 +1,6 @@
+import std;
+
+fn free main()
+    mut array: [5]int32 = [1, 2, 3, 4, 5];
+    write! "Formatted array: {}", array;
+end
