@@ -27,16 +27,13 @@ Option<Declaration::Initializer> Parser::parse_local_initializer(Mutability mut)
             "expected an assignment operator but got '{}'", 
             Tokenizer::meaning_from_kind(cur_tok().kind)
         )
-    ); 
-
-    Declaration::Initializer init(
-        mut,
-        Tokenizer::assign_op_from_token(cur_tok()).value()
     );
+
+    auto assign_op = Tokenizer::assign_op_from_token(cur_tok()).value();
 
     // Eat the assignment operator after processing it.
     eat();
-    init.expr = std::move(parse_expr_without_recovery());
+    Declaration::Initializer init(assign_op, parse_expr_without_recovery());
 
     ASSERT(
         cur_tok().match_kind(TokenKind::SemiColon), 

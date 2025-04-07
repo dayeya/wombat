@@ -92,15 +92,7 @@ inline std::string meaning_from_stmt_kind(const StmtKind& kind) {
         }
     }
 }
-
 }
-
-/*
--- Wombat declaration statement rules:
-...
-[Grammar documentation kept as is]
-...
-*/
 
 namespace Declaration {
 
@@ -123,10 +115,8 @@ struct Initializer : public Stmt {
     Ptr<Expr::BaseExpr> expr;
     Tokenizer::AssignOp assignment;
 
-    Initializer(Mutability mut, Tokenizer::AssignOp op)
-    : Stmt(StmtKind::Local), 
-      expr(std::make_unique<Expr::BaseExpr>(Expr::ExprKind::Local)), 
-      assignment(op) {}
+    Initializer(const Tokenizer::AssignOp& op, Ptr<Expr::BaseExpr> expr)
+        : Stmt(StmtKind::Local), expr(std::move(expr)), assignment(std::move(op)) {}
 };
 
 struct Var : public Stmt {

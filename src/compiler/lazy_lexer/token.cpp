@@ -57,7 +57,7 @@ Option<BinOpKind> Tokenizer::bin_op_from_token(const Token& tok) {
     case TokenKind::Gt:           return BinOpKind::Gt;
     case TokenKind::Le:           return BinOpKind::Le;
     case TokenKind::Ge:           return BinOpKind::Ge;
-    case TokenKind::Eq:           return BinOpKind::Eq;
+    case TokenKind::DoubleEq:     return BinOpKind::Eq;
     case TokenKind::NotEq:        return BinOpKind::NotEq;
     default: {
       auto keyword_match = keyword_from_token(tok.value);
@@ -116,45 +116,66 @@ Option<BooleanKind> Tokenizer::bool_from_token(const Token& tok) {
 
 std::string Tokenizer::meaning_from_kind(const TokenKind& kind) {
   switch (kind) {
-    case TokenKind::OpenParen:      return "Open_Paren";
-    case TokenKind::CloseParen:     return "Close_Paren";
-    case TokenKind::OpenBracket:    return "Open_Bracket";
-    case TokenKind::CloseBracket:   return "Close_Bracket";
-    case TokenKind::OpenCurly:      return "Open_Curly";
-    case TokenKind::CloseCurly:     return "Close_Curly";
-    case TokenKind::OpenAngle:      return "Open_Angle";
-    case TokenKind::CloseAngle:     return "Close_Angle";
-    case TokenKind::Lt:             return "Less_Than";
-    case TokenKind::Gt:             return "Greater_Than";
-    case TokenKind::ReturnSymbol:   return "Arrow";
-    case TokenKind::DoubleStar:     return "Power_Operator";
-    case TokenKind::Minus:          return "Minus_Operator";
-    case TokenKind::Plus:           return "Plus_Operator";
-    case TokenKind::Star:           return "Multiplication_Operator";
-    case TokenKind::Slash:          return "Division_Operator";
-    case TokenKind::Precent:        return "Modulus_Operator";
-    case TokenKind::DoubleEq:       return "Equality_Operator";
-    case TokenKind::NotEq:          return "Not_Equality_Operator";
-    case TokenKind::Eq:             return "Equals_Assignment";
-    case TokenKind::Le:             return "Less_Than_Or_Equal_To";
-    case TokenKind::Ge:             return "Greater_Than_Or_Equal_To";
-    case TokenKind::Eof:            return "End_Of_File";
-    case TokenKind::Colon:          return "Colon";
-    case TokenKind::SemiColon:      return "Semi_Colon";
-    case TokenKind::Comma:          return "Comma";
-    case TokenKind::Dot:            return "Dot";
-    case TokenKind::LiteralNum:     return "Literal_NUMBER";
-    case TokenKind::LiteralFloat:   return "Literal_FLOAT";
-    case TokenKind::LiteralString:  return "Literal_STRING";
-    case TokenKind::LiteralChar:    return "Literal_CHAR";
-    case TokenKind::Identifier:     return "Identifier";
-    case TokenKind::Keyword:        return "Keyword";
-    case TokenKind::Readable:       return "Readable";
-    case TokenKind::Whitespace:     return "Whitespace";
-    case TokenKind::LineComment:    return "Single_Line_Comment";
-    default: {
-      UNREACHABLE();
-    }
+      case TokenKind::OpenParen: return "Open_Paren";
+      case TokenKind::CloseParen: return "Close_Paren";
+      case TokenKind::OpenBracket: return "Open_Bracket";
+      case TokenKind::CloseBracket: return "Close_Bracket";
+      case TokenKind::OpenCurly: return "Open_Curly";
+      case TokenKind::CloseCurly: return "Close_Curly";
+      case TokenKind::OpenAngle: return "Open_Angle";
+      case TokenKind::CloseAngle: return "Close_Angle";
+      case TokenKind::Lt: return "Less_Than";
+      case TokenKind::Gt: return "Greater_Than";
+      case TokenKind::ReturnSymbol: return "Arrow";
+      case TokenKind::DoubleStar: return "Power_Operator";
+      case TokenKind::Minus: return "Minus_Operator";
+      case TokenKind::Plus: return "Plus_Operator";
+      case TokenKind::Star: return "Multiplication_Operator";
+      case TokenKind::Slash: return "Division_Operator";
+      case TokenKind::Precent: return "Modulus_Operator";
+      case TokenKind::DoubleEq: return "Equality_Operator";
+      case TokenKind::NotEq: return "Not_Equality_Operator";
+      case TokenKind::Eq: return "Equals_Assignment";
+      case TokenKind::Le: return "Less_Than_Or_Equal_To";
+      case TokenKind::Ge: return "Greater_Than_Or_Equal_To";
+      case TokenKind::Eof: return "End_Of_File";
+      case TokenKind::Colon: return "Colon";
+      case TokenKind::SemiColon: return "Semi_Colon";
+      case TokenKind::Comma: return "Comma";
+      case TokenKind::Dot: return "Dot";
+      case TokenKind::LiteralNum: return "Literal_NUMBER";
+      case TokenKind::LiteralFloat: return "Literal_FLOAT";
+      case TokenKind::LiteralString: return "Literal_STRING";
+      case TokenKind::LiteralChar: return "Literal_CHAR";
+      case TokenKind::LiteralBoolean: return "Literal_BOOLEAN";
+      case TokenKind::Identifier: return "Identifier";
+      case TokenKind::Keyword: return "Keyword";
+      case TokenKind::Readable: return "Readable";
+      case TokenKind::Whitespace: return "Whitespace";
+      case TokenKind::LineComment: return "Single_Line_Comment";
+      case TokenKind::Bang: return "Bang";
+      case TokenKind::Ampersand: return "Ampersand";
+      case TokenKind::Pipe: return "Pipe";
+      case TokenKind::Hat: return "Hat";
+      case TokenKind::Tilde: return "Tilde";
+      case TokenKind::DoubleSlash: return "Floor_Division_Operator";
+      case TokenKind::ShiftRight: return "Shift_Right";
+      case TokenKind::ShiftLeft: return "Shift_Left";
+      case TokenKind::StarAssign: return "Multiply_Assign";
+      case TokenKind::SlashAssign: return "Divide_Assign";
+      case TokenKind::PrecentAssign: return "Modulo_Assign";
+      case TokenKind::PlusAssign: return "Plus_Assign";
+      case TokenKind::MinusAssign: return "Minus_Assign";
+      case TokenKind::ShlAssign: return "Shift_Left_Assign";
+      case TokenKind::ShrAssign: return "Shift_Right_Assign";
+      case TokenKind::AmpersandAssign: return "Bitwise_And_Assign";
+      case TokenKind::PipeAssign: return "Bitwise_Or_Assign";
+      case TokenKind::HatAssign: return "Bitwise_Xor_Assign";
+      case TokenKind::Foreign: return "Foreign_Token";
+      case TokenKind::None: return "None_Token";
+      default: {
+          UNREACHABLE();
+      }
   }
 }
 

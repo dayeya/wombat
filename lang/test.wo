@@ -1,1 +1,1 @@
-mut x: int = 8;
+f: ptr = 4 + 3;
