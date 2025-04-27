@@ -100,6 +100,8 @@ enum class TokenKind: int {
 };
 
 enum class Keyword: int {
+    // 'import' denotes an import statement.
+    Import,
     // 'fn' denotes either function declaration, implementation or a function pointer via ref<fn ...>
     Fn, 
     // 'return' denotes the return value of a function.
@@ -247,6 +249,9 @@ std::string meaning_from_bin_op_kind(const BinOpKind& kind);
 // Converts a `Tokenizer::UnOpKind` into its string representation.
 std::string meaning_from_un_op_kind(const UnOpKind& kind);
 
+// Converts a `Tokenizer::AssignOp` into its string representation.
+std::string meaning_from_assign_op_kind(const AssignOp& kind);
+
 /// @brief `Tokenizer::Location`
 /// Is a struct wrapping the line and a column of a certain context within the source code.  
 struct Location {
@@ -328,6 +333,7 @@ struct LazyTokenStream {
     std::vector<Token> m_tokens;
 
     LazyTokenStream() : m_tokens() {}
+    ~LazyTokenStream() = default;
 
     // Resets the cursors position.
     void reset() {
@@ -367,8 +373,7 @@ struct LazyTokenStream {
         if(!has_next()) {
             return std::nullopt;
         } else {
-            if(cur == -1) cur++;
-            return std::make_optional<Token>(m_tokens.at(cur++));
+            return std::make_optional<Token>(m_tokens.at(++cur));
         }
     }
 

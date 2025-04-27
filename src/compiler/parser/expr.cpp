@@ -12,9 +12,9 @@ std::string Expr::meaning_from_expr_kind(const ExprKind& kind) {
         case ExprKind::Unary: return "Unary";
         case ExprKind::Group: return "Group";
         case ExprKind::FnCall: return "Function";
-        case ExprKind::Local: return "LocalDef";
+        case ExprKind::Local: return "Local_Resource_Access";
         default: {
-            UNREACHABLE();
+            return "unknown_Expr_Kind";
         }
     }
 }
@@ -100,7 +100,7 @@ Ptr<Expr::UnaryExpr> Parser::expr_unary() {
     eat();
 
     auto unary_expr = expr(prec);
-    return mk_ptr<Expr::UnaryExpr>(Expr::UnaryExpr(unary_op, unary_expr));
+    return mk_ptr(Expr::UnaryExpr(unary_op, unary_expr));
 }
 
 Ptr<Expr::GroupExpr> Parser::expr_group() {
@@ -117,11 +117,59 @@ Ptr<Expr::GroupExpr> Parser::expr_group() {
 
     // Eat the closing paren.
     eat();
-    return mk_ptr<Expr::GroupExpr>(Expr::GroupExpr(group));
+    return mk_ptr(Expr::GroupExpr(group));
 }
 
 Ptr<Expr::Literal> Parser::expr_literal() {
-    return mk_ptr<Expr::Literal>(Expr::Literal(cur_tok()));
+    Expr::Literal literal(cur_tok());
+
+    // Eat the literal itself.
+    eat();
+    return mk_ptr(std::move(literal));
+}
+
+Ptr<Expr::Local> Parser::expr_ident_local() {
+    ASSERT(cur_tok().match_kind(TokenKind::Identifier), "unreachable: expected an identifier.");
+
+    Expr::Identifier ident(cur_tok().value);
+    eat();
+
+    return mk_ptr(Expr::Local(std::move(ident)));
+}
+
+Ptr<Expr::FnCall> Parser::expr_ident_fn() {
+    ASSERT(cur_tok().match_kind(TokenKind::Identifier), "unreachable: expected an identifier.");
+
+    Expr::Identifier ident(cur_tok().value);
+    eat();
+
+    // Eat the open paren.
+    ASSERT(
+        cur_tok().match_kind(TokenKind::OpenParen), 
+        std::format("expected `(` but got `{}`", cur_tok().value)
+    );
+    eat();
+
+    std::vector<Ptr<Expr::BaseExpr>> args;
+    while(!cur_tok().match_kind(TokenKind::CloseParen)) {
+        auto arg = expr(Expr::Precedence::Dummy);
+        args.push_back(std::move(arg));
+
+        if(cur_tok().match_kind(TokenKind::Comma)) {
+            eat();
+            continue;
+        }
+        break;
+    }
+
+    // Eat the closing paren.
+    ASSERT(
+        cur_tok().match_kind(TokenKind::CloseParen), 
+        std::format("expected `)` but got `{}`", cur_tok().value)
+    );
+    eat();
+
+    return mk_ptr(Expr::FnCall(std::move(ident), std::move(args)));
 }
 
 Ptr<Expr::BaseExpr> Parser::expr_primary() {
@@ -132,9 +180,18 @@ Ptr<Expr::BaseExpr> Parser::expr_primary() {
         return expr_group();
     }
     if(literal()) {
-        auto lit = expr_literal();
-        eat(); 
-        return lit;
+        return expr_literal();
+    }
+    if(cur_tok().match_kind(TokenKind::Identifier)) {
+        // First, check if the 'ident' could be a function call.
+        if(
+            ntok_for([](Token& tok) {
+                return tok.match_kind(TokenKind::OpenParen); 
+            }, TokDistance::Next)
+        ) {
+            return expr_ident_fn();
+        }
+        return expr_ident_local();
     }
     ASSERT(false, "invalid token: got `" + cur_tok().value + "`, expected expression");
     return nullptr;
@@ -160,7 +217,7 @@ Ptr<Expr::BaseExpr> Parser::expr(Expr::Precedence min_prec) {
         );
 
         // Continue the matching
-        bin_op_match = Tokenizer::bin_op_from_token(cur_tok());
+        bin_op_match = bin_op_from_token(cur_tok());
     }
 
     return base;

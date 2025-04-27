@@ -12,18 +12,20 @@ using Tokenizer::AssignOp;
 using Tokenizer::BooleanKind;
 
 Option<Keyword> Tokenizer::keyword_from_token(const std::string& lexeme) {
-  if(lexeme == "fn")    return Keyword::Fn;
-  if(lexeme == "end")   return Keyword::End;
-  if(lexeme == "if")    return Keyword::If;
-  if(lexeme == "else")  return Keyword::Else; 
-  if(lexeme == "let")   return Keyword::Let;
-  if(lexeme == "mut")   return Keyword::Mut;
-  if(lexeme == "loop")  return Keyword::Loop;
-  if(lexeme == "break") return Keyword::Break;
-  if(lexeme == "with")  return Keyword::With;
-  if(lexeme == "and")   return Keyword::And;
-  if(lexeme == "or")    return Keyword::Or;
-  if(lexeme == "not")   return Keyword::Not;
+  if(lexeme == "import")     return Keyword::Import;
+  if(lexeme == "fn")     return Keyword::Fn;
+  if(lexeme == "end")    return Keyword::End;
+  if(lexeme == "return") return Keyword::Return;
+  if(lexeme == "if")     return Keyword::If;
+  if(lexeme == "else")   return Keyword::Else; 
+  if(lexeme == "let")    return Keyword::Let;
+  if(lexeme == "mut")    return Keyword::Mut;
+  if(lexeme == "loop")   return Keyword::Loop;
+  if(lexeme == "break")  return Keyword::Break;
+  if(lexeme == "with")   return Keyword::With;
+  if(lexeme == "and")    return Keyword::And;
+  if(lexeme == "or")     return Keyword::Or;
+  if(lexeme == "not")    return Keyword::Not;
   return std::nullopt;
 }
 
@@ -174,7 +176,7 @@ std::string Tokenizer::meaning_from_kind(const TokenKind& kind) {
       case TokenKind::Foreign: return "Foreign_Token";
       case TokenKind::None: return "None_Token";
       default: {
-          UNREACHABLE();
+          ASSERT(false, "unknown_TOKEN");
       }
   }
 }
@@ -189,7 +191,7 @@ std::string Tokenizer::meaning_from_literal_kind(
     case LiteralKind::Str:    return "Str_LITERAL";
     case LiteralKind::Bool:   return "Bool_LITERAL";
     default: {
-      UNREACHABLE();
+      ASSERT(false, "unknown_LITERAL");
     } 
   }
 }
@@ -217,7 +219,7 @@ std::string Tokenizer::meaning_from_bin_op_kind(const BinOpKind& kind) {
       case BinOpKind::Ge:         return "Greater_Than_Equal_To";
       case BinOpKind::Gt:         return "Greater_Than";
       default: {
-        UNREACHABLE();
+        ASSERT(false, "unknown_BinOp");
       }
   }
 }
@@ -228,8 +230,28 @@ std::string Tokenizer::meaning_from_un_op_kind(const UnOpKind& kind) {
       case UnOpKind::Not:    return "Logical_Not";
       case UnOpKind::BitNot: return "Bitwise_Not";
       default: {
-        UNREACHABLE();
+        ASSERT(false, "unknown_UnOp");
       } 
+  }
+}
+
+std::string Tokenizer::meaning_from_assign_op_kind(const AssignOp& kind) {
+  switch (kind)
+  {
+    case AssignOp::Eq: return "Eq_Assign";
+    case AssignOp::Mul: return "Mul_Assign";
+    case AssignOp::Div: return "Div_Assign";
+    case AssignOp::Mod: return "Mod_Assign";
+    case AssignOp::Plus: return "Plus_Assign";
+    case AssignOp::Minus: return "Minus_Assign";
+    case AssignOp::Shl: return "Shl_Assign"; 
+    case AssignOp::Shr: return "Shr_Assign"; 
+    case AssignOp::And: return "And_Assign"; 
+    case AssignOp::Or: return "Or_Assign";
+    case AssignOp::Xor: return "Xor_Assign"; 
+    default: {
+      ASSERT(false, "unknown_AssignOp");
+    }
   }
 }
 

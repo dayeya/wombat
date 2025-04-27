@@ -8,8 +8,21 @@
 #include "ast.hpp"
 #include "err.hpp"
 
+using Statement::Stmt;
 using Statement::StmtKind;
+using Statement::Block;
+using Statement::Import;
+using Statement::FnCall;
+
+using Declaration::Parameter;
+using Declaration::Var;
+using Declaration::Assignment;
+using Declaration::FnSignature;
+using Declaration::FnHeader;
+using Declaration::Fn;
+using Declaration::Initializer;
 using Declaration::Mutability;
+using Declaration::Primitive;
 
 struct TokenCursor {
     Ptr<Token> cur;
@@ -45,14 +58,26 @@ struct TokenCursor {
 
 class Parser {
 public:
+    // A simple enumeration to represent a distance within the token stream.
+    // Those are the most used distances when parsing expressions and statements.
+    enum TokDistance: int {
+        // The current position.
+        Nil = 0,
+        // One token from the current position.
+        Next = 1
+    };
 
     static CONST int MAX_PARSE_DIAGS = 10;
 
-    explicit Parser(const LazyTokenStream& stream) 
+    Parser(const LazyTokenStream& stream) 
         : tok_cur(std::move(stream)), diags(MAX_PARSE_DIAGS) {}
 
     // The whole given token stream into an Ast.
     void parse(AST& ast); 
+
+private:
+    Diagnostics diags;
+    TokenCursor tok_cur;
 
     void eat() {
         if(!tok_cur.can_advance()) {
@@ -62,34 +87,28 @@ public:
         tok_cur.next();
     }
 
-private:
-    TokenCursor tok_cur;
-    Diagnostics diags;
-
     // Looks ahead `n` tokens from the current position, for a certain condition.
     // *defaults* to the next token in line;
-    bool ntok_for(Closure<bool, Token&> condition, int ntok = 1) {
+    bool ntok_for(Closure<bool, Token&> condition, int ntok) {
+        // Increment by 1 since the LazyTokenStream is [-1] indexed.
         size_t ahead_pos = tok_cur.pos() + ntok;
-
+        
         // Reached EOF, finish parsing.
         if(ahead_pos >= tok_cur.stream_size) {
             ASSERT(false, "LOOKAHEAD FAILED: OUT OF BOUNDS");
         }
-    
-        return condition(tok_cur.stream->m_tokens.at(ntok));
+        
+        Token& tok = tok_cur.stream->m_tokens.at(ahead_pos);
+        return condition(tok);
     }
 
     void align_into_begining() {
-        if(tok_cur.cur != nullptr) {
-            ASSERT(false, "parser was already aligned.");
-        }
+        ASSERT(tok_cur.cur == nullptr, "parser was already aligned.");
+        
         // Align the parser. 
         // Meaning we just set it to the start of the program token stream.
         eat(); 
     }
-
-    bool eat_and_expect(bool condition, std::string expect_err);
-    bool eat_and_expect_no_err(bool condition);
 
     inline Token& prev_tok() { 
         return *tok_cur.prev;
@@ -123,19 +142,43 @@ private:
 
     Ptr<Expr::BaseExpr> parse_expr_without_recovery();
     Ptr<Expr::BaseExpr> expr(Expr::Precedence min_prec);
+    Ptr<Expr::BaseExpr> expr_primary();
+
+    Ptr<Expr::FnCall> expr_ident_fn();
+    Ptr<Expr::Local> expr_ident_local();
     Ptr<Expr::UnaryExpr> expr_unary();
     Ptr<Expr::GroupExpr> expr_group();
     Ptr<Expr::Literal> expr_literal();
-    Ptr<Expr::BaseExpr> expr_primary();
+    
+    // Computes the precedence of the right sibling of the current node.
+    // This precedence will be using in the recursive manner when parsing expressions.
     Expr::Precedence rhs_expr_precedence(Tokenizer::BinOpKind binary_op);
 
-    Ptr<Statement::Stmt> parse_stmt_without_recovery();
-    Ptr<Declaration::Fn> parse_fn_decl();
-    Ptr<Declaration::Var> parse_local_decl();
-    Option<Declaration::Initializer> parse_local_initializer(Mutability mut);
+    Var parse_local_decl();
+    Assignment parse_local_assignment();
+    Option<Initializer> parse_local_initializer();
 
-    Ptr<Node> stmt_to_node(const Ptr<Statement::Stmt>& stmt_ref);
-    Ptr<Node> expr_to_node(const Ptr<Expr::BaseExpr>& expr_ref);
+    FnCall parse_fn_call();
+    Fn parse_fn_decl();
+    Block parse_block();
+
+    void parse_fn_header_params(FnHeader& header);
+    void parse_fn_header(FnHeader& header);
+
+    // [TODO]
+    // void parse_type_within_angle_brackets();
+
+    Statement::Import parse_import_stmt();
+    Statement::Return parse_return_stmt();
+    Identifier parse_general_ident();
+    Option<Parameter> parse_param_within_fn_header();
+    Option<Primitive> parse_type_ident();
+    Ptr<Stmt> parse_stmt_without_recovery();
+    
+    // Used for the final AST body.
+    Ptr<FnNode> parse_function_to_node();
+    Ptr<StmtNode> stmt_to_node(const Ptr<Statement::Stmt>& stmt);
+    Ptr<ExprNode> expr_to_node(const Ptr<Expr::BaseExpr>& expr);
 };
 
 #endif // PARSER_HPP_

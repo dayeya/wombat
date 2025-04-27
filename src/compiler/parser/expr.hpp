@@ -124,7 +124,16 @@ struct Literal : public BaseExpr {
 struct Local : public BaseExpr {
     Identifier ident;
 
-    Local() : BaseExpr(ExprKind::Local), ident() {};
+    Local(Identifier&& ident) 
+        : BaseExpr(ExprKind::Local), ident(std::move(ident)) {};
+};
+
+struct FnCall : public BaseExpr {
+    Identifier ident;
+    std::vector<Ptr<BaseExpr>> args;
+
+    FnCall(Identifier&& ident, std::vector<Ptr<BaseExpr>>&& args) 
+        : BaseExpr(ExprKind::FnCall), ident(std::move(ident)), args(std::move(args)) {}
 };
 
 struct BinExpr : public BaseExpr {
@@ -132,9 +141,9 @@ struct BinExpr : public BaseExpr {
     Ptr<BaseExpr> lhs;
     Ptr<BaseExpr> rhs;
 
-    explicit BinExpr() : BaseExpr(ExprKind::Binary) {}
+    BinExpr() : BaseExpr(ExprKind::Binary) {}
 
-    explicit BinExpr(
+    BinExpr(
         BinOpKind op, 
         Ptr<BaseExpr> lhs, 
         Ptr<BaseExpr> rhs

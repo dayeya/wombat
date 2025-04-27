@@ -1,2 +1,3 @@
-mut f: int;
-let g: int = 5;
+fn free main()
+    write("Hello, World!");
+end

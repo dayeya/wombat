@@ -18,7 +18,7 @@ CONST char* UNREACHABLE_PREFIX = "UNREACHABLE";
 inline void ASSERT(
     bool cond, 
     const std::string& msg, 
-    const std::string& prefix = ASSERT_PREFIX,
+    const std::string& prefix = ASSERT_PREFIX, 
     std::source_location loc = std::source_location::current()
 ) {
     if (!cond) {
@@ -31,10 +31,10 @@ inline void ASSERT(
 
 inline void TODO(const std::string& todo, const std::string& version = "", const std::string& from = "") {
     if (!version.empty()) {
-        std::printf("VERSION: [%s] ", version.c_str());
+        std::printf("VERSION: [%s]\n", version.c_str());
     }
     if (!from.empty()) {
-        std::printf("FROM: [%s] ", from.c_str());
+        std::printf("FROM: [%s]\n", from.c_str());
     }
     std::printf("[TODO] -- %s\n", todo.c_str());
 }

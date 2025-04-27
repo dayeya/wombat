@@ -6,21 +6,28 @@
 
 class AST {
 public:
-    explicit AST(Ptr<Node> r = nullptr) : root(std::move(r)) {}
+    explicit AST() : functions() {}
 
-    void set_entry_point(Ptr<Node>& entry) {
-        root = std::move(entry);
+    bool contains_entry_point() const {
+        for(const auto& fn : functions) {
+            if(fn->header->header->ident.matches("main")) {
+                return true;
+            }
+        }
     }
 
-    void traverse(PPVisitor& visitor) {        
-        if (!root) {
-            return;
+    void push_function(Ptr<FnNode>&& fn) {
+        functions.push_back(std::move(fn));
+    }
+
+    void traverse(PPVisitor& visitor) {
+        for(const auto& fn : functions) {
+            fn->accept(visitor);
         }
-        root->accept(visitor);
     }
     
 private:
-    Ptr<Node> root;
+    std::vector<Ptr<FnNode>> functions;
 };
 
 #endif // AST_HPP_

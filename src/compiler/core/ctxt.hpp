@@ -9,6 +9,7 @@ struct Context {
     AST program_ast;
 
     Context() : program_tokens(), program_ast() {}
+    ~Context() = default;
 };
 
 #endif // CONTEXT_HPP_
