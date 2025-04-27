@@ -26,6 +26,7 @@ Option<Keyword> Tokenizer::keyword_from_token(const std::string& lexeme) {
   if(lexeme == "and")    return Keyword::And;
   if(lexeme == "or")     return Keyword::Or;
   if(lexeme == "not")    return Keyword::Not;
+  if(lexeme == "ptr")    return Keyword::Ptr;
   return std::nullopt;
 }
 

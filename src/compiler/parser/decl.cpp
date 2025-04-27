@@ -1,8 +1,11 @@
 #include "parser.hpp"
 
-using Declaration::try_primitive_from_ident;
+using Tokenizer::Token;
+using Tokenizer::Keyword;
 
-Expr::Identifier Parser::parse_general_ident() {
+using Declaration::maybe_primitive;
+
+Identifier Parser::parse_general_ident() {
     ASSERT(
         cur_tok().match_kind(TokenKind::Identifier),
         std::format("expected function name identifier but got '{}'", cur_tok().value)
@@ -14,16 +17,72 @@ Expr::Identifier Parser::parse_general_ident() {
     return fn_ident;
 }
 
-Option<Primitive> Parser::parse_type_ident() {
-    Expr::Identifier ident(cur_tok().value);
-    auto type = try_primitive_from_ident(ident); 
+Ptr<Type> Parser::parse_type() {
+    if(cur_tok().match_kind(TokenKind::Identifier))
+    {
+        Expr::Identifier ident(cur_tok().value);
+        Option<Primitive> type = maybe_primitive(ident); 
+        ASSERT(
+            type.has_value(),
+            std::format("expected a valid primitive type, got '{}'", ident.as_str())
+        );
+        // Eat the type identifier.
+        eat();
+        Primitive ty = type.value();
+        return mk_ptr(PrimitiveType(std::move(ty)));
+    }
+    if(cur_tok().match_keyword(Keyword::Ptr)) 
+    {
+        eat();
+        ASSERT(
+            cur_tok().match_kind(TokenKind::OpenAngle),
+            std::format("expected `<` after ptr keyword but got '{}'", cur_tok().value)
+        );
+
+        // A pointer underlying type.
+        // E.g 'mut string_type_example: ptr<[5]ch>
+        eat();
+        Ptr<Type> type = parse_type();
+        
+        ASSERT(
+            cur_tok().match_kind(TokenKind::CloseAngle),
+            std::format("expected `>` after ptr type but got '{}'", cur_tok().value)
+        );
+        eat();
+
+        return mk_ptr(PointerType(std::move(type)));
+    }
+    if(cur_tok().match_kind(TokenKind::OpenBracket)) 
+    {
+        eat();
+        size_t array_size = 0;
+        
+        ASSERT(
+            cur_tok().match_kind(TokenKind::LiteralNum) ||
+            cur_tok().match_kind(TokenKind::CloseBracket),
+            std::format("expected integer or ']' in array type but got '{}'", cur_tok().value)
+        );
+
+        if(cur_tok().match_kind(TokenKind::LiteralNum)) 
+        {
+            array_size = std::stoul(cur_tok().value);
+            eat();
+        }
+
+        ASSERT(
+            cur_tok().match_kind(TokenKind::CloseBracket),
+            std::format("expected `]` after array type but got '{}'", cur_tok().value)
+        );
+        eat();
+
+        Ptr<Type> type = parse_type();
+        return mk_ptr(ArrayType(std::move(array_size), std::move(type))); 
+    }
     ASSERT(
-        type.has_value(),
-        std::format("expected a valid primitive type, got '{}'", ident.as_str())
+        false,
+        std::format("expected type but got '{}'", cur_tok().value)
     );
-    // Eat the type identifier.
-    eat();
-    return type;
+    return nullptr;
 }
 
 Option<Parameter> Parser::parse_param_within_fn_header() {
@@ -53,16 +112,16 @@ Option<Parameter> Parser::parse_param_within_fn_header() {
     eat();
 
     return Parameter(
-        mut,
-        parse_type_ident().value(), 
-        param_ident
+        std::move(mut),
+        std::move(param_ident),
+        parse_type()
     );
 }
 
 void Parser::parse_fn_header_params(FnHeader& header) {
     if(cur_tok().match_kind(TokenKind::CloseParen)) {
         // We empty parameter list.
-        header.params = {};
+        header.params = std::vector<Parameter>{};
     }
     else 
     {
@@ -75,8 +134,8 @@ void Parser::parse_fn_header_params(FnHeader& header) {
             ASSERT(param.has_value(), "unexpected behavior");
 
             // Just add the parameter. (We will build the signature at the next stage.)
-            header.params.push_back(param.value());
-            header.sig.argument_types.push_back(param.value().type);
+            header.params.push_back(std::move(param.value()));
+            header.sig.argument_types.push_back(std::move(header.params.back().type));
             
             if(cur_tok().match_kind(TokenKind::CloseParen)) {
                 break;
@@ -92,7 +151,7 @@ void Parser::parse_fn_header_params(FnHeader& header) {
 }
 
 void Parser::parse_fn_header(FnHeader& header) {
-    Option<Primitive> type = parse_type_ident();
+    Ptr<Type> type = parse_type();
     Expr::Identifier ident = parse_general_ident();
     
     ASSERT(
@@ -103,8 +162,8 @@ void Parser::parse_fn_header(FnHeader& header) {
         )
     );    
 
-    header.ident = ident;
-    header.sig.ret_type = type.value();
+    header.ident = std::move(ident);
+    header.sig.ret_type = std::move(type);
 
     eat();
     parse_fn_header_params(header);
@@ -139,6 +198,7 @@ Option<Initializer> Parser::parse_local_initializer() {
     // If we encouter a semi-colon there is not initializer.
     // The parser checks this condition without bumping into the next token.
     if(cur_tok().match_kind(TokenKind::SemiColon)) {
+        eat();
         return std::nullopt;
     }
 
@@ -208,21 +268,14 @@ Var Parser::parse_local_decl() {
 
     // Eat the colon.
     eat(); 
-    ASSERT(
-        cur_tok().match_kind(TokenKind::Identifier),
-        std::format(
-            "expected an type-identifier but got '{}'", 
-            meaning_from_kind(cur_tok().kind)
-        )
-    );
-    
-    auto type = parse_type_ident();
+    Ptr<Type> type = parse_type();
+    Option<Initializer> init = parse_local_initializer();
 
     return Var(
-        mut,
-        type.value(),
-        ident,
-        parse_local_initializer()
+        std::move(mut),
+        std::move(ident),
+        std::move(type),
+        std::move(init)
     );
 }
 

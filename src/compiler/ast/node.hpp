@@ -101,6 +101,28 @@ struct VarTerminalNode : public ExprNode {
   }
 };
 
+struct ArraySubscriptionNode : public ExprNode {
+  Expr::Identifier arr;
+  Ptr<ExprNode> index;
+
+  ArraySubscriptionNode(Expr::Identifier&& arr, Ptr<ExprNode>&& index)
+    : ExprNode(), arr(std::move(arr)), index(std::move(index)) {}
+
+  std::string pretty_print(int indent = 0) override {
+    std::stringstream out;
+
+    out << make_indent(indent) << "ArraySubscription:\n"
+        << make_indent(indent + 1) << "name: " << arr.as_str() << "\n"
+        << make_indent(indent + 1) << "index:\n" << index->pretty_print(indent + 2);
+
+    return out.str();
+  }
+
+  void accept(PPVisitor& visitor) override {
+    visitor.visit(*this);
+  }
+};
+
 struct UnaryOpNode : public ExprNode {
   UnOpKind op;
   Ptr<ExprNode> lhs;
@@ -135,7 +157,7 @@ struct VarDeclarationNode : public StmtNode {
 
     out << make_indent(indent) << "Var:\n";
     out << make_indent(indent + 1) << "mutability: " << meaning_from_mutability(var->mut) << "\n";
-    out << make_indent(indent + 1) << "type: " << meaning_from_primitive(var->type) << "\n";
+    out << make_indent(indent + 1) << "type: " << var->type->as_str() << "\n";
     out << make_indent(indent + 1) << "name: " << var->ident.as_str() << "\n";
 
     if (init != nullptr) {

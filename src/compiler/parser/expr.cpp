@@ -172,6 +172,29 @@ Ptr<Expr::FnCall> Parser::expr_ident_fn() {
     return mk_ptr(Expr::FnCall(std::move(ident), std::move(args)));
 }
 
+Ptr<Expr::ArraySubscription> Parser::expr_array_subscription() {
+    ASSERT(cur_tok().match_kind(TokenKind::Identifier), "unreachable: expected an identifier.");
+
+    Expr::Identifier ident(cur_tok().value);
+
+    eat();
+    ASSERT(
+        cur_tok().match_kind(TokenKind::OpenBracket), 
+        std::format("expected `[` but got `{}`", cur_tok().value)
+    );
+
+    eat();
+    Ptr<BaseExpr> index = expr(Expr::Precedence::Dummy);
+
+    ASSERT(
+        cur_tok().match_kind(TokenKind::CloseBracket),
+        std::format("expected `]` but got `{}`", cur_tok().value)
+    );
+    eat();
+
+    return mk_ptr(Expr::ArraySubscription(std::move(ident), std::move(index)));
+}
+
 Ptr<Expr::BaseExpr> Parser::expr_primary() {
     if(unary()) {
         return expr_unary();
@@ -183,13 +206,19 @@ Ptr<Expr::BaseExpr> Parser::expr_primary() {
         return expr_literal();
     }
     if(cur_tok().match_kind(TokenKind::Identifier)) {
-        // First, check if the 'ident' could be a function call.
         if(
             ntok_for([](Token& tok) {
                 return tok.match_kind(TokenKind::OpenParen); 
             }, TokDistance::Next)
         ) {
             return expr_ident_fn();
+        }
+        if(
+            ntok_for([](Token& tok) {
+                return tok.match_kind(TokenKind::OpenBracket); 
+            }, TokDistance::Next)
+        ) {
+            return expr_array_subscription();
         }
         return expr_ident_local();
     }

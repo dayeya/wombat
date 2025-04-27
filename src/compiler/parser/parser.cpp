@@ -58,6 +58,17 @@ Ptr<ExprNode> Parser::expr_to_node(const Ptr<Expr::BaseExpr>& expr) {
             FnCallNode node(std::move(fn_call->ident), std::move(args));
             return mk_ptr<FnCallNode>(std::move(node));
         }
+        case ExprKind::ArraySubscription:
+        {
+            auto* array_sub = dynamic_cast<Expr::ArraySubscription*>(expr.get());
+            ASSERT(array_sub != nullptr, "unexpected behavior: failed to cast to an array subscription expression.");
+
+            ArraySubscriptionNode node(
+                std::move(array_sub->arr), 
+                expr_to_node(array_sub->index)
+            );
+            return mk_ptr<ArraySubscriptionNode>(std::move(node));
+        }
         default:
         {
             ASSERT(false, std::format(

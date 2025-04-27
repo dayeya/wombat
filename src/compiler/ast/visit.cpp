@@ -50,3 +50,7 @@ void PPVisitor::visit(ImportNode& im) {
 void PPVisitor::visit(VarTerminalNode& vn) {
     std::cout << vn.pretty_print(0);
 }
+
+void PPVisitor::visit(ArraySubscriptionNode& an) {
+    std::cout << an.pretty_print(0);
+}

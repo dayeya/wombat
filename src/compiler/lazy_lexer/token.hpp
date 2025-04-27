@@ -127,7 +127,9 @@ enum class Keyword: int {
     // Logical operations.
     And, 
     Or, 
-    Not 
+    Not,
+    // A ptr type.
+    Ptr
 };
 
 enum class LiteralKind: int {

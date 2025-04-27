@@ -23,6 +23,7 @@ target_sources(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser/decl.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ast/visit.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/errors/diag.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/tac/symtab.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -41,4 +42,5 @@ target_include_directories(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ast
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/codegen
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/tac
 )

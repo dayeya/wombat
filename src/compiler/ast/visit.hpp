@@ -6,6 +6,7 @@ struct BinOpNode;
 struct UnaryOpNode;
 struct VarDeclarationNode;
 struct VarTerminalNode;
+struct ArraySubscriptionNode;
 struct AssignmentNode;
 struct FnHeaderNode;
 struct FnNode;
@@ -19,6 +20,7 @@ struct PPVisitor {
     void visit(BinOpNode& bn);
     void visit(UnaryOpNode& un);
     void visit(VarDeclarationNode& ln);
+    void visit(ArraySubscriptionNode& an);
     void visit(FnHeaderNode& fh);
     void visit(FnNode& fn);
     void visit(BlockNode& bn);

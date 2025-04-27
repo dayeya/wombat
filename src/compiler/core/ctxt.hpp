@@ -3,6 +3,7 @@
 
 #include "ast.hpp"
 #include "lex.hpp"
+#include "ir.hpp"
 
 struct Context {
     LazyTokenStream program_tokens;

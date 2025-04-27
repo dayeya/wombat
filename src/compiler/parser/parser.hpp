@@ -16,6 +16,7 @@ using Statement::FnCall;
 
 using Declaration::Parameter;
 using Declaration::Var;
+using Declaration::Type;
 using Declaration::Assignment;
 using Declaration::FnSignature;
 using Declaration::FnHeader;
@@ -23,6 +24,9 @@ using Declaration::Fn;
 using Declaration::Initializer;
 using Declaration::Mutability;
 using Declaration::Primitive;
+using Declaration::PrimitiveType;
+using Declaration::PointerType;
+using Declaration::ArrayType;
 
 struct TokenCursor {
     Ptr<Token> cur;
@@ -149,7 +153,8 @@ private:
     Ptr<Expr::UnaryExpr> expr_unary();
     Ptr<Expr::GroupExpr> expr_group();
     Ptr<Expr::Literal> expr_literal();
-    
+    Ptr<Expr::ArraySubscription> expr_array_subscription();
+
     // Computes the precedence of the right sibling of the current node.
     // This precedence will be using in the recursive manner when parsing expressions.
     Expr::Precedence rhs_expr_precedence(Tokenizer::BinOpKind binary_op);
@@ -158,6 +163,7 @@ private:
     Assignment parse_local_assignment();
     Option<Initializer> parse_local_initializer();
 
+    Ptr<Type> parse_type();
     FnCall parse_fn_call();
     Fn parse_fn_decl();
     Block parse_block();
@@ -172,7 +178,6 @@ private:
     Statement::Return parse_return_stmt();
     Identifier parse_general_ident();
     Option<Parameter> parse_param_within_fn_header();
-    Option<Primitive> parse_type_ident();
     Ptr<Stmt> parse_stmt_without_recovery();
     
     // Used for the final AST body.

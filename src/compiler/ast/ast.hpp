@@ -6,7 +6,7 @@
 
 class AST {
 public:
-    explicit AST() : functions() {}
+    explicit AST() : functions{} {}
 
     bool contains_entry_point() const {
         for(const auto& fn : functions) {

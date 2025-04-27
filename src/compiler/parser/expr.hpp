@@ -67,17 +67,25 @@ namespace Expr {
 
 enum class ExprKind: int {
     // A value expression maps to Expr::Literal.
+    // E.g `1, true, foo, 1.0, "bar"`
     Lit,
     // A binary expression maps to Expr::BinExpr.
     Binary,
     // An unary expression, operator and the inner expression.
+    // E.g '-1', 'not true', '~foo'
     Unary,
     // An expression within parenthesis.
+    // E.g '(1 + 2)'
     Group,
     // A function call expression. Expr::FnCall.
+    // E.g 'foo(1, 2, 3)'
     FnCall,
     // A named variable.
-    Local
+    // E.g 'foo'
+    Local,
+    // An array subscription.
+    // E.g 'foo[0]'
+    ArraySubscription,
 };
 
 // A wrapper for `[std::string]`.
@@ -161,6 +169,14 @@ struct UnaryExpr : public BaseExpr {
     Ptr<BaseExpr> expr;
 
     UnaryExpr(UnOpKind op, Ptr<BaseExpr>& e) : BaseExpr(ExprKind::Unary), op(op), expr(std::move(e)) {}
+};
+
+struct ArraySubscription : public BaseExpr {
+    Identifier arr;
+    Ptr<BaseExpr> index;
+
+    ArraySubscription(Identifier&& arr, Ptr<BaseExpr>&& index) 
+        : BaseExpr(ExprKind::ArraySubscription), arr(std::move(arr)), index(std::move(index)) {}
 };
 
 enum class Precedence : int {

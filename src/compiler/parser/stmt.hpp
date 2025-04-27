@@ -147,6 +147,8 @@ using Keyword = Tokenizer::Keyword;
 using Stmt = Statement::Stmt;
 using StmtKind = Statement::StmtKind;
 
+enum class Mutability : int { Immutable, Mutable };
+
 enum class Primitive : int {
     // A free pointer. 
     // 
@@ -159,12 +161,69 @@ enum class Primitive : int {
     // One byte char.
     Char,
     // A boolean (true | false)
-    Boolean,
-    // A pointer of any primitive kind.
-    Ptr
+    Boolean
 };
 
-enum class Mutability : int { Immutable, Mutable };
+enum class TypeFamily : int {
+    // A primitive type.
+    // E.g 'int', 'float', 'char', 'bool'
+    Primitive,
+    // A pointer type.
+    Pointer,
+    // An array type.
+    Array
+};
+
+struct Type {
+    TypeFamily fam;
+
+    Type(TypeFamily family) : fam(family) {}
+
+    virtual std::string as_str() = 0;
+};
+
+struct PrimitiveType : public Type {
+    Primitive type;
+
+    PrimitiveType(Primitive&& type)
+        : Type(TypeFamily::Primitive), type{std::move(type)} {}
+
+    std::string as_str() override {
+        switch(type) {
+            case Primitive::Int: return "int";
+            case Primitive::Float: return "float";
+            case Primitive::Char: return "char";
+            case Primitive::Boolean: return "bool";
+            case Primitive::Free: return "free";
+            default: {
+                return "primitive_UNKNOWN";
+            }
+        }
+    }
+};
+
+struct PointerType : public Type {
+    Ptr<Type> underlying;
+
+    PointerType(Ptr<Type>&& type)
+        : Type(TypeFamily::Pointer), underlying(std::move(type)) {}
+
+    std::string as_str() override {
+        return std::format("ptr<{}>", underlying->as_str());
+    }
+};
+
+struct ArrayType : public Type {
+    size_t array_size;
+    Ptr<Type> underlying;
+
+    ArrayType(size_t&& size, Ptr<Type>&& type)
+        : Type(TypeFamily::Array), array_size(std::move(size)), underlying(std::move(type)) {}
+    
+    std::string as_str() override {
+        return std::format("[{}]{}", array_size, underlying->as_str());
+    }
+};
 
 struct Initializer {
     Ptr<BaseExpr> expr;
@@ -192,20 +251,6 @@ inline std::string meaning_from_mutability(const Mutability& mut) {
     }
 }
 
-inline std::string meaning_from_primitive(const Primitive& prim) {
-    switch(prim) {
-        case Primitive::Free: return "free";
-        case Primitive::Int: return "int"; 
-        case Primitive::Float: return "float";
-        case Primitive::Char: return "char";
-        case Primitive::Boolean: return "boolean";
-        case Primitive::Ptr: return "pointer";
-        default: {
-            return "primitive_UNKNOWN";
-        }
-    }
-}
-
 inline Mutability mut_from_token(const Token& tok) {
     if(tok.match_keyword(Keyword::Mut)) {
         return Mutability::Mutable;
@@ -219,31 +264,30 @@ inline Mutability mut_from_token(const Token& tok) {
     ));
 }
 
-inline Option<Primitive> try_primitive_from_ident(const Identifier& ident) {
+inline Option<Primitive> maybe_primitive(const Identifier& ident) {
     if(ident.matches("free")) return Primitive::Free;
     if(ident.matches("int")) return Primitive::Int; 
     if(ident.matches("float")) return Primitive::Float;
     if(ident.matches("ch")) return Primitive::Char;
     if(ident.matches("bool")) return Primitive::Boolean;
-    if(ident.matches("ptr")) return Primitive::Ptr;
     return std::nullopt;
 }
 
 struct Var : public Stmt {
     Mutability mut;
-    Primitive type;
     Identifier ident;
+    Ptr<Type> type;
     Option<Initializer> init;
 
     Var(
-        Mutability mut,
-        Primitive type,
-        Identifier ident,
-        Option<Initializer> init
+        Mutability&& mut,
+        Identifier&& ident,
+        Ptr<Type>&& type,
+        Option<Initializer>&& init
     ) : Stmt(StmtKind::Local),
-        mut{mut},
-        type{type},
-        ident{ident},
+        mut{std::move(mut)},
+        type{std::move(type)},
+        ident{std::move(ident)},
         init{std::move(init)} {}
 
     bool is_initialized() const {
@@ -257,43 +301,43 @@ struct Var : public Stmt {
 
 struct Parameter {
     Mutability mut;
-    Primitive type;
     Identifier ident;
+    Ptr<Type> type;
 
-    Parameter() = default;
-    Parameter(Mutability mut, Primitive type, Identifier ident)
-        : mut(mut), type(type), ident(ident) {}
+    Parameter(Mutability&& mut, Identifier&& ident, Ptr<Type>&& type)
+        : mut{std::move(mut)}, type{std::move(type)}, ident{std::move(ident)} {}
 
     std::string as_str() {
         return "{" + std::format(
             "\n\tmut: {}, \n\ttype: {}, \n\tident: {}\n",
             meaning_from_mutability(mut),            
-            meaning_from_primitive(type),            
+            type->as_str(),            
             ident.as_str()         
         ) + "}";
     }
 };
 
 struct FnSignature {
-    using FnParamSignature = std::vector<Primitive>;
+    using FnParamSignature = std::vector<Ptr<Type>>;
 
-    Primitive ret_type;
+    Ptr<Type> ret_type;
     FnParamSignature argument_types;
 
     FnSignature() = default;
-    FnSignature(FnParamSignature& types, Primitive& ret) 
-        : argument_types{argument_types}, ret_type{ret} {}
+    FnSignature(FnParamSignature&& types, Ptr<Type>&& ret) 
+        : argument_types{std::move(argument_types)}, ret_type{std::move(ret)} {}
 
     std::string as_str() {
         std::string params{""};
         for(int k = 0; k < argument_types.size(); ++k)
-        {
-            params += meaning_from_primitive(argument_types.at(k));
+        {   
+            Ptr<Type>& type = argument_types.at(k);
+            params += type->as_str();
             if(k != argument_types.size() - 1) {
                 params += ", ";
             }
         }
-        return std::format("fn {} ({})", meaning_from_primitive(ret_type), params);
+        return std::format("fn {} ({})", ret_type->as_str(), params);
     }
 };
 
