@@ -133,9 +133,9 @@ void Parser::parse_fn_header_params(FnHeader& header) {
             // If the `parse_param_within_fn_header` fails somehow, we cover it.
             ASSERT(param.has_value(), "unexpected behavior");
 
-            // Just add the parameter. (We will build the signature at the next stage.)
             header.params.push_back(std::move(param.value()));
-            header.sig.argument_types.push_back(std::move(header.params.back().type));
+            std::string type_str = header.params.back().type->as_str();
+            header.sig.argument_types.push_back(type_str);
             
             if(cur_tok().match_kind(TokenKind::CloseParen)) {
                 break;

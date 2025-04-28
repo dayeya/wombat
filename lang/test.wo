@@ -1,3 +1,4 @@
-fn free main()
-    mut x: []ptr<[]ch>;
+fn free main(mut argc: int, mut argv: ptr<[]ch>)
+    mut x: int = 5;
+    mut y: ptr<int> = x;
 end

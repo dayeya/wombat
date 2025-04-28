@@ -318,7 +318,8 @@ struct Parameter {
 };
 
 struct FnSignature {
-    using FnParamSignature = std::vector<Ptr<Type>>;
+    using TypeString = std::string;
+    using FnParamSignature = std::vector<TypeString>;
 
     Ptr<Type> ret_type;
     FnParamSignature argument_types;
@@ -331,8 +332,7 @@ struct FnSignature {
         std::string params{""};
         for(int k = 0; k < argument_types.size(); ++k)
         {   
-            Ptr<Type>& type = argument_types.at(k);
-            params += type->as_str();
+            params += argument_types.at(k);
             if(k != argument_types.size() - 1) {
                 params += ", ";
             }
