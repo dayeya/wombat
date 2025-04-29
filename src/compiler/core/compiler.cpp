@@ -24,7 +24,7 @@ void Compiler::parse(const BuildConfig& build_config) {
     parser.parse(ctxt.program_ast);
 
     if(build_config.print_ast) {
-        PPVisitor pp_visitor;
+        PPVisitor pp_visitor(std::cout);
         ctxt.program_ast.traverse(pp_visitor);
     }
 
