@@ -58,6 +58,7 @@ ArgumentList := Expression (, Expression)*
 using Tokenizer::LiteralKind;
 using Tokenizer::BinOpKind;
 using Tokenizer::UnOpKind;
+using Tokenizer::AssignOp;
 
 using Tokenizer::Token;
 using Tokenizer::Location;
@@ -101,6 +102,10 @@ struct Identifier {
 
     bool matches(const std::string& s) const noexcept {
         return _ident == s;
+    }
+
+    bool cmp(const Identifier& s) const noexcept {
+        return s.matches(_ident);
     }
 };
 

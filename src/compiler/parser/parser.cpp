@@ -87,12 +87,18 @@ Ptr<StmtNode> Parser::stmt_to_node(const Ptr<Statement::Stmt>& stmt) {
             auto* local = dynamic_cast<Var*>(stmt.get());
             ASSERT(local != nullptr, "unexpected behavior: failed to cast to a variable declaration.");
 
+            Option<AssignOp> op = std::nullopt;
             Ptr<ExprNode> expr_node = nullptr;
             if (local->is_initialized()) {
+                op = std::move(local->init.value().assignment);
                 expr_node = expr_to_node(local->initializer_expr());
             }
 
-            VarDeclarationNode node(mk_ptr<Var>(std::move(*local)), std::move(expr_node));
+            VarDeclarationNode node(
+                std::move(local->info), 
+                std::move(op), 
+                std::move(expr_node)
+            );
             return mk_ptr<VarDeclarationNode>(std::move(node));
         }
         case StmtKind::FnDefinition:

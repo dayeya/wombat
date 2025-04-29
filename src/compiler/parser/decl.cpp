@@ -132,10 +132,7 @@ void Parser::parse_fn_header_params(FnHeader& header) {
             // Why should the parser be crashed?
             // If the `parse_param_within_fn_header` fails somehow, we cover it.
             ASSERT(param.has_value(), "unexpected behavior");
-
             header.params.push_back(std::move(param.value()));
-            std::string type_str = header.params.back().type->as_str();
-            header.sig.argument_types.push_back(type_str);
             
             if(cur_tok().match_kind(TokenKind::CloseParen)) {
                 break;
@@ -163,7 +160,7 @@ void Parser::parse_fn_header(FnHeader& header) {
     );    
 
     header.ident = std::move(ident);
-    header.sig.ret_type = std::move(type);
+    header.ret_type = std::move(type);
 
     eat();
     parse_fn_header_params(header);

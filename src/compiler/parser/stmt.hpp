@@ -164,83 +164,6 @@ enum class Primitive : int {
     Boolean
 };
 
-enum class TypeFamily : int {
-    // A primitive type.
-    // E.g 'int', 'float', 'char', 'bool'
-    Primitive,
-    // A pointer type.
-    Pointer,
-    // An array type.
-    Array
-};
-
-struct Type {
-    TypeFamily fam;
-
-    Type(TypeFamily family) : fam(family) {}
-
-    virtual std::string as_str() = 0;
-};
-
-struct PrimitiveType : public Type {
-    Primitive type;
-
-    PrimitiveType(Primitive&& type)
-        : Type(TypeFamily::Primitive), type{std::move(type)} {}
-
-    std::string as_str() override {
-        switch(type) {
-            case Primitive::Int: return "int";
-            case Primitive::Float: return "float";
-            case Primitive::Char: return "char";
-            case Primitive::Boolean: return "bool";
-            case Primitive::Free: return "free";
-            default: {
-                return "primitive_UNKNOWN";
-            }
-        }
-    }
-};
-
-struct PointerType : public Type {
-    Ptr<Type> underlying;
-
-    PointerType(Ptr<Type>&& type)
-        : Type(TypeFamily::Pointer), underlying(std::move(type)) {}
-
-    std::string as_str() override {
-        return std::format("ptr<{}>", underlying->as_str());
-    }
-};
-
-struct ArrayType : public Type {
-    size_t array_size;
-    Ptr<Type> underlying;
-
-    ArrayType(size_t&& size, Ptr<Type>&& type)
-        : Type(TypeFamily::Array), array_size(std::move(size)), underlying(std::move(type)) {}
-    
-    std::string as_str() override {
-        return std::format("[{}]{}", array_size, underlying->as_str());
-    }
-};
-
-struct Initializer {
-    Ptr<BaseExpr> expr;
-    Tokenizer::AssignOp assignment;
-
-    Initializer(const Tokenizer::AssignOp& op, Ptr<BaseExpr> expr)
-        : expr(std::move(expr)), assignment(std::move(op)) {}
-};
-
-struct Assignment : public Stmt {
-    Expr::Identifier ident;
-    Initializer init;
-
-    Assignment(Expr::Identifier&& ident, Initializer&& init) 
-        : Stmt(StmtKind::Assignment), ident(std::move(ident)), init(std::move(init)) {}
-};
-
 inline std::string meaning_from_mutability(const Mutability& mut) {
     switch(mut) {
         case Mutability::Mutable: return "mutable";
@@ -273,10 +196,130 @@ inline Option<Primitive> maybe_primitive(const Identifier& ident) {
     return std::nullopt;
 }
 
-struct Var : public Stmt {
+enum class TypeFamily : int {
+    // A primitive type.
+    // E.g 'int', 'float', 'char', 'bool'
+    Primitive,
+    // A pointer type.
+    Pointer,
+    // An array type.
+    Array
+};
+
+// Each type will be hashed for type checking.
+struct TypeHash {
+    size_t hash;
+
+    TypeHash() : hash{0} {}
+    TypeHash(size_t h) : hash{h} {}
+
+    std::string as_str() {
+        // Hexa
+        return std::format("0x{:x}", hash);
+    }
+};
+
+struct Type {
+    TypeFamily fam;
+
+    Type(TypeFamily family) : fam(family) {}
+
+    virtual std::string as_str() = 0;
+    virtual TypeHash hash() = 0;
+};
+
+struct PrimitiveType : public Type {
+    Primitive type;
+
+    PrimitiveType(Primitive&& type)
+        : Type(TypeFamily::Primitive), type{std::move(type)} {}
+
+    std::string as_str() override {
+        switch(type) {
+            case Primitive::Int: return "int";
+            case Primitive::Float: return "float";
+            case Primitive::Char: return "char";
+            case Primitive::Boolean: return "bool";
+            case Primitive::Free: return "free";
+            default: {
+                return "primitive_UNKNOWN";
+            }
+        }
+    }
+
+    TypeHash hash() override {
+        size_t h = 17;
+        h = h * 31 + static_cast<size_t>(fam);
+        h = h * 31 + static_cast<size_t>(type);
+        return TypeHash{h};
+    }
+};
+
+struct PointerType : public Type {
+    Ptr<Type> underlying;
+
+    PointerType(Ptr<Type>&& type)
+        : Type(TypeFamily::Pointer), underlying(std::move(type)) {}
+
+    std::string as_str() override {
+        return std::format("ptr<{}>", underlying->as_str());
+    }
+
+    TypeHash hash() override {
+        size_t h = 17;
+        h = h * 31 + static_cast<size_t>(fam);
+        h = h * 31 + underlying->hash().hash;
+        return TypeHash{h};
+    }
+};
+
+struct ArrayType : public Type {
+    size_t array_size;
+    Ptr<Type> underlying;
+
+    ArrayType(size_t&& size, Ptr<Type>&& type)
+        : Type(TypeFamily::Array), array_size(std::move(size)), underlying(std::move(type)) {}
+    
+    std::string as_str() override {
+        return std::format("[{}]{}", array_size, underlying->as_str());
+    }
+
+    TypeHash hash() override {
+        size_t h = 17;
+        h = h * 31 + static_cast<size_t>(fam);
+        h = h * 31 + std::hash<size_t>{}(array_size);
+        h = h * 31 + underlying->hash().hash;
+        return TypeHash{h};
+    }
+};
+
+struct Initializer {
+    Ptr<BaseExpr> expr;
+    Tokenizer::AssignOp assignment;
+
+    Initializer(const Tokenizer::AssignOp& op, Ptr<BaseExpr> expr)
+        : expr(std::move(expr)), assignment(std::move(op)) {}
+};
+
+struct VarInfo {
     Mutability mut;
     Identifier ident;
     Ptr<Type> type;
+
+    VarInfo(Mutability&& mut, Identifier&& ident, Ptr<Type>&& type)
+        : mut(std::move(mut)), ident(std::move(ident)), type(std::move(type)) {}
+};
+
+struct Assignment : public Stmt {
+    Expr::Identifier ident;
+    Initializer init;
+
+    Assignment(Expr::Identifier&& ident, Initializer&& init) 
+        : Stmt(StmtKind::Assignment), ident(std::move(ident)), init(std::move(init)) {}
+};
+
+struct Var : public Stmt {
+    VarInfo info;
     Option<Initializer> init;
 
     Var(
@@ -285,9 +328,7 @@ struct Var : public Stmt {
         Ptr<Type>&& type,
         Option<Initializer>&& init
     ) : Stmt(StmtKind::Local),
-        mut{std::move(mut)},
-        type{std::move(type)},
-        ident{std::move(ident)},
+        info{std::move(mut), std::move(ident), std::move(type)},
         init{std::move(init)} {}
 
     bool is_initialized() const {
@@ -308,49 +349,37 @@ struct Parameter {
         : mut{std::move(mut)}, type{std::move(type)}, ident{std::move(ident)} {}
 
     std::string as_str() {
-        return "{" + std::format(
-            "\n\tmut: {}, \n\ttype: {}, \n\tident: {}\n",
-            meaning_from_mutability(mut),            
-            type->as_str(),            
-            ident.as_str()         
-        ) + "}";
+        return std::format("{}{}: {}", 
+            (mut == Mutability::Mutable ? "mut " : ""), 
+            ident.as_str(), 
+            type->as_str()
+        );
     }
 };
 
-struct FnSignature {
-    using TypeString = std::string;
-    using FnParamSignature = std::vector<TypeString>;
-
-    Ptr<Type> ret_type;
-    FnParamSignature argument_types;
-
-    FnSignature() = default;
-    FnSignature(FnParamSignature&& types, Ptr<Type>&& ret) 
-        : argument_types{std::move(argument_types)}, ret_type{std::move(ret)} {}
-
-    std::string as_str() {
-        std::string params{""};
-        for(int k = 0; k < argument_types.size(); ++k)
-        {   
-            params += argument_types.at(k);
-            if(k != argument_types.size() - 1) {
-                params += ", ";
-            }
-        }
-        return std::format("fn {} ({})", ret_type->as_str(), params);
-    }
-};
 
 struct FnHeader {
     using FnParams = std::vector<Parameter>;
-    
-    FnSignature sig;
-    FnParams params;
+
     Identifier ident;
+    FnParams params;
+    SharedPtr<Type> ret_type;
 
     FnHeader() = default;
-    FnHeader(FnSignature& sig, FnParams& params, Identifier& ident) 
-        : sig(std::move(sig)), params(std::move(params)), ident(std::move(ident)) {}
+    FnHeader(Identifier& ident, FnParams& params, SharedPtr<Type>& ret_type) 
+        : ident(std::move(ident)), params(std::move(params)),  ret_type(std::move(ret_type)){}
+    
+    std::string as_str() {
+        std::string within_paren_str{""};
+        for(int k = 0; k < params.size(); ++k)
+        {   
+            within_paren_str += params.at(k).as_str();
+            if(k != params.size() - 1) {
+                within_paren_str += ", ";
+            }
+        }
+        return std::format("fn {} ({})", ret_type->as_str(), within_paren_str);
+    }
 };
 
 struct Fn : public Stmt {

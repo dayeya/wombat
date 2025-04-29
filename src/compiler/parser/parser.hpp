@@ -18,7 +18,6 @@ using Declaration::Parameter;
 using Declaration::Var;
 using Declaration::Type;
 using Declaration::Assignment;
-using Declaration::FnSignature;
 using Declaration::FnHeader;
 using Declaration::Fn;
 using Declaration::Initializer;

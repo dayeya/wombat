@@ -1,20 +1,17 @@
 #ifndef AST_HPP_
 #define AST_HPP_
 
-#include "visit.hpp"
 #include "node.hpp"
+#include "pp_visitor.hpp"
 
-class AST {
-public:
-    explicit AST() : functions{} {}
+struct AST {
+    using FnContainer = std::vector<Ptr<FnNode>>;
 
-    bool contains_entry_point() const {
-        for(const auto& fn : functions) {
-            if(fn->header->header->ident.matches("main")) {
-                return true;
-            }
-        }
-    }
+    // Since `Wombat` is a functional programming language,
+    // An AST is built from multiple functions.
+    FnContainer functions;
+
+    AST() : functions{} {}
 
     void push_function(Ptr<FnNode>&& fn) {
         functions.push_back(std::move(fn));
@@ -25,9 +22,6 @@ public:
             fn->accept(visitor);
         }
     }
-    
-private:
-    std::vector<Ptr<FnNode>> functions;
 };
 
 #endif // AST_HPP_
