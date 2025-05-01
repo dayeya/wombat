@@ -228,7 +228,7 @@ struct Type {
     virtual TypeHash hash() = 0;
 };
 
-struct PrimitiveType : public Type {
+struct PrimitiveType : virtual public Type {
     Primitive type;
 
     PrimitiveType(Primitive&& type)
@@ -255,7 +255,7 @@ struct PrimitiveType : public Type {
     }
 };
 
-struct PointerType : public Type {
+struct PointerType : virtual public Type {
     Ptr<Type> underlying;
 
     PointerType(Ptr<Type>&& type)
@@ -273,7 +273,7 @@ struct PointerType : public Type {
     }
 };
 
-struct ArrayType : public Type {
+struct ArrayType : virtual public Type {
     size_t array_size;
     Ptr<Type> underlying;
 
@@ -304,9 +304,9 @@ struct Initializer {
 struct VarInfo {
     Mutability mut;
     Identifier ident;
-    Ptr<Type> type;
+    SharedPtr<Type> type;
 
-    VarInfo(Mutability&& mut, Identifier&& ident, Ptr<Type>&& type)
+    VarInfo(Mutability&& mut, Identifier&& ident, SharedPtr<Type>&& type)
         : mut(std::move(mut)), ident(std::move(ident)), type(std::move(type)) {}
 };
 
@@ -343,9 +343,9 @@ struct Var : public Stmt {
 struct Parameter {
     Mutability mut;
     Identifier ident;
-    Ptr<Type> type;
+    SharedPtr<Type> type;
 
-    Parameter(Mutability&& mut, Identifier&& ident, Ptr<Type>&& type)
+    Parameter(Mutability&& mut, Identifier&& ident, SharedPtr<Type>&& type)
         : mut{std::move(mut)}, type{std::move(type)}, ident{std::move(ident)} {}
 
     std::string as_str() {

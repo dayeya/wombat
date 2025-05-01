@@ -11,11 +11,11 @@ using Tokenizer::meaning_from_literal_kind;
 using Tokenizer::meaning_from_un_op_kind;
 
 void PPVisitor::visit(LiteralNode& ln) {
-    ASSERT(!ln.empty(), "cannot pretty-print a literal without a value.");
+    ASSERT(!ln.src_loc.eq(Location::Singularity()), "cannot pretty-print a literal without a value.");
 
     print_node_header("LiteralNode");
-    print(format("Kind: {}\n", meaning_from_literal_kind(ln.val->kind)));
-    print(format("Value: {}\n", ln.val->val));
+    print(format("Kind: {}\n", meaning_from_literal_kind(ln.kind)));
+    print(format("Value: {}\n", ln.str));
     decrease_depth();
 }
 

@@ -25,6 +25,7 @@ public:
 private:
     void lex(const BuildConfig& build_config);
     void parse(const BuildConfig& build_config);
+    void sema_analyze(const BuildConfig& build_config);
     
     bool caught_diags();
     bool caught_early_diags();

@@ -81,7 +81,7 @@ Ptr<ExprNode> Parser::expr_to_node(const Ptr<Expr::BaseExpr>& expr) {
 }
 
 Ptr<StmtNode> Parser::stmt_to_node(const Ptr<Statement::Stmt>& stmt) {
-    switch (stmt->kind) {
+    switch(stmt->kind) {
         case StmtKind::Local:
         {
             auto* local = dynamic_cast<Var*>(stmt.get());

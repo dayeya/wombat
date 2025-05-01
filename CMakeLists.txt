@@ -23,6 +23,7 @@ target_sources(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser/decl.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ast/pp_visitor.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/errors/diag.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/sema_analysis/sema_visitor.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)

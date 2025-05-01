@@ -1,4 +1,14 @@
-fn free main(mut argc: int, mut argv: ptr<[]ch>)
-    mut x: int = 5;
-    mut y: ptr<int> = x;
+fn bool func2()
+    mut ref: ptr<int> = 1;
+end
+
+fn int func1(mut d: ptr<[5]int>) 
+    func2();
+    d = 1;
+    let z: ch = 1;
+    z = d + x;
+end
+
+fn free main()
+    func1();
 end

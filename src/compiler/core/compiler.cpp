@@ -31,11 +31,23 @@ void Compiler::parse(const BuildConfig& build_config) {
     TODO("Dump any diagnostics from the parser into the compiler.");
 }
 
+void Compiler::sema_analyze(const BuildConfig& build_config) {
+    ASSERT(!ctxt.program_ast.functions.empty(), "cannot analyze an empty AST.");
+
+    SemanticVisitor sema_visitor;
+    for(auto& fn : ctxt.program_ast.functions) {
+        fn->analyze(sema_visitor);
+    }
+
+    TODO("Dump any diagnostics from the semantic analysis into the compiler.");
+}
+
 void Compiler::compile_target(const BuildConfig& build_config) {
     ASSERT(build_config.src.has_value(), "missing target to compile.");
     
     lex(build_config);
     parse(build_config);
+    sema_analyze(build_config);
 }
 
 void Compiler::build_target_into_exectuable() {

@@ -267,6 +267,10 @@ struct Location {
     static inline auto Singularity() -> Location {
         return { 0, 0 };
     }
+
+    inline bool eq(const Location& other) const {
+        return line == other.line && col == other.col;
+    }
 };
 
 /// @brief `Tokenizer::Token`
