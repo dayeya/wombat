@@ -222,6 +222,7 @@ struct TypeHash {
 struct Type {
     TypeFamily fam;
 
+    virtual ~Type() = default;
     Type(TypeFamily family) : fam(family) {}
 
     virtual std::string as_str() = 0;

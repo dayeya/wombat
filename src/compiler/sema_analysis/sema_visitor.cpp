@@ -18,7 +18,11 @@ void SemanticVisitor::sema_analyze(VarTerminalNode& term) {
 };
 
 void SemanticVisitor::sema_analyze(ArraySubscriptionNode& arr_sub) {
-    ASSERT(false,"`NOT IMPLEMENTED");
+    ASSERT(
+        table.sym_exists(arr_sub.arr), 
+        format("'{}' was not declared in this scope.", arr_sub.arr.as_str())
+    );
+    TODO("Type check for array subscription is not implemented.");
 };
 
 void SemanticVisitor::sema_analyze(ReturnNode& ret) {

@@ -1,14 +1,8 @@
-fn bool func2()
-    mut ref: ptr<int> = 1;
-end
-
-fn int func1(mut d: ptr<[5]int>) 
-    func2();
-    d = 1;
-    let z: ch = 1;
-    z = d + x;
+fn bool f1()
+    mut x: [5]bool = 1;
 end
 
 fn free main()
-    func1();
+    let xs: ch = 1 + 3;
+    f();
 end

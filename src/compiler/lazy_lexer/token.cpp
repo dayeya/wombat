@@ -56,8 +56,8 @@ Option<BinOpKind> Tokenizer::bin_op_from_token(const Token& tok) {
     case TokenKind::Hat:          return BinOpKind::BitXor;
     case TokenKind::ShiftLeft:    return BinOpKind::Shl;
     case TokenKind::ShiftRight:   return BinOpKind::Shr;  
-    case TokenKind::Lt:           return BinOpKind::Lt;
-    case TokenKind::Gt:           return BinOpKind::Gt;
+    case TokenKind::OpenAngle:    return BinOpKind::Lt;
+    case TokenKind::CloseAngle:   return BinOpKind::Gt;
     case TokenKind::Le:           return BinOpKind::Le;
     case TokenKind::Ge:           return BinOpKind::Ge;
     case TokenKind::DoubleEq:     return BinOpKind::Eq;
