@@ -56,7 +56,6 @@ SharedPtr<Type> SemanticVisitor::sema_ptr_arithmetics(
             ASSERT(false, format("invalid pointer subtraction: '{}' - '{}'", lhs->as_str(), rhs->as_str()));
             return nullptr;
         }
-
         case BinOpKind::Eq:
         case BinOpKind::NotEq:
         case BinOpKind::Gt:
@@ -436,9 +435,10 @@ void SemanticVisitor::sema_analyze(FnNode& fn) {
 }
 
 void SemanticVisitor::sema_analyze(ReturnNode& ret) {
-    SharedPtr<Symbol> sym = table.fetch_symbol(ret.fn);
-    SharedPtr<SymFunction> fn = std::dynamic_pointer_cast<SymFunction>(sym);
-    if (sema_type_primitive_cmp(fn->ret_type, Primitive::Free)) {
+    SharedPtr<SymFunction> fn = std::dynamic_pointer_cast<SymFunction>(table.fetch_symbol(ret.fn));
+
+    if (sema_type_primitive_cmp(fn->ret_type, Primitive::Free)) 
+    {
         if (ret.expr == nullptr) {
             return;
         } else {
@@ -453,21 +453,27 @@ void SemanticVisitor::sema_analyze(ReturnNode& ret) {
             );
         }
     }
-    ASSERT(
-        ret.expr != nullptr,
-        format("Function '{}' requires a return value of type '{}'", ret.fn.as_str(), fn->ret_type->as_str())
-    );
-    
-    ret.expr->analyze(*this);
-    ASSERT(
-        sema_type_cmp(*fn->ret_type, *ret.expr->sema_type),
-        format(
-            "Type mismatch in return: function '{}' expects '{}' but got '{}'", 
-            ret.fn.as_str(),
-            fn->ret_type->as_str(),
-            ret.expr->sema_type->as_str()
-        )
-    );
+    else 
+    {
+        ASSERT(
+            ret.expr != nullptr,
+            format(
+                "'{}' requires a return value of type '{}'", 
+                ret.fn.as_str(), 
+                fn->ret_type->as_str()
+            )
+        );
+        ret.expr->analyze(*this);
+        ASSERT(
+            sema_type_cmp(*fn->ret_type, *ret.expr->sema_type),
+            format(
+                "Type mismatch in return: function '{}' expects '{}' but got '{}'", 
+                ret.fn.as_str(),
+                fn->ret_type->as_str(),
+                ret.expr->sema_type->as_str()
+            )
+        );
+    }
 };
 
 void SemanticVisitor::sema_analyze(ImportNode& imprt) {

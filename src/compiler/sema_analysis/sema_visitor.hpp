@@ -20,6 +20,7 @@ struct BlockNode;
 struct ReturnNode;
 struct FnCallNode;
 struct ImportNode;
+struct ExprNode;
 
 struct SemanticVisitor {
     SymTable table;
@@ -29,6 +30,9 @@ struct SemanticVisitor {
     inline bool sema_type_cmp(const Type& ty1, const Type& ty2) {
         return ty1.hash() == ty2.hash();
     }
+
+    bool sema_is_lval(Ptr<ExprNode>& expr);
+    bool sema_is_rval(Ptr<ExprNode>& expr);
     
     // Compares the inner primitive type with 'expected'. 
     bool sema_type_primitive_cmp(SharedPtr<Type>& ty, Primitive&& expected);

@@ -68,7 +68,7 @@ public:
     static CONST int MAX_PARSE_DIAGS = 10;
 
     Parser(const LazyTokenStream& stream) 
-        : current_ctxt(Identifier("global")), tok_cur(std::move(stream)), diags(MAX_PARSE_DIAGS) {}
+        : current_ctxt{}, tok_cur{std::move(stream)}, diags{MAX_PARSE_DIAGS} {}
 
     // The whole given token stream into an Ast.
     void parse(AST& ast); 

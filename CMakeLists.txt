@@ -15,6 +15,7 @@ target_sources(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/utils/file.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/build/builder.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/core/compiler.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/core/typing.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/lazy_lexer/lex.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/lazy_lexer/token.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser/parser.cpp

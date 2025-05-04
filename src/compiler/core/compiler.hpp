@@ -4,10 +4,19 @@
 #include <filesystem>
 #include "alias.hpp"
 #include "builder.hpp"
-#include "ctxt.hpp"
+#include "lex.hpp"
+#include "ast.hpp"
 #include "diag.hpp"
 
 namespace fs = std::filesystem;
+
+struct Context {
+    LazyTokenStream program_tokens;
+    AST program_ast;
+
+    Context() : program_tokens(), program_ast() {}
+    ~Context() = default;
+};
 
 class Compiler {
 public:

@@ -1,8 +1,7 @@
-fn bool f1()
-    mut x: [5]bool = 1;
+fn ch func()
+    return 'a';
 end
 
 fn free main()
-    let xs: ch = 1 + 3;
-    f();
+    mut x: bool = !(func() > 'b');
 end
