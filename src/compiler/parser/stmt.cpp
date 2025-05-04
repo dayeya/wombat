@@ -6,7 +6,14 @@ using Keyword = Tokenizer::Keyword;
 Statement::Return Parser::parse_return_stmt() {
     // Eat the 'return' keyword.
     eat();
+
+    if(cur_tok().match_kind(TokenKind::SemiColon)) {
+        eat();
+        return Statement::Return{current_ctxt, nullptr};
+    }
+
     Statement::Return ret_stmt {
+        current_ctxt,
         parse_expr_without_recovery()
     };
 
@@ -32,7 +39,7 @@ Statement::Import Parser::parse_import_stmt() {
     );
 
     Statement::Import import_stmt{
-        Expr::Identifier(cur_tok().value)
+        Identifier(cur_tok().value)
     };
 
     // Eat the identifier.

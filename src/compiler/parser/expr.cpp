@@ -131,7 +131,7 @@ Ptr<Expr::Literal> Parser::expr_literal() {
 Ptr<Expr::Local> Parser::expr_ident_local() {
     ASSERT(cur_tok().match_kind(TokenKind::Identifier), "unreachable: expected an identifier.");
 
-    Expr::Identifier ident(cur_tok().value);
+    Identifier ident(cur_tok().value);
     eat();
 
     return mk_ptr(Expr::Local(std::move(ident)));
@@ -140,7 +140,7 @@ Ptr<Expr::Local> Parser::expr_ident_local() {
 Ptr<Expr::FnCall> Parser::expr_ident_fn() {
     ASSERT(cur_tok().match_kind(TokenKind::Identifier), "unreachable: expected an identifier.");
 
-    Expr::Identifier ident(cur_tok().value);
+    Identifier ident(cur_tok().value);
     eat();
 
     // Eat the open paren.
@@ -175,7 +175,7 @@ Ptr<Expr::FnCall> Parser::expr_ident_fn() {
 Ptr<Expr::ArraySubscription> Parser::expr_array_subscription() {
     ASSERT(cur_tok().match_kind(TokenKind::Identifier), "unreachable: expected an identifier.");
 
-    Expr::Identifier ident(cur_tok().value);
+    Identifier ident(cur_tok().value);
 
     eat();
     ASSERT(

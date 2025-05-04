@@ -2,26 +2,25 @@
 
 using Tokenizer::Token;
 using Tokenizer::Keyword;
-
-using Declaration::maybe_primitive;
+using Tokenizer::Identifier;
 
 Identifier Parser::parse_general_ident() {
     ASSERT(
         cur_tok().match_kind(TokenKind::Identifier),
-        std::format("expected function name identifier but got '{}'", cur_tok().value)
+        std::format("expected identifier but got '{}'", cur_tok().value)
     );
 
-    Expr::Identifier fn_ident(cur_tok().value);
+    Identifier ident(cur_tok().value);
     eat();
 
-    return fn_ident;
+    return ident;
 }
 
 Ptr<Type> Parser::parse_type() {
     if(cur_tok().match_kind(TokenKind::Identifier))
     {
-        Expr::Identifier ident(cur_tok().value);
-        Option<Primitive> type = maybe_primitive(ident); 
+        Identifier ident(cur_tok().value);
+        Option<Primitive> type = maybe_primitive(ident.as_str()); 
         ASSERT(
             type.has_value(),
             std::format("expected a valid primitive type, got '{}'", ident.as_str())
@@ -97,12 +96,12 @@ Option<Parameter> Parser::parse_param_within_fn_header() {
         cur_tok().match_kind(TokenKind::Identifier), 
         std::format(
             "expected an identifier but got '{}'", 
-            Tokenizer::meaning_from_kind(cur_tok().kind)
+            Tokenizer::tok_kind_str(cur_tok().kind)
         )
     );
 
     // Build and eat the identifier.
-    Expr::Identifier param_ident(cur_tok().value);
+    Identifier param_ident(cur_tok().value);
     eat();
 
     ASSERT(
@@ -149,16 +148,17 @@ void Parser::parse_fn_header_params(FnHeader& header) {
 
 void Parser::parse_fn_header(FnHeader& header) {
     Ptr<Type> type = parse_type();
-    Expr::Identifier ident = parse_general_ident();
+    Identifier ident = parse_general_ident();
     
     ASSERT(
         cur_tok().match_kind(TokenKind::OpenParen), 
         std::format(
             "expected '(' after in fn declaration but got '{}'",
-            meaning_from_kind(cur_tok().kind)
+            Tokenizer::tok_kind_str(cur_tok().kind)
         )
     );    
-
+    
+    current_ctxt.set(ident.as_str());
     header.ident = std::move(ident);
     header.ret_type = std::move(type);
 
@@ -184,7 +184,7 @@ Fn Parser::parse_fn_decl() {
 
     ASSERT(
         cur_tok().match_keyword(Tokenizer::Keyword::End), 
-        "expected 'end' keyword but got '{}'", meaning_from_kind(cur_tok().kind)
+        std::format("expected 'end' keyword but got '{}'", Tokenizer::tok_kind_str(cur_tok().kind))
     );
     eat();
 
@@ -215,7 +215,7 @@ Option<Initializer> Parser::parse_local_initializer() {
         ),
         std::format(
             "expected an assignment operator but got '{}'", 
-            meaning_from_kind(cur_tok().kind)
+            Tokenizer::tok_kind_str(cur_tok().kind)
         )
     );
     auto assign_op = assign_op_from_token(cur_tok()).value();
@@ -228,7 +228,7 @@ Option<Initializer> Parser::parse_local_initializer() {
         cur_tok().match_kind(TokenKind::SemiColon), 
         std::format(
             "expected ';' after local declaration but got '{}'",
-            meaning_from_kind(cur_tok().kind)
+            Tokenizer::tok_kind_str(cur_tok().kind)
         )
     );
 
@@ -246,12 +246,12 @@ Var Parser::parse_local_decl() {
         cur_tok().match_kind(TokenKind::Identifier), 
         std::format(
             "expected an identifier but got '{}'", 
-            meaning_from_kind(cur_tok().kind)
+            Tokenizer::tok_kind_str(cur_tok().kind)
         )
     );
 
     Mutability mut = Declaration::mut_from_token(mut_token);
-    Expr::Identifier ident(cur_tok().value);
+    Identifier ident(cur_tok().value);
 
     // Eat the identifier.
     eat();
@@ -259,7 +259,7 @@ Var Parser::parse_local_decl() {
         cur_tok().match_kind(TokenKind::Colon),
         std::format(
             "expected a colon after identifier but got '{}'", 
-            meaning_from_kind(cur_tok().kind)
+            Tokenizer::tok_kind_str(cur_tok().kind)
         )
     );
 
@@ -277,7 +277,7 @@ Var Parser::parse_local_decl() {
 }
 
 Assignment Parser::parse_local_assignment() {
-    Expr::Identifier ident(cur_tok().value);
+    Identifier ident(cur_tok().value);
     eat();
 
     Option<Initializer> init = parse_local_initializer();
@@ -285,7 +285,7 @@ Assignment Parser::parse_local_assignment() {
         init.has_value(),
         std::format(
             "expected an assignment operator or but got '{}'", 
-            meaning_from_kind(cur_tok().kind)
+            Tokenizer::tok_kind_str(cur_tok().kind)
         )
     );
 

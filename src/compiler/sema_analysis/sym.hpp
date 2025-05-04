@@ -4,11 +4,6 @@
 #include <unordered_map>
 #include "stmt.hpp"
 
-using Declaration::Type;
-using Declaration::TypeHash;
-using Declaration::Mutability;
-using Declaration::FnHeader;
-
 enum class SymKind : int {
     // A symbol that refers to a defined function.
     // E.g 'fn int foo() { ... }'

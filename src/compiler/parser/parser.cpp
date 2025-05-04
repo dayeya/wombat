@@ -139,7 +139,11 @@ Ptr<StmtNode> Parser::stmt_to_node(const Ptr<Statement::Stmt>& stmt) {
             auto* ret_stmt = dynamic_cast<Statement::Return*>(stmt.get());
             ASSERT(ret_stmt != nullptr, "unexpected behavior: failed to cast to a return statement.");
 
-            ReturnNode node(expr_to_node(ret_stmt->expr));
+            Ptr<ExprNode> expr = nullptr;
+            if(ret_stmt->expr != nullptr) {
+                expr = expr_to_node(ret_stmt->expr);
+            }
+            ReturnNode node(std::move(ret_stmt->from), std::move(expr));
             return mk_ptr<ReturnNode>(std::move(node));
         }
         case StmtKind::Assignment:

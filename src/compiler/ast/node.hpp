@@ -7,11 +7,10 @@
 
 #include "expr.hpp"
 #include "stmt.hpp"
+#include "typing.hpp"
 #include "pp_visitor.hpp"
 #include "sema_visitor.hpp"
 
-using Declaration::Type;
-using Declaration::TypeHash;
 using Declaration::VarInfo;
 using Declaration::Parameter;
 
@@ -27,8 +26,15 @@ struct StmtNode : virtual public Node {
 };
 
 struct ExprNode : virtual public Node {
-  ExprNode() = default;
-  ~ExprNode() = default;
+  // A type attached to the expression during sema analysis.
+  SharedPtr<Type> sema_type;
+
+  ExprNode() : sema_type{nullptr} {};
+  ExprNode(ExprNode&&) noexcept = default;
+  ExprNode& operator=(ExprNode&&) noexcept = default;
+
+  ExprNode(const ExprNode&) = delete;
+  ExprNode& operator=(const ExprNode&) = delete;
 };
 
 struct LiteralNode : public ExprNode {
@@ -41,8 +47,8 @@ struct LiteralNode : public ExprNode {
   LiteralNode(const Expr::Literal& expr) 
     : ExprNode(), str(std::move(expr.val)), kind(std::move(expr.kind)), src_loc(std::move(expr.loc)) {}
 
-  inline bool match(LiteralKind&& k) const {
-    return kind == kind;
+  inline bool match(LiteralKind k) const {
+    return kind == k;
   }
 
   void analyze(SemanticVisitor& analyzer) override {
@@ -55,9 +61,9 @@ struct LiteralNode : public ExprNode {
 };
 
 struct VarTerminalNode : public ExprNode {
-  Expr::Identifier ident;
+  Identifier ident;
 
-  explicit VarTerminalNode(Expr::Identifier&& ident)
+  explicit VarTerminalNode(Identifier&& ident)
     : ExprNode(), ident(std::move(ident)) {}
 
   void analyze(SemanticVisitor& analyzer) override {
@@ -70,10 +76,10 @@ struct VarTerminalNode : public ExprNode {
 };
 
 struct ArraySubscriptionNode : public ExprNode {
-  Expr::Identifier arr;
+  Identifier arr;
   Ptr<ExprNode> index;
 
-  ArraySubscriptionNode(Expr::Identifier&& arr, Ptr<ExprNode>&& index)
+  ArraySubscriptionNode(Identifier&& arr, Ptr<ExprNode>&& index)
     : ExprNode(), arr(std::move(arr)), index(std::move(index)) {}
 
   void analyze(SemanticVisitor& analyzer) override {
@@ -136,11 +142,11 @@ struct VarDeclarationNode : public StmtNode {
 };
 
 struct AssignmentNode : public StmtNode {
-  Expr::Identifier ident;
+  Identifier ident;
   Tokenizer::AssignOp op;
   Ptr<ExprNode> expr;
 
-  AssignmentNode(Tokenizer::AssignOp op, Expr::Identifier ident, Ptr<ExprNode>&& expr)
+  AssignmentNode(Tokenizer::AssignOp op, Identifier ident, Ptr<ExprNode>&& expr)
     : StmtNode(), op{op}, ident(std::move(ident)), expr(std::move(expr)) {}
 
   void analyze(SemanticVisitor& analyzer) override {
@@ -206,10 +212,11 @@ struct FnNode : public StmtNode {
 };
 
 struct ReturnNode : public StmtNode {
+  Identifier fn;
   Ptr<ExprNode> expr;
 
-  explicit ReturnNode(Ptr<ExprNode>&& expr)
-    : StmtNode(), expr(std::move(expr)) {}
+  ReturnNode(Identifier&& ident, Ptr<ExprNode>&& expr)
+    : StmtNode(), fn(std::move(ident)), expr(std::move(expr)) {}
 
   void analyze(SemanticVisitor& analyzer) override {
     analyzer.sema_analyze(*this);
@@ -237,9 +244,9 @@ struct FnCallNode : public ExprNode, public StmtNode {
 };
 
 struct ImportNode : public StmtNode {
-  Expr::Identifier ident;
+  Identifier ident;
 
-  ImportNode(Expr::Identifier&& ident)
+  ImportNode(Identifier&& ident)
     : StmtNode(), ident(std::move(ident)) {}
 
   void analyze(SemanticVisitor& analyzer) override {

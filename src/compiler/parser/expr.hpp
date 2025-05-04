@@ -7,6 +7,8 @@
 
 #include "token.hpp"
 
+using Tokenizer::Identifier;
+
 /*
 -- Wombat BNF for expression rules:
 
@@ -87,26 +89,6 @@ enum class ExprKind: int {
     // An array subscription.
     // E.g 'foo[0]'
     ArraySubscription,
-};
-
-// A wrapper for `[std::string]`.
-struct Identifier {
-    std::string _ident;
-
-    Identifier() = default;
-    Identifier(std::string ident) : _ident(ident) {};
-    
-    std::string as_str() const noexcept {
-        return _ident;
-    }
-
-    bool matches(const std::string& s) const noexcept {
-        return _ident == s;
-    }
-
-    bool cmp(const Identifier& s) const noexcept {
-        return s.matches(_ident);
-    }
 };
 
 struct BaseExpr {

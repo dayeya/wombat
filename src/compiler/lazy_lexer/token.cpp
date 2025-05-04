@@ -81,8 +81,8 @@ Option<BinOpKind> Tokenizer::bin_op_from_token(const Token& tok) {
 
 Option<UnOpKind> Tokenizer::un_op_from_token(const Token& tok) {
   switch (tok.kind) {
-    case TokenKind::Tilde:  return UnOpKind::BitNot;
-    case TokenKind::Minus:  return UnOpKind::Neg;
+    case TokenKind::Bang: return UnOpKind::BitNot;
+    case TokenKind::Minus: return UnOpKind::Neg;
     default: {
       if(tok.match_keyword(Keyword::Not)) {
         return UnOpKind::Not;
@@ -117,7 +117,7 @@ Option<BooleanKind> Tokenizer::bool_from_token(const Token& tok) {
   return std::nullopt;
 }
 
-std::string Tokenizer::meaning_from_kind(const TokenKind& kind) {
+std::string Tokenizer::tok_kind_str(const TokenKind& kind) {
   switch (kind) {
       case TokenKind::OpenParen: return "Open_Paren";
       case TokenKind::CloseParen: return "Close_Paren";
@@ -178,11 +178,12 @@ std::string Tokenizer::meaning_from_kind(const TokenKind& kind) {
       case TokenKind::None: return "None_Token";
       default: {
           ASSERT(false, "unknown_TOKEN");
+          return "unknown";
       }
   }
 }
 
-std::string Tokenizer::meaning_from_literal_kind(
+std::string Tokenizer::lit_kind_str(
   const LiteralKind& kind
 ) {
   switch (kind) {
@@ -193,72 +194,76 @@ std::string Tokenizer::meaning_from_literal_kind(
     case LiteralKind::Bool:   return "Bool_LITERAL";
     default: {
       ASSERT(false, "unknown_LITERAL");
+      return "unknown";
     } 
   }
 }
 
-std::string Tokenizer::meaning_from_bin_op_kind(const BinOpKind& kind) {
+std::string Tokenizer::bin_op_str(const BinOpKind& kind) {
   switch (kind) {
-      case BinOpKind::Add:        return "Addition";
-      case BinOpKind::Sub:        return "Subtraction";
-      case BinOpKind::Mul:        return "Multiplication";
-      case BinOpKind::Pow:        return "Exponentiation";
-      case BinOpKind::Div:        return "Division";
-      case BinOpKind::FlooredDiv: return "Floor_Division";
-      case BinOpKind::Mod:        return "Modulus";
-      case BinOpKind::And:        return "Logical_And";
-      case BinOpKind::Or:         return "Logical_Or";
-      case BinOpKind::BitXor:     return "Bitwise_XOR";
-      case BinOpKind::BitAnd:     return "Bitwise_AND";
-      case BinOpKind::BitOr:      return "Bitwise_OR";
-      case BinOpKind::Shl:        return "Shift_Left";
-      case BinOpKind::Shr:        return "Shift_Right";
-      case BinOpKind::Eq:         return "Equality";
-      case BinOpKind::Lt:         return "Less_Than";
-      case BinOpKind::Le:         return "Less_Than_Equal_To";
-      case BinOpKind::NotEq:      return "Not_Equal_To";
-      case BinOpKind::Ge:         return "Greater_Than_Equal_To";
-      case BinOpKind::Gt:         return "Greater_Than";
-      default: {
-        ASSERT(false, "unknown_BinOp");
-      }
+    case BinOpKind::Add:        return "+";
+    case BinOpKind::Sub:        return "-";
+    case BinOpKind::Mul:        return "*";
+    case BinOpKind::Pow:        return "**";
+    case BinOpKind::Div:        return "/";
+    case BinOpKind::FlooredDiv: return "//";
+    case BinOpKind::Mod:        return "%";
+    case BinOpKind::And:        return "and";
+    case BinOpKind::Or:         return "or";
+    case BinOpKind::BitXor:     return "^";
+    case BinOpKind::BitAnd:     return "&";
+    case BinOpKind::BitOr:      return "|";
+    case BinOpKind::Shl:        return "<<";
+    case BinOpKind::Shr:        return ">>";
+    case BinOpKind::Eq:         return "==";
+    case BinOpKind::NotEq:      return "!=";
+    case BinOpKind::Lt:         return "<";
+    case BinOpKind::Le:         return "<=";
+    case BinOpKind::Gt:         return ">";
+    case BinOpKind::Ge:         return ">=";
+    default: {
+      ASSERT(false, "unreachable");
+      return "unknown";
+    }
   }
 }
 
-std::string Tokenizer::meaning_from_un_op_kind(const UnOpKind& kind) {
+std::string Tokenizer::un_op_str(const UnOpKind& kind) {
   switch (kind) {
-      case UnOpKind::Neg:    return "Negation";
-      case UnOpKind::Not:    return "Logical_Not";
-      case UnOpKind::BitNot: return "Bitwise_Not";
-      default: {
-        ASSERT(false, "unknown_UnOp");
-      } 
+    case UnOpKind::Neg:    return "-";
+    case UnOpKind::Not:    return "not";
+    case UnOpKind::BitNot: return "~";
+    default: {
+      ASSERT(false, "unknown");
+      return "unknown";
+    } 
   }
 }
 
-std::string Tokenizer::meaning_from_assign_op_kind(const AssignOp& kind) {
+std::string Tokenizer::assign_op_str(const AssignOp& kind) {
   switch (kind)
   {
-    case AssignOp::Eq: return "Eq_Assign";
-    case AssignOp::Mul: return "Mul_Assign";
-    case AssignOp::Div: return "Div_Assign";
-    case AssignOp::Mod: return "Mod_Assign";
-    case AssignOp::Plus: return "Plus_Assign";
-    case AssignOp::Minus: return "Minus_Assign";
-    case AssignOp::Shl: return "Shl_Assign"; 
-    case AssignOp::Shr: return "Shr_Assign"; 
-    case AssignOp::And: return "And_Assign"; 
-    case AssignOp::Or: return "Or_Assign";
-    case AssignOp::Xor: return "Xor_Assign"; 
+    case AssignOp::Eq: return "=";
+    case AssignOp::Mul: return "*=";
+    case AssignOp::Div: return "/=";
+    case AssignOp::Mod: return "%=";
+    case AssignOp::Plus: return "+=";
+    case AssignOp::Minus: return "-=";
+    case AssignOp::Shl: return "<<="; 
+    case AssignOp::Shr: return ">>="; 
+    case AssignOp::And: return "&="; 
+    case AssignOp::Or: return "|=";
+    case AssignOp::Xor: return "^="; 
     default: {
       ASSERT(false, "unknown_AssignOp");
+      return "unknown";
     }
   }
 }
 
 void Token::out() const {
   std::cout << "Token {\n"
-            << "  kind: TokenKind::" << meaning_from_kind(kind) << ",\n"
+            << "  kind: TokenKind::" << tok_kind_str(kind) << ",\n"
             << "  value: \"" << value << "\",\n"
             << "  loc: {\n"
             << "    line: " << loc.line << ",\n"

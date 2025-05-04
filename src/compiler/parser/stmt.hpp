@@ -4,11 +4,13 @@
 #include <format>
 #include <vector>
 #include <list>
+#include "token.hpp"
 #include "expr.hpp"
+#include "typing.hpp"
 
+using Tokenizer::Identifier;
 using Expr::ExprKind;
 using Expr::BaseExpr;
-using Expr::Identifier;
 
 /*
 -- Wombat BNF for statement rules:
@@ -108,10 +110,11 @@ struct FnCall : public Stmt {
 };
 
 struct Return : public Stmt {
+    Identifier from;
     Ptr<BaseExpr> expr;
 
-    Return(Ptr<BaseExpr> expr) 
-        : Stmt(StmtKind::FnReturn), expr(std::move(expr)) {}
+    Return(Identifier from, Ptr<BaseExpr> expr) 
+        : Stmt(StmtKind::FnReturn), expr(std::move(expr)), from(from) {}
 };
 
 struct Block {
@@ -147,33 +150,6 @@ using Keyword = Tokenizer::Keyword;
 using Stmt = Statement::Stmt;
 using StmtKind = Statement::StmtKind;
 
-enum class Mutability : int { Immutable, Mutable };
-
-enum class Primitive : int {
-    // A free pointer. 
-    // 
-    // E.g 'fn free main() ... end'
-    Free,
-    // An integer.
-    Int, 
-    // A float.
-    Float,
-    // One byte char.
-    Char,
-    // A boolean (true | false)
-    Boolean
-};
-
-inline std::string meaning_from_mutability(const Mutability& mut) {
-    switch(mut) {
-        case Mutability::Mutable: return "mutable";
-        case Mutability::Immutable: return "immutable";
-        default: {
-            return "mutability_UNKNOWN";
-        }
-    }
-}
-
 inline Mutability mut_from_token(const Token& tok) {
     if(tok.match_keyword(Keyword::Mut)) {
         return Mutability::Mutable;
@@ -186,113 +162,6 @@ inline Mutability mut_from_token(const Token& tok) {
         tok.value
     ));
 }
-
-inline Option<Primitive> maybe_primitive(const Identifier& ident) {
-    if(ident.matches("free")) return Primitive::Free;
-    if(ident.matches("int")) return Primitive::Int; 
-    if(ident.matches("float")) return Primitive::Float;
-    if(ident.matches("ch")) return Primitive::Char;
-    if(ident.matches("bool")) return Primitive::Boolean;
-    return std::nullopt;
-}
-
-enum class TypeFamily : int {
-    // A primitive type.
-    // E.g 'int', 'float', 'char', 'bool'
-    Primitive,
-    // A pointer type.
-    Pointer,
-    // An array type.
-    Array
-};
-
-// Each type will be hashed for type checking.
-struct TypeHash {
-    size_t hash;
-
-    TypeHash() : hash{0} {}
-    TypeHash(size_t h) : hash{h} {}
-
-    std::string as_str() {
-        // Hexa
-        return std::format("0x{:x}", hash);
-    }
-};
-
-struct Type {
-    TypeFamily fam;
-
-    virtual ~Type() = default;
-    Type(TypeFamily family) : fam(family) {}
-
-    virtual std::string as_str() = 0;
-    virtual TypeHash hash() = 0;
-};
-
-struct PrimitiveType : virtual public Type {
-    Primitive type;
-
-    PrimitiveType(Primitive&& type)
-        : Type(TypeFamily::Primitive), type{std::move(type)} {}
-
-    std::string as_str() override {
-        switch(type) {
-            case Primitive::Int: return "int";
-            case Primitive::Float: return "float";
-            case Primitive::Char: return "char";
-            case Primitive::Boolean: return "bool";
-            case Primitive::Free: return "free";
-            default: {
-                return "primitive_UNKNOWN";
-            }
-        }
-    }
-
-    TypeHash hash() override {
-        size_t h = 17;
-        h = h * 31 + static_cast<size_t>(fam);
-        h = h * 31 + static_cast<size_t>(type);
-        return TypeHash{h};
-    }
-};
-
-struct PointerType : virtual public Type {
-    Ptr<Type> underlying;
-
-    PointerType(Ptr<Type>&& type)
-        : Type(TypeFamily::Pointer), underlying(std::move(type)) {}
-
-    std::string as_str() override {
-        return std::format("ptr<{}>", underlying->as_str());
-    }
-
-    TypeHash hash() override {
-        size_t h = 17;
-        h = h * 31 + static_cast<size_t>(fam);
-        h = h * 31 + underlying->hash().hash;
-        return TypeHash{h};
-    }
-};
-
-struct ArrayType : virtual public Type {
-    size_t array_size;
-    Ptr<Type> underlying;
-
-    ArrayType(size_t&& size, Ptr<Type>&& type)
-        : Type(TypeFamily::Array), array_size(std::move(size)), underlying(std::move(type)) {}
-    
-    std::string as_str() override {
-        return std::format("[{}]{}", array_size, underlying->as_str());
-    }
-
-    TypeHash hash() override {
-        size_t h = 17;
-        h = h * 31 + static_cast<size_t>(fam);
-        h = h * 31 + std::hash<size_t>{}(array_size);
-        h = h * 31 + underlying->hash().hash;
-        return TypeHash{h};
-    }
-};
 
 struct Initializer {
     Ptr<BaseExpr> expr;
@@ -312,10 +181,10 @@ struct VarInfo {
 };
 
 struct Assignment : public Stmt {
-    Expr::Identifier ident;
+    Identifier ident;
     Initializer init;
 
-    Assignment(Expr::Identifier&& ident, Initializer&& init) 
+    Assignment(Identifier&& ident, Initializer&& init) 
         : Stmt(StmtKind::Assignment), ident(std::move(ident)), init(std::move(init)) {}
 };
 

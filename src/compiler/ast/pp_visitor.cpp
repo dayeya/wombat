@@ -1,27 +1,24 @@
 #include <iostream>
 
-#include <format>
 #include "token.hpp"
 #include "ast.hpp"
 
-using Tokenizer::meaning_from_kind;
-using Tokenizer::meaning_from_assign_op_kind;
-using Tokenizer::meaning_from_bin_op_kind;
-using Tokenizer::meaning_from_literal_kind;
-using Tokenizer::meaning_from_un_op_kind;
+using Tokenizer::tok_kind_str;
+using Tokenizer::assign_op_str;
+using Tokenizer::bin_op_str;
+using Tokenizer::lit_kind_str;
+using Tokenizer::un_op_str;
 
 void PPVisitor::visit(LiteralNode& ln) {
     ASSERT(!ln.src_loc.eq(Location::Singularity()), "cannot pretty-print a literal without a value.");
 
-    print_node_header("LiteralNode");
-    print(format("Kind: {}\n", meaning_from_literal_kind(ln.kind)));
-    print(format("Value: {}\n", ln.str));
+    print_node_header(format("LiteralNode({})", ln.str));
     decrease_depth();
 }
 
 void PPVisitor::visit(BinOpNode& bn) {
     print_node_header("BinaryNode");
-    print(format("Op: {}\n", meaning_from_bin_op_kind(bn.op)));
+    print(format("Op: {}\n", bin_op_str(bn.op)));
 
     print_node_header("Left");
     bn.lhs->accept(*this);
@@ -34,7 +31,7 @@ void PPVisitor::visit(BinOpNode& bn) {
 
 void PPVisitor::visit(UnaryOpNode& un) {
     print_node_header("UnaryNode");
-    print(format("Op: {}\n", meaning_from_un_op_kind(un.op)));
+    print(format("Op: {}\n", un_op_str(un.op)));
 
     print_node_header("Left");
     un.lhs->accept(*this);
@@ -57,13 +54,13 @@ void PPVisitor::visit(ArraySubscriptionNode& an) {
 
 void PPVisitor::visit(VarDeclarationNode& vdn) {
     print_node_header("Var");
-    print(format("Mut: {}\n", meaning_from_mutability(vdn.info.mut)));
+    print(format("Mut: {}\n", mut_str(vdn.info.mut)));
     print(format("Type: {}\n", vdn.info.type->as_str()));
     print(format("Name: {}\n", vdn.info.ident.as_str()));
 
     if (vdn.init != nullptr && vdn.op.has_value()) {
         print_node_header("Initializer");
-        print(format("Op: {}\n", meaning_from_assign_op_kind(vdn.op.value())));
+        print(format("Op: {}\n", assign_op_str(vdn.op.value())));
         vdn.init->accept(*this);
         decrease_depth();
     }
@@ -159,8 +156,8 @@ void PPVisitor::visit(FnCallNode& fn) {
 
 void PPVisitor::visit(AssignmentNode& an) {
     print_node_header("Assignment");
-    print(format("ident: {}\n", an.ident.as_str()));
-    print(format("op: {}\n", meaning_from_assign_op_kind(an.op)));
+    print(format("Ident: {}\n", an.ident.as_str()));
+    print(format("Op: {}\n", assign_op_str(an.op)));
 
     print_node_header("Expr");
     an.expr->accept(*this);
@@ -169,7 +166,8 @@ void PPVisitor::visit(AssignmentNode& an) {
 
 void PPVisitor::visit(ReturnNode& rn) {
     print_node_header("Return");
-    print_node_header("Expr:");
+    print(format("Fn: {}\n", rn.fn.as_str()));
+    print_node_header("Expr");
     rn.expr->accept(*this);
     decrease_depth();
 }

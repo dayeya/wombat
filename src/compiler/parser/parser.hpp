@@ -7,6 +7,7 @@
 #include "stmt.hpp"
 #include "ast.hpp"
 #include "err.hpp"
+#include "typing.hpp"
 
 using Statement::Stmt;
 using Statement::StmtKind;
@@ -16,16 +17,10 @@ using Statement::FnCall;
 
 using Declaration::Parameter;
 using Declaration::Var;
-using Declaration::Type;
 using Declaration::Assignment;
 using Declaration::FnHeader;
 using Declaration::Fn;
 using Declaration::Initializer;
-using Declaration::Mutability;
-using Declaration::Primitive;
-using Declaration::PrimitiveType;
-using Declaration::PointerType;
-using Declaration::ArrayType;
 
 struct TokenCursor {
     Ptr<Token> cur;
@@ -73,7 +68,7 @@ public:
     static CONST int MAX_PARSE_DIAGS = 10;
 
     Parser(const LazyTokenStream& stream) 
-        : tok_cur(std::move(stream)), diags(MAX_PARSE_DIAGS) {}
+        : current_ctxt(Identifier("global")), tok_cur(std::move(stream)), diags(MAX_PARSE_DIAGS) {}
 
     // The whole given token stream into an Ast.
     void parse(AST& ast); 
@@ -81,6 +76,7 @@ public:
 private:
     Diagnostics diags;
     TokenCursor tok_cur;
+    Identifier current_ctxt;
 
     void eat() {
         if(!tok_cur.can_advance()) {

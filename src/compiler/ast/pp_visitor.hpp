@@ -1,6 +1,9 @@
 #ifndef VISITOR_HPP_
 #define VISITOR_HPP_
 
+#include <format>
+using std::format;
+
 struct LiteralNode;
 struct BinOpNode;
 struct UnaryOpNode;

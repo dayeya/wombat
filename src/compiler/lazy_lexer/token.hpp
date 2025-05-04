@@ -239,20 +239,35 @@ Option<Keyword> keyword_from_token(const std::string& lexeme);
 // Returns an optional wrapping a `Tokenizer::LiteralKind` or an `std::nullopt`.
 Option<LiteralKind> literal_kind_from_token(const TokenKind& kind);
 
-// Converts a `Tokenizer::TokenKind` into its string representation.
-std::string meaning_from_kind(const TokenKind& kind);
+std::string tok_kind_str(const TokenKind& kind);
+std::string lit_kind_str(const LiteralKind& kind);
+std::string bin_op_str(const BinOpKind& kind);
+std::string un_op_str(const UnOpKind& kind);
+std::string assign_op_str(const AssignOp& kind);
 
-// Converts a `Tokenizer::LiteralKind` into its string representation.
-std::string meaning_from_literal_kind(const LiteralKind& kind);
+// A wrapper for `[std::string]`.
+struct Identifier {
+    std::string _ident;
 
-// Converts a `Tokenizer::BinOpKind` into its string representation.
-std::string meaning_from_bin_op_kind(const BinOpKind& kind);
+    Identifier() = default;
+    Identifier(std::string ident) : _ident(ident) {};
+    
+    std::string as_str() const noexcept {
+        return _ident;
+    }
 
-// Converts a `Tokenizer::UnOpKind` into its string representation.
-std::string meaning_from_un_op_kind(const UnOpKind& kind);
+    bool matches(const std::string& s) const noexcept {
+        return _ident == s;
+    }
 
-// Converts a `Tokenizer::AssignOp` into its string representation.
-std::string meaning_from_assign_op_kind(const AssignOp& kind);
+    bool cmp(const Identifier& s) const noexcept {
+        return s.matches(_ident);
+    }
+
+    void set(std::string&& s) noexcept {
+        _ident.assign(s);
+    }
+};
 
 /// @brief `Tokenizer::Location`
 /// Is a struct wrapping the line and a column of a certain context within the source code.  
