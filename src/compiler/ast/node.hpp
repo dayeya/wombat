@@ -195,6 +195,50 @@ struct BlockNode : public StmtNode {
   }
 };
 
+struct BreakNode : public StmtNode {
+  BreakNode() : StmtNode() {};
+
+  void analyze(SemanticVisitor& analyzer) override {
+    analyzer.sema_analyze(*this);
+  }
+
+  void accept(PPVisitor& visitor) override {
+    visitor.visit(*this);
+  }
+};
+
+struct LoopNode : public StmtNode {
+  Ptr<BlockNode> body;
+
+  LoopNode(Ptr<BlockNode>&& loop_body)
+    : StmtNode(), body(std::move(loop_body)) {}
+
+  void analyze(SemanticVisitor& analyzer) override {
+    analyzer.sema_analyze(*this);
+  }
+
+  void accept(PPVisitor& visitor) override {
+    visitor.visit(*this);
+  }
+};
+
+struct IfNode : public StmtNode {
+  Ptr<ExprNode> condition;
+  Ptr<BlockNode> if_block;
+  Ptr<BlockNode> else_block;
+
+  IfNode(Ptr<ExprNode> condition, Ptr<BlockNode>&& if_block, Ptr<BlockNode>&& else_block)
+  : StmtNode(), condition(std::move(condition)), if_block(std::move(if_block)), else_block(std::move(else_block)) {}
+
+  void analyze(SemanticVisitor& analyzer) override {
+    analyzer.sema_analyze(*this);
+  }
+
+  void accept(PPVisitor& visitor) override {
+    visitor.visit(*this);
+  }
+};
+
 struct FnNode : public StmtNode {
   Ptr<FnHeaderNode> header;
   Ptr<BlockNode> body;

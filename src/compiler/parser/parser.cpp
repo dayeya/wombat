@@ -134,6 +134,53 @@ Ptr<StmtNode> Parser::stmt_to_node(const Ptr<Statement::Stmt>& stmt) {
             FnCallNode node(std::move(fn_call->inner_expr->ident), std::move(args));
             return mk_ptr<FnCallNode>(std::move(node));
         }
+        case StmtKind::Break:
+        {
+            auto* brk = dynamic_cast<Break*>(stmt.get());
+            ASSERT(brk != nullptr, "unexpected behavior: failed to cast to a break statement.");
+            return mk_ptr<BreakNode>(BreakNode());
+        }
+        case StmtKind::Loop:
+        {
+            auto* loop = dynamic_cast<Loop*>(stmt.get());
+            ASSERT(brk != nullptr, "unexpected behavior: failed to cast to a loop statement.");
+
+            std::vector<Ptr<StmtNode>> cur_ctx_stmt{};
+            for(auto& stmt : loop->body.as_list()) {
+                cur_ctx_stmt.push_back(stmt_to_node(stmt));
+            }
+
+            BlockNode body(std::move(cur_ctx_stmt));
+            LoopNode loop_stmt(mk_ptr<BlockNode>(std::move(body)));
+            return mk_ptr(std::move(loop_stmt));
+        }
+        case StmtKind::If:
+        {
+            auto* if_stmt = dynamic_cast<If*>(stmt.get());
+            ASSERT(if_stmt != nullptr, "unexpected behavior: failed to cast to a if statement.");
+
+            std::vector<Ptr<StmtNode>> if_block_stmt{};
+            for(auto& stmt : if_stmt->if_block.as_list()) {
+                if_block_stmt.push_back(stmt_to_node(stmt));
+            }
+
+            std::vector<Ptr<StmtNode>> else_block_stmt{};
+            if(if_stmt->has_else)
+            {
+                for(auto& stmt : if_stmt->else_block.as_list()) {
+                    else_block_stmt.push_back(stmt_to_node(stmt));
+                }    
+            }
+
+            BlockNode if_block(std::move(if_block_stmt));
+            BlockNode else_block(std::move(else_block_stmt));
+            IfNode if_node(
+                expr_to_node(if_stmt->condition), 
+                mk_ptr(std::move(if_block)), 
+                !else_block.children.empty() ? mk_ptr(std::move(else_block)) : nullptr
+            );
+            return mk_ptr(std::move(if_node));
+        }
         case StmtKind::FnReturn:
         {
             auto* ret_stmt = dynamic_cast<Statement::Return*>(stmt.get());

@@ -476,6 +476,34 @@ void SemanticVisitor::sema_analyze(ReturnNode& ret) {
     }
 };
 
-void SemanticVisitor::sema_analyze(ImportNode& imprt) {
-    ASSERT(false,"NOT IMPLEMENTED");
+void SemanticVisitor::sema_analyze(BreakNode& brk) {
+    // A function just to pass over this function when analyzing any block;
+    while(true) break;
+}
+
+void SemanticVisitor::sema_analyze(LoopNode& loop) {
+    loop.body->analyze(*this);
 };
+
+void SemanticVisitor::sema_analyze(ImportNode& import) {
+    ASSERT(false, "NOT IMPLEMENTED");
+};
+
+void SemanticVisitor::sema_analyze(IfNode& cfn) {
+    cfn.condition->analyze(*this);
+
+    PrimitiveType boolean{Primitive::Boolean};
+    if(!sema_type_cmp(*cfn.condition->sema_type, boolean)) {
+        ASSERT(false, "'if' condition must have a 'bool' type");
+    }
+
+    table.push_scope();
+    cfn.if_block->analyze(*this);
+    table.pop_scope();
+    
+    if(cfn.else_block != nullptr) {
+        table.push_scope();
+        cfn.else_block->analyze(*this);
+        table.pop_scope();
+    }
+}

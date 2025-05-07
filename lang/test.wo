@@ -1,7 +1,7 @@
-fn ch func()
-    return 'a';
-end
-
 fn free main()
-    mut x: bool = !(func() > 'b');
+    if false {
+        mut x: int = 5;
+    } else {
+        mut y: int = x + 45;
+    }
 end

@@ -232,7 +232,7 @@ std::string Tokenizer::un_op_str(const UnOpKind& kind) {
   switch (kind) {
     case UnOpKind::Neg:    return "-";
     case UnOpKind::Not:    return "not";
-    case UnOpKind::BitNot: return "~";
+    case UnOpKind::BitNot: return "!";
     default: {
       ASSERT(false, "unknown");
       return "unknown";

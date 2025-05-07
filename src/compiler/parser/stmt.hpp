@@ -3,7 +3,6 @@
 
 #include <format>
 #include <vector>
-#include <list>
 #include "token.hpp"
 #include "expr.hpp"
 #include "typing.hpp"
@@ -83,7 +82,19 @@ enum class StmtKind : int {
     // A statement expression like funcation or macro calls.
     // 
     // E.g 'foo();'
-    Expr
+    Expr,
+    // An if statement.
+    //
+    // E.g 'if x > 2 { ... }'
+    If,
+    // An loop statement.
+    //
+    // E.g 'loop { ... }'
+    Loop,
+    // A break statement.
+    // 
+    // E.g 'loop { ... break; }'
+    Break
 };
 
 struct Stmt {
@@ -128,6 +139,31 @@ struct Block {
     StmtList& as_list() {
         return stmts;
     }
+};
+
+struct If : public Stmt {
+    bool has_else;
+    Ptr<BaseExpr> condition;
+    Block if_block;
+    Block else_block;
+
+    If() 
+    : Stmt(StmtKind::If), 
+      has_else{false}, 
+      condition{nullptr}, 
+      if_block(), 
+      else_block() {}
+};
+
+struct Break : public Stmt {
+    Break() : Stmt(StmtKind::Break) {}
+};
+
+struct Loop : public Stmt {
+    Block body;
+
+    Loop() : Stmt(StmtKind::Loop), body() {}
+    Loop(Block&& body) : Stmt(StmtKind::Loop), body(std::move(body)) {}
 };
 
 inline std::string meaning_from_stmt_kind(const StmtKind& kind) {

@@ -3,6 +3,79 @@
 using ScopeDelimiter = Statement::ScopeDelimiter;
 using Keyword = Tokenizer::Keyword;
 
+Statement::If Parser::parse_if_stmt() {
+    // Eat the 'if' keyword.
+    eat();
+
+    Ptr<BaseExpr> condition = parse_expr_without_recovery();
+
+    ASSERT(
+        cur_tok().match_kind(TokenKind::OpenCurly),
+        "open a scope after an if statement, use '{}' for this." 
+    );
+    
+    eat();
+    Block if_block = parse_block();
+
+    ASSERT(cur_tok().match_kind(TokenKind::CloseCurly), "must close 'if' body with '}'." );
+    eat();
+
+    Statement::If if_stmt{};
+    if(cur_tok().match_keyword(Keyword::Else)) 
+    {
+        eat(); // Eat the 'else' keyword.
+        ASSERT(
+            cur_tok().match_kind(TokenKind::OpenCurly),
+            "open a scope for 'else' statement, use '{}' for this." 
+        );
+        
+        eat();
+        Block else_block = parse_block();
+
+        ASSERT(cur_tok().match_kind(TokenKind::CloseCurly), "must close 'else' body with '}'." );
+        eat();
+
+        if_stmt.has_else = true;
+        if_stmt.else_block = std::move(else_block);
+    }
+
+    if_stmt.if_block = std::move(if_block);
+    if_stmt.condition = std::move(condition);
+    return std::move(if_stmt);
+}
+
+Statement::Break Parser::parse_break_stmt() {
+    // Eat the 'break' keyword.
+    eat();
+    ASSERT(
+        cur_tok().match_kind(TokenKind::SemiColon),
+        "expected ';' after the break keyword." 
+    );
+    eat();
+    return Statement::Break();
+}
+
+Statement::Loop Parser::parse_loop_stmt() {
+    // Eat the loop keyword.
+    eat();
+    ASSERT(
+        cur_tok().match_kind(TokenKind::OpenCurly),
+        "must open a scope after loop keyword, use '{}' for this." 
+    );
+    
+    eat();
+    Block body = parse_block();
+
+    ASSERT(
+        cur_tok().match_kind(TokenKind::CloseCurly),
+        "must close 'loop' body with '}'." 
+    );
+
+    eat();
+    Statement::Loop loop{std::move(body)};
+    return std::move(loop);
+}
+
 Statement::Return Parser::parse_return_stmt() {
     // Eat the 'return' keyword.
     eat();
@@ -92,6 +165,15 @@ Ptr<Statement::Stmt> Parser::parse_stmt_without_recovery() {
     }
     if(cur_tok().match_keyword(Keyword::Return)) {
         return mk_ptr(parse_return_stmt());
+    }
+    if(cur_tok().match_keyword(Keyword::If)) {
+        return mk_ptr(parse_if_stmt());
+    }
+    if(cur_tok().match_keyword(Keyword::Loop)) {
+        return mk_ptr(parse_loop_stmt());
+    }
+    if(cur_tok().match_keyword(Keyword::Break)) {
+        return mk_ptr(parse_break_stmt());
     }
     if(cur_tok().match_keyword(Keyword::Import)) {
         return mk_ptr(parse_import_stmt());

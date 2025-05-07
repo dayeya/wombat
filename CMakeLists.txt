@@ -12,7 +12,6 @@ target_sources(
     wombat
     PRIVATE main.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/utils/str.cpp
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/utils/file.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/build/builder.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/core/compiler.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/core/typing.cpp

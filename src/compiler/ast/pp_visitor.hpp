@@ -14,6 +14,9 @@ struct AssignmentNode;
 struct FnHeaderNode;
 struct FnNode;
 struct BlockNode;
+struct LoopNode;
+struct IfNode;
+struct BreakNode;
 struct ReturnNode;
 struct FnCallNode;
 struct ImportNode;
@@ -59,10 +62,13 @@ struct PPVisitor {
     void visit(FnHeaderNode& fh);
     void visit(FnNode& fn);
     void visit(BlockNode& bn);
+    void visit(LoopNode& ln);
+    void visit(IfNode& cfn);
     void visit(ReturnNode& rn);
     void visit(FnCallNode& fn);
     void visit(AssignmentNode& an);
     void visit(ImportNode& im);
+    void visit(BreakNode& brk);
     void visit(VarTerminalNode& vn);
 };
 

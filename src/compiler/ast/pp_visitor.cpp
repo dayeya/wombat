@@ -119,6 +119,33 @@ void PPVisitor::visit(BlockNode& fb) {
     }
 }
 
+void PPVisitor::visit(BreakNode& brk) {
+    print("Break\n");
+}
+
+void PPVisitor::visit(LoopNode& ln) {
+    print_node_header("Loop");
+    ln.body->accept(*this);
+    decrease_depth();
+}
+
+void PPVisitor::visit(IfNode& cfn) {
+    print_node_header("If");
+    print_node_header("Condition");
+    cfn.condition->accept(*this);
+    decrease_depth();
+
+    print_node_header("IfBlock");
+    cfn.if_block->accept(*this);
+    decrease_depth();
+
+    if(cfn.else_block != nullptr) {
+        print_node_header("ElseBlock");
+        cfn.else_block->accept(*this);
+        decrease_depth();
+    }
+}
+
 void PPVisitor::visit(FnCallNode& fn) {
     print_node_header("FnCall");
     print(format("Name: {}\n", fn.ident.as_str()));

@@ -14,6 +14,9 @@ using Statement::StmtKind;
 using Statement::Block;
 using Statement::Import;
 using Statement::FnCall;
+using Statement::If;
+using Statement::Break;
+using Statement::Loop;
 
 using Declaration::Parameter;
 using Declaration::Var;
@@ -162,6 +165,9 @@ private:
     FnCall parse_fn_call();
     Fn parse_fn_decl();
     Block parse_block();
+    Break parse_break_stmt();
+    If parse_if_stmt();
+    Loop parse_loop_stmt();
 
     void parse_fn_header_params(FnHeader& header);
     void parse_fn_header(FnHeader& header);
