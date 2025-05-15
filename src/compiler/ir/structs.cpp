@@ -21,7 +21,7 @@ std::string IrFn::dump() {
             case OpCode::Label: 
             {
                 if(fn_label(inst)) {
-                    append(format("@{}\n", inst.dst.value()));
+                    append(format("@{}:\n", inst.dst.value()));
                 }
                 else {
                     // Label is a control flow label.
