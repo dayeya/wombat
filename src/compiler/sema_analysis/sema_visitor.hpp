@@ -2,6 +2,8 @@
 #define SEMANTICS_HPP_
 
 #include "sym.hpp"
+#include "builtins.hpp"
+#include <array>
 
 using Tokenizer::bin_op_str;
 using Tokenizer::assign_op_str;
@@ -26,12 +28,48 @@ struct ImportNode;
 struct ExprNode;
 
 struct SemanticVisitor {
+    using BuiltIns = std::array<std::string, 1>;
+
     SymTable table;
     
     SemanticVisitor() : table() {}
     
-    inline bool sema_type_cmp(const Type& ty1, const Type& ty2) {
-        return ty1.hash() == ty2.hash();
+    void include_builtins() {
+        SharedPtr<PrimitiveType> type = std::make_shared<PrimitiveType>(PrimitiveType{Primitive::Free});
+        SharedPtr<SymFunction> fn = std::make_shared<SymFunction>(SymFunction{
+            {
+                Declaration::Parameter(
+                    Mutability::Immutable, 
+                    Identifier{"out"}, 
+                    std::make_shared<PrimitiveType>(PrimitiveType{Primitive::Char})
+                )
+            },
+            std::move(type)
+        });
+        table.insert_symbol(BUILTINS.at(0).ident, std::move(fn));
+        
+        type = std::make_shared<PrimitiveType>(PrimitiveType{Primitive::Free});
+        fn = std::make_shared<SymFunction>(SymFunction{
+            {
+                Declaration::Parameter(
+                    Mutability::Immutable, 
+                    Identifier{"num"}, 
+                    std::make_shared<PrimitiveType>(PrimitiveType{Primitive::Int})
+                )
+            },
+            std::move(type)
+        });
+        table.insert_symbol(BUILTINS.at(1).ident, std::move(fn));
+    };
+
+    inline bool is_builtin(const Identifier& ident) {
+        for(const auto& builtin_symbol : BUILTINS)
+            if(ident.matches(builtin_symbol.ident)) return true;
+        return false;
+    };
+
+    inline bool sema_type_cmp(Type& given, Type& expected) {
+        return given.hash() == expected.hash();
     }
 
     bool sema_is_lval(Ptr<ExprNode>& expr);

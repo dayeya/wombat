@@ -1,7 +1,0 @@
-fn free main()
-    if false {
-        mut x: int = 5;
-    } else {
-        mut y: int = x + 45;
-    }
-end

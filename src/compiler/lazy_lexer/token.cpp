@@ -30,7 +30,7 @@ Option<Keyword> Tokenizer::keyword_from_token(const std::string& lexeme) {
   return std::nullopt;
 }
 
-Option<LiteralKind> Tokenizer::literal_kind_from_token(const TokenKind& kind) {
+Option<LiteralKind> Tokenizer::lit_from_tok(const TokenKind& kind) {
   switch (kind) {
     case TokenKind::LiteralNum:     return LiteralKind::Int;
     case TokenKind::LiteralFloat:   return LiteralKind::Float;

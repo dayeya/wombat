@@ -10,11 +10,11 @@ For a long time I wanted something new to work with, something *FUN*, so why not
 # Development Goals
 - [X] Compiled
 - [X] Statically typed
-- [ ] Rich and easy-to-understand syntax 
-- [ ] Fast to ship, fun to develop.
-- [ ] Cross-platform. DISCLAIMER - ATM THE COMPILER SUPPORTS ONLY UNIX-OS. 
-- [ ] **Readable** and professional, by encforcing developers who are usually dismissive of clean code to start sticking to it.
+- [X] Rich and easy-to-understand syntax 
+- [X] Fast to ship, fun to develop.
+- [X] **Readable** and professional, by encforcing developers who are usually dismissive of clean code to start sticking to it.
 - [ ] Turing-complete
+- [ ] Cross-platform. DISCLAIMER - ATM THE COMPILER SUPPORTS ONLY UNIX-OS. 
 
 # Language vision
 Here, you can find wombats visions.

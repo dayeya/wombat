@@ -24,6 +24,8 @@ target_sources(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ast/pp_visitor.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/errors/diag.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/sema_analysis/sema_visitor.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ir/ir.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ir/structs.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -37,6 +39,7 @@ target_include_directories(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/build
     PRIVATE ${PROJECT_SOURCE_DIR}/src/utils
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/core
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ir
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/errors
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/lazy_lexer
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/parser

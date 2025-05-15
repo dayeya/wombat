@@ -4,7 +4,9 @@
 #include <stddef.h>
 #include <string>
 #include <format>
+
 #include "alias.hpp"
+#include "common.hpp"
 
 enum class Mutability : int {
     // Immutable items. 
@@ -43,7 +45,9 @@ enum class TypeFamily : int {
     // A pointer type.
     Pointer,
     // An array type.
-    Array
+    Array,
+    // A Slice.
+    Slice
 };
 
 // Each type will be hashed for type checking.
@@ -68,6 +72,10 @@ struct Type {
 
     virtual ~Type() = default;
     Type(TypeFamily family) : fam(family) {}
+
+    inline bool is_prim() { return fam == TypeFamily::Primitive; }
+    inline bool is_ptr() { return fam == TypeFamily::Pointer; }
+    inline bool is_arr() { return fam == TypeFamily::Array; }
 
     virtual std::string as_str() const = 0;
     virtual TypeHash hash() const = 0;
@@ -144,5 +152,25 @@ struct ArrayType : virtual public Type {
         return TypeHash{h};
     }
 };
+
+struct Slice : virtual public Type {
+    SharedPtr<Type> underlying;
+
+    ~Slice() override = default;
+    Slice(SharedPtr<Type>&& type)
+        : Type(TypeFamily::Slice), underlying(std::move(type)) {}
+    
+    std::string as_str() const override {
+        return std::format("slice<{}>", underlying->as_str());
+    }
+
+    TypeHash hash() const override {
+        size_t h = 17;
+        h = h * 31 + static_cast<size_t>(fam);
+        h = h * 31 + underlying->hash().hash;
+        return TypeHash{h};
+    }
+};
+
 
 #endif // TYPING_HPP_

@@ -21,7 +21,7 @@ int main_linux(int argc, char** argv) {
     wombat_builder.parse_arguments(argc, argv + 1);
 
     if(!wombat_builder.config.src) {
-        wombat_builder.dump_err_and_exit(OpCode::NotEnoughArguments, "missing target to compile.");
+        wombat_builder.dump_err_and_exit(ErrCode::NotEnoughArguments, "missing target to compile.");
     }
 
     Compiler compiler = Compiler();

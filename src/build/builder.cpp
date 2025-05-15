@@ -13,14 +13,14 @@ void Builder::parse_input_file(std::span<char*>& args, size_t& cur, std::string 
     ASSERT(args[cur], "Range exceeded when parsing an input file.");
 
     if(!real_loc(input)) {
-        dump_err_and_exit(OpCode::Internal, std::string("cannot find ") + input);
+        dump_err_and_exit(ErrCode::Internal, std::string("cannot find ") + input);
     }
     if(is_directory(input)) {
-        dump_err_and_exit(OpCode::Internal, "provide a valid source file");
+        dump_err_and_exit(ErrCode::Internal, "provide a valid source file");
     }
     if(!matches_ext(input, SRC_EXTENSTION)) {
         dump_err_and_exit(
-            OpCode::Internal, 
+            ErrCode::Internal, 
             "invalid file format", 
             "try " + std::string(SRC_EXTENSTION) + " instead"
         );
@@ -35,7 +35,7 @@ void Builder::parse_out_file(std::span<char*>& args, size_t& cur) {
 
     if(!out) {
         dump_err_and_exit(
-            OpCode::NoInput, 
+            ErrCode::NoInput, 
             "-o requires an input file", 
             "try --help for more detailed information"
         );
@@ -46,14 +46,14 @@ void Builder::parse_out_file(std::span<char*>& args, size_t& cur) {
     StrLoc obj = out.value();
 
     if(!real_loc(obj)) {
-        dump_err_and_exit(OpCode::Internal, std::string("cannot find ") + obj);
+        dump_err_and_exit(ErrCode::Internal, std::string("cannot find ") + obj);
     }
     if(is_directory(obj)) {
-        dump_err_and_exit(OpCode::Internal, "provide a valid source file");
+        dump_err_and_exit(ErrCode::Internal, "provide a valid source file");
     }
     if(!matches_ext(obj, OUT_EXTENSION)) {
         dump_err_and_exit(
-            OpCode::Internal, 
+            ErrCode::Internal, 
             "invalid file format", 
             "try " + std::string(OUT_EXTENSION) + " instead"
         );
@@ -81,15 +81,17 @@ void Builder::parse_option(std::span<char*>& args, size_t& cur, const std::strin
         config.print_ast = true;
     } else if(opt == "-lx") {
         config.print_tokens = true;
+    } else if(opt == "-ir") {
+        config.print_ir = true;
     } else if(opt == "--version") {
         version();
-        exit_builder(OpCode::Success);
+        exit_builder(ErrCode::Success);
     } else if(opt == "--help") {
         usage(config.name.c_str());
-        exit_builder(OpCode::Success);
+        exit_builder(ErrCode::Success);
     } else {
         dump_err_and_exit(
-            OpCode::InvalidArgument, 
+            ErrCode::InvalidArgument, 
             "invalid argument: " + opt,
             "try --help for detailed information"
         );
@@ -105,13 +107,14 @@ void Builder::init(const std::string& parent_exec) {
         false,
         false, 
         false,
+        false,
         Verbosity::Normal
     );
 }
 
 void Builder::parse_arguments(int argc, char** argv) {
     if (argc < 2) {
-        dump_err_and_exit(OpCode::NotEnoughArguments, "missing main target to compile");
+        dump_err_and_exit(ErrCode::NotEnoughArguments, "missing main target to compile");
         return;
     }
 
@@ -128,7 +131,7 @@ void Builder::parse_arguments(int argc, char** argv) {
         else if(!config.src) {
             parse_input_file(args, cur, cur_arg);
         } else {
-            dump_err_and_exit(OpCode::Internal, "invalid argument: " + cur_arg);
+            dump_err_and_exit(ErrCode::Internal, "invalid argument: " + cur_arg);
         }
 
         // Bump into the next.
@@ -137,11 +140,11 @@ void Builder::parse_arguments(int argc, char** argv) {
 
     // Enforce the user to provide a target.
     if(!config.src) {
-        dump_err_and_exit(OpCode::Internal, "missing main target to compile");
+        dump_err_and_exit(ErrCode::Internal, "missing main target to compile");
     }
 }
 
-void Builder::exit_builder(OpCode code) {
+void Builder::exit_builder(ErrCode code) {
     std::exit(stdlib_status_from_op_code(code));
 }
 
@@ -149,7 +152,7 @@ void Builder::suggest(const std::string& suggestion) const {
     std::fprintf(stderr, "~ %s\n", suggestion.c_str());
 }
 
-void Builder::dump_err_and_exit(OpCode code, const std::string& description, const std::string& suggestion) {
+void Builder::dump_err_and_exit(ErrCode code, const std::string& description, const std::string& suggestion) {
     if(!description.empty()) {
         std::fprintf(stderr, "[%s::err] %s\n", COMPILER_NAME.c_str(), description.c_str());
     }
@@ -174,6 +177,7 @@ void Builder::usage(const char* exec) const {
     std::printf("    -v1            - Enable deeper subprocess logging.\n");
     std::printf("    -ast           - Add to the verbose output the parsed AST.\n");
     std::printf("    -lx            - Add to the verbose output the lexed tokens.\n");
+    std::printf("    -ir            - Write into an <FILE>.wil file a formatted IR.\n");
     std::printf("\n");
 }
 

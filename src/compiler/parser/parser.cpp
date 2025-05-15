@@ -236,4 +236,11 @@ void Parser::parse(AST& ast) {
     while(tok_cur.can_advance()) {
         ast.push_function(std::move(parse_function_to_node()));
     }
+
+    auto cur = std::find_if(ast.functions.begin(), ast.functions.end(), [&ast](Ptr<FnNode>& fn) -> bool {
+        auto& ident = fn->header->name;
+        return ident.matches("main");
+    });
+
+    ASSERT(cur != ast.functions.end(), "'main' function is not defined.");
 }

@@ -14,7 +14,7 @@ enum class Verbosity: int {
     Debug
 };
 
-enum class OpCode: int {
+enum class ErrCode: int {
     Internal,           // Internal.
     Success,            // Succuessful usage.
     NotEnoughArguments, // Empty shell.
@@ -31,6 +31,7 @@ struct BuildConfig {
     bool compile_and_assemble;
     bool print_ast;
     bool print_tokens;
+    bool print_ir;
 
     BuildConfig() = default;
     BuildConfig(
@@ -41,6 +42,7 @@ struct BuildConfig {
         bool cmpl_and_asm,
         bool ast,
         bool tokens,
+        bool ir,
         Verbosity v
     ) : name{parent},
         src{src_location},
@@ -49,6 +51,7 @@ struct BuildConfig {
         compile_and_assemble{cmpl_and_asm},
         print_ast{ast},
         print_tokens{tokens},
+        print_ir{ir},
         verb{v} {}
 };
 
@@ -57,17 +60,17 @@ struct Builder {
 
     Builder() = default;
     void init(const std::string& parent_exec);
-    void exit_builder(OpCode code);
+    void exit_builder(ErrCode code);
 
-    int stdlib_status_from_op_code(const OpCode& code) const {
-        return (code == OpCode::Success) ? EXIT_SUCCESS : EXIT_FAILURE;
+    int stdlib_status_from_op_code(const ErrCode& code) const {
+        return (code == ErrCode::Success) ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     void usage(const char* exec) const;
     void version() const;
 
     void suggest(const std::string& suggestion) const;
-    void dump_err_and_exit(OpCode code, const std::string& description, const std::string& suggestion="");
+    void dump_err_and_exit(ErrCode code, const std::string& description, const std::string& suggestion="");
 
     void parse_arguments(int argc, char** argv);
     void parse_input_file(std::span<char*>& view, size_t& cur, std::string input);

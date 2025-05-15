@@ -172,9 +172,6 @@ private:
     void parse_fn_header_params(FnHeader& header);
     void parse_fn_header(FnHeader& header);
 
-    // [TODO]
-    // void parse_type_within_angle_brackets();
-
     Statement::Import parse_import_stmt();
     Statement::Return parse_return_stmt();
     Identifier parse_general_ident();

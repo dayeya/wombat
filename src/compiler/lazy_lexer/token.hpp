@@ -237,7 +237,7 @@ Option<Keyword> keyword_from_token(const std::string& lexeme);
 
 // Converts a `Tokenizer::TokenKind` into a `Tokenizer::LiteralKind`.
 // Returns an optional wrapping a `Tokenizer::LiteralKind` or an `std::nullopt`.
-Option<LiteralKind> literal_kind_from_token(const TokenKind& kind);
+Option<LiteralKind> lit_from_tok(const TokenKind& kind);
 
 std::string tok_kind_str(const TokenKind& kind);
 std::string lit_kind_str(const LiteralKind& kind);

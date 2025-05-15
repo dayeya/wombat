@@ -36,4 +36,7 @@ Ptr<T> mk_ptr(T&& v) {
 // Wrapper around std::string when we use file locations.
 using StrLoc = std::string;
 
+// Wrapper around std::string when we cheap identifier without including [token.hpp].
+using CheapIdent = std::string;
+
 #endif // ALIAS_HPP_

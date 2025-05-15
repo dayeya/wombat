@@ -421,6 +421,8 @@ void SemanticVisitor::sema_analyze(FnHeaderNode& fn_header) {
 }
 
 void SemanticVisitor::sema_analyze(FnNode& fn) {
+    ASSERT(!is_builtin(fn.header->name), "cannot redeclare a builtin function.");
+
     // Add a new function symbol to global scope.
     table.insert_symbol(
         fn.header->name, 

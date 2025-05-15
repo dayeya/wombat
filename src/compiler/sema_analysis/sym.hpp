@@ -16,14 +16,16 @@ enum class SymKind : int {
     // A symbol that refers to a defined type.
     // E.g 'struct Foo {}'
     //             ^^^
-    CustomType,
+    CustomType
 };
 
 struct Symbol {
     SymKind sym_kind;
     
     Symbol() = default;
-    Symbol(SymKind kind) : sym_kind(kind) {}
+    Symbol(SymKind&& kind) 
+        : sym_kind{std::move(kind)} {}
+
     virtual ~Symbol() = default;
 };
 

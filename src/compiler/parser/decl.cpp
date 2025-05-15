@@ -57,17 +57,13 @@ Ptr<Type> Parser::parse_type() {
         size_t array_size = 0;
         
         ASSERT(
-            cur_tok().match_kind(TokenKind::LiteralNum) ||
-            cur_tok().match_kind(TokenKind::CloseBracket),
-            std::format("expected integer or ']' in array type but got '{}'", cur_tok().value)
+            cur_tok().match_kind(TokenKind::LiteralNum),
+            std::format("expected a constant array size but got '{}'", cur_tok().value)
         );
 
-        if(cur_tok().match_kind(TokenKind::LiteralNum)) 
-        {
-            array_size = std::stoul(cur_tok().value);
-            eat();
-        }
-
+        array_size = std::stoul(cur_tok().value);
+        eat();
+        
         ASSERT(
             cur_tok().match_kind(TokenKind::CloseBracket),
             std::format("expected `]` after array type but got '{}'", cur_tok().value)

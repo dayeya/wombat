@@ -64,7 +64,7 @@ using Tokenizer::AssignOp;
 
 using Tokenizer::Token;
 using Tokenizer::Location;
-using Tokenizer::literal_kind_from_token;
+using Tokenizer::lit_from_tok;
 
 namespace Expr {
 
@@ -112,7 +112,7 @@ struct Literal : public BaseExpr {
     explicit Literal(const Token& t): BaseExpr(ExprKind::Lit) {
         val = t.value;
         loc = t.loc;
-        kind = literal_kind_from_token(t.kind).value_or(LiteralKind::None);
+        kind = lit_from_tok(t.kind).value_or(LiteralKind::None);
     }
 };
 

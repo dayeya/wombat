@@ -1,0 +1,3 @@
+fn free main()
+    putnum(!5);
+end
