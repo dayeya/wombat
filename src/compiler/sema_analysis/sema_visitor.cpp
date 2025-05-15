@@ -105,7 +105,10 @@ SharedPtr<Type> SemanticVisitor::sema_process_type(
         case BinOpKind::Div:
         case BinOpKind::Mul:
         case BinOpKind::Pow:
-        case BinOpKind::FlooredDiv: 
+        case BinOpKind::FlooredDiv:
+        case BinOpKind::BitAnd:
+        case BinOpKind::BitOr:
+        case BinOpKind::BitXor:
         {
             return lhs;
         }

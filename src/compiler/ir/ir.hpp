@@ -48,23 +48,40 @@ private:
         return result;
     };
 
-    OpCode ir_op_from_bin(const BinOpKind& op) {
-        switch(op) {
-            case BinOpKind::Add: return OpCode::Add;
-            case BinOpKind::Sub: return OpCode::Sub;
-            case BinOpKind::Mul: return OpCode::Mul;
-            case BinOpKind::Div: return OpCode::Div;
-            default: {
-                ASSERT(false, std::format("[ir::err] unsupported binary code: '{}'", bin_op_str(op)));
-                return OpCode::Nop;
-            }
+OpCode ir_op_from_bin(const BinOpKind& op) {
+    switch(op) {
+        case BinOpKind::Add:        return OpCode::Add;
+        case BinOpKind::Sub:        return OpCode::Sub;
+        case BinOpKind::Mul:        return OpCode::Mul;
+        case BinOpKind::Div:        return OpCode::Div;
+        case BinOpKind::FlooredDiv: return OpCode::FlooredDiv;
+        case BinOpKind::Mod:        return OpCode::Mod;
+        case BinOpKind::And:        return OpCode::And;
+        case BinOpKind::Or:         return OpCode::Or;
+        case BinOpKind::BitXor:     return OpCode::BitXor;
+        case BinOpKind::BitAnd:     return OpCode::BitAnd;
+        case BinOpKind::BitOr:      return OpCode::BitOr;
+        case BinOpKind::Shl:        return OpCode::Shl;
+        case BinOpKind::Shr:        return OpCode::Shr;
+        case BinOpKind::Eq:         return OpCode::Eq;
+        case BinOpKind::Lt:         return OpCode::Lt;
+        case BinOpKind::Le:         return OpCode::Le;
+        case BinOpKind::NotEq:      return OpCode::NotEq;
+        case BinOpKind::Ge:         return OpCode::Ge;
+        case BinOpKind::Gt:         return OpCode::Gt;
+        default: {
+            ASSERT(false, std::format("[ir::err] unsupported binary op: '{}'", bin_op_str(op)));
+            return OpCode::Nop;
         }
     }
+}
+
 
     OpCode ir_op_from_un(const UnOpKind op) {
         switch(op) {
             case UnOpKind::Neg: return OpCode::Neg;
             case UnOpKind::BitNot: return OpCode::BitNot;
+            case UnOpKind::Not: return OpCode::Not;
             default: {
                 ASSERT(false, std::format("[ir::err] unsupported unary code: '{}'", un_op_str(op)));
                 return OpCode::Nop;

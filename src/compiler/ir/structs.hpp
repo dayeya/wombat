@@ -10,58 +10,57 @@ using Tokenizer::LiteralKind;
 
 CONST char TAB = '\t';
 CONST char NEWLINE = '\n';
-
 enum class OpCode: int {
-    // Represents a label within the binary code.
-    // 
-    // E.g '@main' or control flow like: '.if'
-    //
+    // Represents a label in the code (e.g. @main, .if)
     Label,
-    // Perform a copy of a variable.
-    //
-    // E.g `
-    //      mut x: int = 5;
-    //      mut y: int = x;
-    //     `
+    // Copies a variable to another
+    // Example: mut y: int = x;
     Copy,
-    // Creation of a temporary.
-    // 
-    // E.g 'putnum(1 + 2) --> %t1 = 1 + 2'
-    // 
+    // Creates a temporary from an expression
+    // Example: putnum(1 + 2) --> %t1 = 1 + 2
     Temp,
-    // Push an arguement.
-    //
-    // E.g `push %1`
+    // Pushes an argument to the stack
+    // Example: push %1
     Push,
-    // Pop a parameter.
-    //
-    // E.g `pop #[local(buffer)]`
+    // Pops a value into a target (e.g. a local)
+    // Example: pop #[local(buffer)]
     Pop,
-    // Invoke a function with argument.
-    // 
-    // E.g `call print 1`
+    // Calls a function with arguments
+    // Example: call print 1
     Call,
-    // Return from a function.
-    // 
-    // E.g `ret %t1`
+    // Returns a value from a function
+    // Example: ret %t1
     Ret,
-    // Perform a syscall.
-    // 
-    // E.g 'syscall OUT'
+    // Performs a system call
+    // Example: syscall OUT
     Syscall,
-    // Perform an addition operation.
-    Add,
-    // Perform an subtraction operation.
-    Sub,
-    // Perform an multiplication operation.
-    Mul,
-    // Perform an division operation.
-    Div,
-    // Peforms a negation.
-    Neg,
-    // Perform a bitwise not.
-    BitNot,
-    // Misc
+    // Arithmetic operations
+    Add,        // Adds two values (a + b)
+    Sub,        // Subtracts two values (a - b)
+    Mul,        // Multiplies two values (a * b)
+    Div,        // Divides two values (a / b)
+    FlooredDiv, // Integer division with floor (floor(a / b))
+    Mod,        // Modulus (a % b)
+    // Logical operations
+    And,        // and: a and b
+    Or,         // or: a or b
+    // Bitwise operations
+    BitXor,     // Bitwise XOR (a ^ b)
+    BitAnd,     // Bitwise AND (a & b)
+    BitOr,      // Bitwise OR (a | b)
+    Shl,        // Bitwise shift left (a << b)
+    Shr,        // Bitwise shift right (a >> b)
+    // Comparison operations
+    Eq,         // eq: a == b
+    Lt,         // lt: a < b
+    Le,         // le: a <= b
+    NotEq,      // neq: a != b
+    Ge,         // gw: a >= b
+    Gt,         // gt: a > b
+    Neg,        // neg: -a
+    Not,        // not: true
+    BitNot,     // bitwise(not): !a
+    // No operation (placeholder)
     Nop
 };
 
@@ -135,25 +134,41 @@ struct Instruction {
 
     inline std::string op_as_str() {
         switch(op) {
-            case OpCode::Label:   return "label";
-            case OpCode::Copy:    return "copy";
-            case OpCode::Push:    return "push";
-            case OpCode::Pop:     return "pop";
-            case OpCode::Call:    return "call";
-            case OpCode::Ret:     return "ret";
-            case OpCode::Syscall: return "syscall";
-            case OpCode::Add:     return "add";
-            case OpCode::Sub:     return "sub";
-            case OpCode::Mul:     return "mul";
-            case OpCode::Div:     return "div";
-            case OpCode::Neg:     return "neg";
-            case OpCode::BitNot:  return "bitwise(not)";
-            case OpCode::Nop:     return "nop";
-            default: {
-                return "unknown";
-            }
+            case OpCode::Label:       return "label";
+            case OpCode::Copy:        return "copy";
+            case OpCode::Temp:        return "temp";
+            case OpCode::Push:        return "push";
+            case OpCode::Pop:         return "pop";
+            case OpCode::Call:        return "call";
+            case OpCode::Ret:         return "ret";
+            case OpCode::Syscall:     return "syscall";
+            case OpCode::Add:         return "add";
+            case OpCode::Sub:         return "sub";
+            case OpCode::Mul:         return "mul";
+            case OpCode::Div:         return "div";
+            case OpCode::FlooredDiv:  return "floor";
+            case OpCode::Mod:         return "mod";
+            case OpCode::And:         return "and";
+            case OpCode::Or:          return "or";
+            case OpCode::BitXor:      return "bitwise(xor)";
+            case OpCode::BitAnd:      return "bitwise(and)";
+            case OpCode::BitOr:       return "bitwise(or)";
+            case OpCode::BitNot:      return "bitwise(not)";
+            case OpCode::Shl:         return "shl";
+            case OpCode::Shr:         return "shr";
+            case OpCode::Eq:          return "eq";
+            case OpCode::Lt:          return "lt";
+            case OpCode::Le:          return "le";
+            case OpCode::NotEq:       return "neq";
+            case OpCode::Ge:          return "ge";
+            case OpCode::Gt:          return "gt";
+            case OpCode::Neg:         return "neg";
+            case OpCode::Not:         return "not";
+            case OpCode::Nop:         return "nop";
+            default:                  return "unknown";
         }
     }
+
 };
 
 inline Instruction new_inst(OpCode&& op, Option<RawVal>&& dst, Instruction::Parts&& parts) {

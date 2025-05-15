@@ -53,6 +53,18 @@ std::string IrFn::dump() {
             case OpCode::Sub:
             case OpCode::Mul:
             case OpCode::Div:
+            case OpCode::FlooredDiv:
+            case OpCode::And:
+            case OpCode::Or:
+            case OpCode::Eq:
+            case OpCode::NotEq:
+            case OpCode::Le:
+            case OpCode::Lt:
+            case OpCode::Ge:
+            case OpCode::Gt:
+            case OpCode::BitAnd:
+            case OpCode::BitXor:
+            case OpCode::BitOr:
             {   
                 ASSERT(
                     inst.parts.capacity() == 2, 
@@ -66,6 +78,7 @@ std::string IrFn::dump() {
                 append(format("{} = {}: {}, {}\n", std::move(dst), inst.op_as_str(), lhs->as_str(), rhs->as_str()));
                 break;
             }
+            case OpCode::Not:
             case OpCode::Neg:
             case OpCode::BitNot:
             {
