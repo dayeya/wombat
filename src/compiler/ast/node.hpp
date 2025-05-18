@@ -228,6 +228,10 @@ struct VarDeclarationNode : public StmtNode {
       init(std::move(init)), 
       op(std::move(op)) {}
 
+  inline bool initialized() const {
+    return init != nullptr;
+  }
+
   void analyze(SemanticVisitor& analyzer) override {
     analyzer.sema_analyze(*this);
   }

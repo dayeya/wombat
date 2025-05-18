@@ -1,0 +1,8 @@
+fn float mul(x: float, y: float)
+    return x * y;
+end
+
+fn int main()
+    mut g: float = 6.0;
+    mut xs: float = 5.0 + g / 2.0;
+end

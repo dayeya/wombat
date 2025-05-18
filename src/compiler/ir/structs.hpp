@@ -10,29 +10,38 @@ using Tokenizer::LiteralKind;
 
 CONST char TAB = '\t';
 CONST char NEWLINE = '\n';
+CONST char* DOC = " ; ";
+
 enum class OpCode: int {
     // Represents a label in the code (e.g. @main, .if)
     Label,
     // Copies a variable to another
-    // Example: mut y: int = x;
+    // E.g. 'mut y: int = x;'
     Copy,
+    // Allocates bytes in the current context.
+    Alloc,
+    // Assigns data into a target.
+    // E.g. 'x = 1'
+    Assign,
+    // Loads a variable into a temporary.
+    Load,
     // Creates a temporary from an expression
-    // Example: putnum(1 + 2) --> %t1 = 1 + 2
+    // E.g. 'putnum(1 + 2) --> %t1 = 1 + 2'
     Temp,
     // Pushes an argument to the stack
-    // Example: push %1
+    // E.g. 'push %1'
     Push,
-    // Pops a value into a target (e.g. a local)
-    // Example: pop #[local(buffer)]
+    // Pops a value into a target.
+    // E.g. 'pop @buffer'
     Pop,
     // Calls a function with arguments
-    // Example: call print 1
+    // E.g. 'call print, 1'
     Call,
     // Returns a value from a function
-    // Example: ret %t1
+    // E.g. 'ret %t1'
     Ret,
     // Performs a system call
-    // Example: syscall OUT
+    // E.g. 'syscall OUT'
     Syscall,
     // Arithmetic operations
     Add,        // Adds two values (a + b)
@@ -136,11 +145,14 @@ struct Instruction {
         switch(op) {
             case OpCode::Label:       return "label";
             case OpCode::Copy:        return "copy";
+            case OpCode::Assign:      return "assign";
+            case OpCode::Load:        return "load";
+            case OpCode::Alloc:       return "alloc";
+            case OpCode::Ret:         return "ret";
             case OpCode::Temp:        return "temp";
             case OpCode::Push:        return "push";
             case OpCode::Pop:         return "pop";
             case OpCode::Call:        return "call";
-            case OpCode::Ret:         return "ret";
             case OpCode::Syscall:     return "syscall";
             case OpCode::Add:         return "add";
             case OpCode::Sub:         return "sub";
@@ -150,10 +162,10 @@ struct Instruction {
             case OpCode::Mod:         return "mod";
             case OpCode::And:         return "and";
             case OpCode::Or:          return "or";
-            case OpCode::BitXor:      return "bitwise(xor)";
-            case OpCode::BitAnd:      return "bitwise(and)";
-            case OpCode::BitOr:       return "bitwise(or)";
-            case OpCode::BitNot:      return "bitwise(not)";
+            case OpCode::BitXor:      return "bit_xor";
+            case OpCode::BitAnd:      return "bit_and";
+            case OpCode::BitOr:       return "bit_or";
+            case OpCode::BitNot:      return "bit_not";
             case OpCode::Shl:         return "shl";
             case OpCode::Shr:         return "shr";
             case OpCode::Eq:          return "eq";

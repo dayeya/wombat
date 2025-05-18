@@ -70,6 +70,13 @@ struct TypeHash {
 struct Type {
     TypeFamily fam;
 
+    static CONST size_t INT_SIZE    = 8;
+    static CONST size_t FLOAT_SIZE  = 8;
+    static CONST size_t BOOL_SIZE   = 1;
+    static CONST size_t CHAR_SIZE   = 1;
+    static CONST size_t PTR_SIZE    = 1;
+    static CONST size_t FREE_SIZE   = 0;
+
     virtual ~Type() = default;
     Type(TypeFamily family) : fam(family) {}
 
@@ -79,6 +86,7 @@ struct Type {
 
     virtual std::string as_str() const = 0;
     virtual TypeHash hash() const = 0;
+    virtual size_t wsizeof() const = 0;
 };
 
 struct PrimitiveType : virtual public Type {
@@ -111,6 +119,18 @@ struct PrimitiveType : virtual public Type {
         h = h * 31 + static_cast<size_t>(type);
         return TypeHash{h};
     }
+
+    size_t wsizeof() const override {
+        switch(type)
+        {
+            case Primitive::Int:     return Type::INT_SIZE;
+            case Primitive::Boolean: return Type::BOOL_SIZE;
+            case Primitive::Char:    return Type::CHAR_SIZE;
+            case Primitive::Float:   return Type::FLOAT_SIZE;
+            case Primitive::Free:    return Type::FREE_SIZE;
+            default: return 0;
+        }
+    } 
 };
 
 struct PointerType : virtual public Type {
@@ -130,27 +150,35 @@ struct PointerType : virtual public Type {
         h = h * 31 + underlying->hash().hash;
         return TypeHash{h};
     }
+
+    size_t wsizeof() const override {
+        return Type::PTR_SIZE;
+    } 
 };
 
 struct ArrayType : virtual public Type {
-    size_t array_size;
+    size_t size;
     SharedPtr<Type> underlying;
 
     ~ArrayType() override = default;
     ArrayType(size_t&& size, SharedPtr<Type>&& type)
-        : Type(TypeFamily::Array), array_size(std::move(size)), underlying(std::move(type)) {}
+        : Type(TypeFamily::Array), size(std::move(size)), underlying(std::move(type)) {}
     
     std::string as_str() const override {
-        return std::format("[{}]{}", array_size, underlying->as_str());
+        return std::format("[{}]{}", size, underlying->as_str());
     }
 
     TypeHash hash() const override {
         size_t h = 17;
         h = h * 31 + static_cast<size_t>(fam);
-        h = h * 31 + std::hash<size_t>{}(array_size);
+        h = h * 31 + std::hash<size_t>{}(size);
         h = h * 31 + underlying->hash().hash;
         return TypeHash{h};
     }
+
+    size_t wsizeof() const override {
+        return size * underlying->wsizeof();
+    } 
 };
 
 struct Slice : virtual public Type {

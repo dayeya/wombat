@@ -11,9 +11,11 @@ std::string IrFn::dump() {
     // Setup a stream.
     int depth = 0;
     std::stringstream stream;
-    auto append = [&stream, &depth](std::string&& inst) -> void { stream << std::string(depth, TAB) << inst; };
+
     auto increase_depth = [&depth]() -> void { depth++; };
     auto decrease_depth = [&depth]() -> void { depth--; };
+    auto inline_doc = [&stream, &depth](std::string&& line) -> void { stream << DOC << line << NEWLINE; };
+    auto append = [&stream, &depth](std::string&& inst) -> void { stream << std::string(depth, TAB) << inst << NEWLINE; };
 
     for(auto& inst : insts) {
         switch(inst.op) 
@@ -21,7 +23,7 @@ std::string IrFn::dump() {
             case OpCode::Label: 
             {
                 if(fn_label(inst)) {
-                    append(format("@{}:\n", inst.dst.value()));
+                    append(format("@{}:", inst.dst.value()));
                 }
                 else {
                     // Label is a control flow label.
@@ -30,23 +32,55 @@ std::string IrFn::dump() {
                 increase_depth();
                 break;
             }
+            case OpCode::Alloc:
+            {
+                ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for alloc instruction.");
+                auto alloc_bytes = inst.parts.front()->as_str();
+                append(format("#[stack_allocation({} bytes)]", alloc_bytes));
+                append(format("alloc {}, {}", inst.dst.value(), alloc_bytes));
+                break;
+            }
+            case OpCode::Assign:
+            {
+                ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for assign instruction.");
+                append(format("{} = {}", inst.dst.value(), inst.parts.front()->as_str()));
+                break;
+            }
             case OpCode::Push:
             {   
                 ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for push instruction.");
                 auto& op = inst.parts.front();
-                append(format("push {}\n", op->as_str()));
+                append(format("push {}", op->as_str()));
+                break;
+            }
+            case OpCode::Pop: 
+            {
+                ASSERT(inst.parts.capacity() == 0, "unexpected number of operands for push instruction.");
+                append(format("pop |> {}", inst.dst.value()));
                 break;
             }
             case OpCode::Call: 
             {   
-                ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for push instruction.");
+                ASSERT(inst.parts.capacity() == 2, "unexpected number of operands for call instruction.");
 
                 // Get the operand. (Represents the number of arguments.)
-                auto& op = inst.parts.front();
-                ASSERT(op->kind == OpKind::Lit, "cannot push something that is not a literal.");
+                auto dst = inst.dst;
+                auto& fn = inst.parts.at(0);
+                auto& args = inst.parts.at(1);
 
-                auto* lop = static_cast<LitOp*>(op.get());
-                append(format("call {}, {}\n", inst.dst.value(), lop->value));
+                if(dst.has_value()) {
+                    append(format("{} = call {}, {}", dst.value(), fn->as_str(), args->as_str()));
+                } else {
+                    append(format("_ = call {}, {}", fn->as_str(), args->as_str()));
+                }
+
+                break;
+            }
+            case OpCode::Ret:
+            {   
+                ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for ret instruction.");
+                auto& op = inst.parts.front();
+                append(format("ret {}", op->as_str()));
                 break;
             }
             case OpCode::Add:
@@ -75,7 +109,7 @@ std::string IrFn::dump() {
                 auto& lhs = inst.parts.at(0);
                 auto& rhs = inst.parts.at(1);
 
-                append(format("{} = {}: {}, {}\n", std::move(dst), inst.op_as_str(), lhs->as_str(), rhs->as_str()));
+                append(format("{} = {}: {}, {}", std::move(dst), inst.op_as_str(), lhs->as_str(), rhs->as_str()));
                 break;
             }
             case OpCode::Not:
@@ -88,13 +122,13 @@ std::string IrFn::dump() {
                 );
                 RawVal dst = inst.dst.value();
                 auto& lhs = inst.parts.front();
-                append(format("{} = {}: {}\n", std::move(dst), inst.op_as_str(), lhs->as_str()));
+                append(format("{} = {}: {}", std::move(dst), inst.op_as_str(), lhs->as_str()));
                 break;
             }
             default: 
-                ASSERT(false, format("cannot format a '{}' instruction. ", inst.op_as_str()));
+                append(format("#[unhandled({})]", inst.op_as_str()));
         }
     }
-
+    stream << NEWLINE;
     return stream.str();
 }

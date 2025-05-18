@@ -3,9 +3,205 @@
 
 using LoweredBlock = IrProgram::LoweredBlock;
 
-void IrProgram::gen(AST& ast) {
-    for(auto& fn : ast.functions) {
-        lowered_program.push_back(flatten_function(fn));
+void IrProgram::flatten_fn_call_from_stmt(LoweredBlock& block, Ptr<StmtNode>& fn_call) {
+    auto* call = dynamic_cast<FnCallNode*>(fn_call.get());
+
+    // Push all the arguments.
+    for(int cur = call->args.capacity() - 1; cur >= 0; --cur)
+    {
+        auto& param = call->args.at(cur);
+
+        Instruction::Parts ops;
+        ops.push_back(flatten_expr(block, param));
+
+        block.push_back(new_inst(OpCode::Push, std::nullopt, std::move(ops)));
+    }
+
+    Instruction::Parts ops;
+    ops.push_back(new_var_op(call->ident.as_str()));
+    ops.push_back(new_lit_op(std::format("{}", call->args.capacity()), LiteralKind::Int));
+
+    auto call_inst = new_inst(
+        OpCode::Call, 
+        std::nullopt, 
+        std::move(ops)
+    );
+    block.push_back(std::move(call_inst));
+}
+
+void IrProgram::flatten_ret_stmt(LoweredBlock& block, Ptr<StmtNode>& ret_stmt) {
+    auto* ret = dynamic_cast<ReturnNode*>(ret_stmt.get());
+
+    Instruction::Parts ops;
+    ops.push_back(flatten_expr(block, ret->expr));
+
+    block.push_back(new_inst(OpCode::Ret, ret->fn.as_str(), std::move(ops)));
+}
+
+void IrProgram::flatten_var_decl(LoweredBlock& block, Ptr<StmtNode>& var_decl) {
+    auto* var = dynamic_cast<VarDeclarationNode*>(var_decl.get());
+
+    Instruction::Parts ops;
+    ops.push_back(new_lit_op(format("{}", var->info.type->wsizeof()), LiteralKind::Int));
+
+    auto alloc = new_inst(
+        OpCode::Alloc,
+        var->info.ident.as_str(),
+        std::move(ops)
+    );
+    block.push_back(std::move(alloc));
+
+    if(var->initialized()) {
+        Instruction::Parts ops;
+        ops.push_back(flatten_expr(block, var->init));
+
+        block.push_back(new_inst(
+            OpCode::Assign,
+            var->info.ident.as_str(),
+            std::move(ops)
+        ));
+    }
+}
+
+LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
+    LoweredBlock body;
+    body.reserve(block->children.capacity());
+
+    for(auto& child : block->children)
+    {
+        switch(child->id) 
+        {
+            case NodeId::VarDecl: 
+            {
+                flatten_var_decl(body, child);
+                break;
+            }
+            case NodeId::FnCall:
+            {
+                flatten_fn_call_from_stmt(body, child);
+                break;
+            }
+            case NodeId::Return:
+            {
+                flatten_ret_stmt(body, child);
+                break;
+            }
+            default: 
+            {
+                ASSERT(
+                    false,
+                    format("cannot generate IR code from {}", child->id_str())
+                );
+            }
+        }
+    }
+
+    return std::move(body);
+}
+
+Ptr<Operand> IrProgram::flatten_lit_expr(Ptr<ExprNode>& expr) {
+    auto* lit = dynamic_cast<LiteralNode*>(expr.get());
+    auto operand = new_lit_op(std::move(lit->str), std::move(lit->kind));
+    return std::move(operand);
+}
+
+Ptr<Operand> IrProgram::flatten_bin_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
+    auto* bin = dynamic_cast<BinOpNode*>(expr.get());
+    auto lhs = flatten_expr(ctx, bin->lhs);
+    auto rhs = flatten_expr(ctx, bin->rhs);
+
+    // A temporary to hold the result.
+    Ptr<TempOp> temp = new_tmp_op(push_temp());
+
+    Instruction::Parts ops;
+    ops.push_back(std::move(lhs));
+    ops.push_back(std::move(rhs));
+
+    // Push a new instruction into the current block.
+    auto inst = new_inst(
+        ir_op_from_bin(bin->op),
+        temp->as_str(),
+        std::move(ops)
+    );
+    ctx.push_back(std::move(inst));
+
+    return std::move(temp);
+}
+
+Ptr<Operand> IrProgram::flatten_un_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
+    auto* un = dynamic_cast<UnaryOpNode*>(expr.get());
+    auto lhs = flatten_expr(ctx, un->lhs);
+
+    // A temporary to hold the result.
+    Ptr<TempOp> temp = new_tmp_op(push_temp());
+
+    Instruction::Parts ops;
+    ops.push_back(std::move(lhs));
+
+    // Push a new instruction into the current block.
+    auto inst = new_inst(
+        ir_op_from_un(un->op),
+        temp->as_str(),
+        std::move(ops)
+    );
+    ctx.push_back(std::move(inst));
+
+    return std::move(temp);
+}
+
+Ptr<Operand> IrProgram::flatten_fn_call_from_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
+    auto* call = dynamic_cast<FnCallNode*>(expr.get());
+
+    // Push all the arguments.
+    for(int cur = call->args.capacity() - 1; cur >= 0; --cur)
+    {
+        auto& param = call->args.at(cur);
+
+        Instruction::Parts ops;
+        ops.push_back(flatten_expr(ctx, param));
+
+        ctx.push_back(new_inst(OpCode::Push, std::nullopt, std::move(ops)));
+    }
+
+    Instruction::Parts ops;
+    ops.push_back(new_var_op(call->ident.as_str()));
+    ops.push_back(new_lit_op(std::format("{}", call->args.capacity()), LiteralKind::Int));
+
+    // Create a temp to call the value of the call.
+    Ptr<TempOp> temp = new_tmp_op(push_temp());
+
+    auto call_inst = new_inst(
+        OpCode::Call, 
+        temp->as_str(), 
+        std::move(ops)
+    );
+    ctx.push_back(std::move(call_inst));
+
+    return std::move(temp);
+}
+
+Ptr<Operand> IrProgram::flatten_terminal(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
+    auto* term = dynamic_cast<VarTerminalNode*>(expr.get());
+    auto operand = new_var_op(std::move(term->ident.as_str()));
+    return std::move(operand);
+}
+
+Ptr<Operand> IrProgram::flatten_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
+    switch(expr->id) 
+    {
+        case NodeId::Lit: return flatten_lit_expr(expr);
+        case NodeId::Bin: return flatten_bin_expr(ctx, expr);
+        case NodeId::Un: return flatten_un_expr(ctx, expr);
+        case NodeId::Term: return flatten_terminal(ctx, expr);
+        case NodeId::FnCall: return flatten_fn_call_from_expr(ctx, expr);
+        default: 
+        {
+            ASSERT(
+                false,
+                format("cannot generate IR code from {}", expr->id_str())
+            );
+            return nullptr;
+        }
     }
 }
 
@@ -30,114 +226,9 @@ IrFn IrProgram::flatten_function(Ptr<FnNode>& fn) {
     return flattened;
 };
 
-LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
-    LoweredBlock body;
-    body.reserve(block->children.capacity());
-
-    for(auto& child : block->children)
-    {
-        switch(child->id) 
-        {
-            case NodeId::FnCall:
-            {
-                auto* call = dynamic_cast<FnCallNode*>(child.get());
-
-                // Push all the arguments.
-                for(int cur = call->args.capacity() - 1; cur >= 0; --cur)
-                {
-                    auto& param = call->args.at(cur);
-
-                    Instruction::Parts ops;
-                    ops.push_back(flatten_expr(body, param));
-
-                    body.push_back(new_inst(OpCode::Push, std::nullopt, std::move(ops)));
-                }
-
-                Instruction::Parts ops;
-                ops.push_back(new_lit_op(std::format("{}", call->args.capacity()), LiteralKind::Int));
-
-                auto call_inst = new_inst(
-                    OpCode::Call, 
-                    call->ident.as_str(), 
-                    std::move(ops)
-                );
-                body.push_back(std::move(call_inst));
-                break;
-            }
-            default: 
-            {
-                ASSERT(
-                    false,
-                    format("cannot generate IR code from {}", child->id_str())
-                );
-            }
-        }
-    }
-
-    return std::move(body);
-}
-
-Ptr<Operand> IrProgram::flatten_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
-    switch(expr->id) 
-    {
-        case NodeId::Lit: 
-        {
-            auto* lit = dynamic_cast<LiteralNode*>(expr.get());
-            auto operand = new_lit_op(std::move(lit->str), std::move(lit->kind));
-            return std::move(operand);
-        }
-        case NodeId::Bin:
-        {
-            auto* bin = dynamic_cast<BinOpNode*>(expr.get());
-            auto lhs = flatten_expr(ctx, bin->lhs);
-            auto rhs = flatten_expr(ctx, bin->rhs);
-
-            // A temporary to hold the result.
-            Ptr<TempOp> temp = new_tmp_op(push_temp());
-
-            Instruction::Parts ops;
-            ops.push_back(std::move(lhs));
-            ops.push_back(std::move(rhs));
-
-            // Push a new instruction into the current block.
-            auto inst = new_inst(
-                ir_op_from_bin(bin->op),
-                temp->as_str(),
-                std::move(ops)
-            );
-            ctx.push_back(std::move(inst));
-
-            return std::move(temp);
-        }
-        case NodeId::Un:
-        {
-            auto* un = dynamic_cast<UnaryOpNode*>(expr.get());
-            auto lhs = flatten_expr(ctx, un->lhs);
-
-            // A temporary to hold the result.
-            Ptr<TempOp> temp = new_tmp_op(push_temp());
-
-            Instruction::Parts ops;
-            ops.push_back(std::move(lhs));
-
-            // Push a new instruction into the current block.
-            auto inst = new_inst(
-                ir_op_from_un(un->op),
-                temp->as_str(),
-                std::move(ops)
-            );
-            ctx.push_back(std::move(inst));
-
-            return std::move(temp);
-        }
-        default: 
-        {
-            ASSERT(
-                false,
-                format("cannot generate IR code from {}", expr->id_str())
-            );
-            return nullptr;
-        }
+void IrProgram::gen(AST& ast) {
+    for(auto& fn : ast.functions) {
+        lowered_program.push_back(flatten_function(fn));
     }
 }
 

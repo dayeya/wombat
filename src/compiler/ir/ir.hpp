@@ -33,9 +33,25 @@ private:
 
     static CONST char EXT[11] = ".wombat.il";
     
+    // Compound types.
     IrFn flatten_function(Ptr<FnNode>& fn);
-    LoweredBlock flatten_block(Ptr<BlockNode>& block);
+    LoweredBlock flatten_block(Ptr<BlockNode>& ctx);
+
+    // expression flattening.
     Ptr<Operand> flatten_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
+    Ptr<Operand> flatten_bin_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
+    Ptr<Operand> flatten_un_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
+    Ptr<Operand> flatten_lit_expr(Ptr<ExprNode>& expr);
+    Ptr<Operand> flatten_terminal(LoweredBlock& ctx, Ptr<ExprNode>& expr);
+    Ptr<Operand> flatten_fn_call_from_expr(LoweredBlock& ctx, Ptr<ExprNode>& fn_call);
+
+    // statement flattening.
+    void flatten_fn_call_from_stmt(LoweredBlock& ctx, Ptr<StmtNode>& fn_call);
+    void flatten_var_decl(LoweredBlock& ctx, Ptr<StmtNode>& var_decl);
+    void flatten_ret_stmt(LoweredBlock& ctx, Ptr<StmtNode>& ret_stmt);
+    void flatten_if_stmt(LoweredBlock& ctx, Ptr<StmtNode>& if_stmt);
+    void flatten_loop_stmt(LoweredBlock& ctx, Ptr<StmtNode>& loop_stmt);
+    void flatten_brk_stmt(LoweredBlock& ctx, Ptr<StmtNode>& break_stmt);
 
     // Dev wants to create a `.wombat.il` file.
     bool dumpable() {
@@ -48,34 +64,33 @@ private:
         return result;
     };
 
-OpCode ir_op_from_bin(const BinOpKind& op) {
-    switch(op) {
-        case BinOpKind::Add:        return OpCode::Add;
-        case BinOpKind::Sub:        return OpCode::Sub;
-        case BinOpKind::Mul:        return OpCode::Mul;
-        case BinOpKind::Div:        return OpCode::Div;
-        case BinOpKind::FlooredDiv: return OpCode::FlooredDiv;
-        case BinOpKind::Mod:        return OpCode::Mod;
-        case BinOpKind::And:        return OpCode::And;
-        case BinOpKind::Or:         return OpCode::Or;
-        case BinOpKind::BitXor:     return OpCode::BitXor;
-        case BinOpKind::BitAnd:     return OpCode::BitAnd;
-        case BinOpKind::BitOr:      return OpCode::BitOr;
-        case BinOpKind::Shl:        return OpCode::Shl;
-        case BinOpKind::Shr:        return OpCode::Shr;
-        case BinOpKind::Eq:         return OpCode::Eq;
-        case BinOpKind::Lt:         return OpCode::Lt;
-        case BinOpKind::Le:         return OpCode::Le;
-        case BinOpKind::NotEq:      return OpCode::NotEq;
-        case BinOpKind::Ge:         return OpCode::Ge;
-        case BinOpKind::Gt:         return OpCode::Gt;
-        default: {
-            ASSERT(false, std::format("[ir::err] unsupported binary op: '{}'", bin_op_str(op)));
-            return OpCode::Nop;
+    OpCode ir_op_from_bin(const BinOpKind& op) {
+        switch(op) {
+            case BinOpKind::Add:        return OpCode::Add;
+            case BinOpKind::Sub:        return OpCode::Sub;
+            case BinOpKind::Mul:        return OpCode::Mul;
+            case BinOpKind::Div:        return OpCode::Div;
+            case BinOpKind::FlooredDiv: return OpCode::FlooredDiv;
+            case BinOpKind::Mod:        return OpCode::Mod;
+            case BinOpKind::And:        return OpCode::And;
+            case BinOpKind::Or:         return OpCode::Or;
+            case BinOpKind::BitXor:     return OpCode::BitXor;
+            case BinOpKind::BitAnd:     return OpCode::BitAnd;
+            case BinOpKind::BitOr:      return OpCode::BitOr;
+            case BinOpKind::Shl:        return OpCode::Shl;
+            case BinOpKind::Shr:        return OpCode::Shr;
+            case BinOpKind::Eq:         return OpCode::Eq;
+            case BinOpKind::Lt:         return OpCode::Lt;
+            case BinOpKind::Le:         return OpCode::Le;
+            case BinOpKind::NotEq:      return OpCode::NotEq;
+            case BinOpKind::Ge:         return OpCode::Ge;
+            case BinOpKind::Gt:         return OpCode::Gt;
+            default: {
+                ASSERT(false, std::format("[ir::err] unsupported binary op: '{}'", bin_op_str(op)));
+                return OpCode::Nop;
+            }
         }
     }
-}
-
 
     OpCode ir_op_from_un(const UnOpKind op) {
         switch(op) {

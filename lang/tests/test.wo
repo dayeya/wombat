@@ -1,3 +1,9 @@
+fn int f1()
+    return 1;
+end
+
+
 fn free main()
     putnum(5 & 3 * !4 + -1);
+    putchar('c' - 'b');
 end
