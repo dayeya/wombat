@@ -63,6 +63,24 @@ void IrProgram::flatten_var_decl(LoweredBlock& block, Ptr<StmtNode>& var_decl) {
     }
 }
 
+void IrProgram::flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign) {
+    auto* var = dynamic_cast<AssignmentNode*>(assign.get());
+
+    Instruction::Parts ops;
+    ops.push_back(flatten_expr(ctx, var->expr));
+
+    ctx.push_back(new_inst(
+        OpCode::Assign,
+        var->ident.as_str(),
+        std::move(ops)
+    ));
+}
+
+void IrProgram::flatten_if_stmt(LoweredBlock& ctx, Ptr<StmtNode>& stmt) {
+    auto* control_flow = dynamic_cast<IfNode*>(stmt.get());
+    ctx.push_back(new_inst(OpCode::Label, "", {}));
+}
+
 LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
     LoweredBlock body;
     body.reserve(block->children.capacity());
@@ -74,6 +92,16 @@ LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
             case NodeId::VarDecl: 
             {
                 flatten_var_decl(body, child);
+                break;
+            }
+            case NodeId::Assign:
+            {
+                flatten_assignment(body, child);
+                break;
+            }
+            case NodeId::If: 
+            {
+                flatten_if_stmt(body, child);
                 break;
             }
             case NodeId::FnCall:
@@ -227,6 +255,7 @@ IrFn IrProgram::flatten_function(Ptr<FnNode>& fn) {
 };
 
 void IrProgram::gen(AST& ast) {
+    lowered_program.reserve(ast.functions.capacity());
     for(auto& fn : ast.functions) {
         lowered_program.push_back(flatten_function(fn));
     }

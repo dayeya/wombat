@@ -1,0 +1,6 @@
+fn free main()
+    let FACTOR: int = 3;
+    mut transform: Fn<int, (int)> = int (num: int) with FACTOR {
+        return num * FACTOR;
+    };
+end

@@ -48,6 +48,7 @@ private:
     // statement flattening.
     void flatten_fn_call_from_stmt(LoweredBlock& ctx, Ptr<StmtNode>& fn_call);
     void flatten_var_decl(LoweredBlock& ctx, Ptr<StmtNode>& var_decl);
+    void flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign);
     void flatten_ret_stmt(LoweredBlock& ctx, Ptr<StmtNode>& ret_stmt);
     void flatten_if_stmt(LoweredBlock& ctx, Ptr<StmtNode>& if_stmt);
     void flatten_loop_stmt(LoweredBlock& ctx, Ptr<StmtNode>& loop_stmt);
@@ -58,8 +59,8 @@ private:
         return src.has_value();
     }
 
-    fs::path transform_extension(const fs::path& src) {
-        fs::path result = src;
+    fs::path transform_extension(const fs::path& from) {
+        fs::path result = from;
         result.replace_extension(EXT);
         return result;
     };
@@ -104,11 +105,11 @@ private:
         }
     }
 
-    inline Ptr<LitOp> new_lit_op(RawVal&& value, LiteralKind&& kind) {
+    inline Ptr<LitOp> new_lit_op(String&& value, LiteralKind&& kind) {
         return mk_ptr(LitOp{ std::move(value), std::move(kind) });
     }
 
-    inline Ptr<VarOp> new_var_op(RawVal&& name) {
+    inline Ptr<VarOp> new_var_op(String&& name) {
         return mk_ptr(VarOp{ std::move(name) });
     }
 

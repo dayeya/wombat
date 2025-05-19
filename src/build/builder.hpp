@@ -27,6 +27,7 @@ struct BuildConfig {
     Option<StrLoc> src; // Any input for the compiler to build
     Option<StrLoc> dst; // out location for a single target
     Verbosity verb;     // Verbosity intesity.
+    bool run;
     bool compile_only;
     bool compile_and_assemble;
     bool print_ast;
@@ -38,6 +39,7 @@ struct BuildConfig {
         StrLoc parent,
         Option<StrLoc> src_location,
         Option<StrLoc> dst_location,
+        bool run,
         bool cmpl_only,
         bool cmpl_and_asm,
         bool ast,
@@ -47,6 +49,7 @@ struct BuildConfig {
     ) : name{parent},
         src{src_location},
         dst{dst_location},
+        run{run},
         compile_only{cmpl_only},
         compile_and_assemble{cmpl_and_asm},
         print_ast{ast},

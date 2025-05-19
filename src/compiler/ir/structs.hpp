@@ -5,7 +5,7 @@
 #include "builtins.hpp"
 #include <format>
 
-using RawVal = std::string;
+using String = std::string;
 using Tokenizer::LiteralKind;
 
 CONST char TAB = '\t';
@@ -88,28 +88,28 @@ struct Operand {
     ~Operand() = default;
     Operand(OpKind&& kind) : kind(std::move(kind)) {}
 
-    virtual RawVal as_str() const = 0;
+    virtual String as_str() const = 0;
 };
 
 struct LitOp : public Operand {
-    RawVal value;
+    String value;
     LiteralKind kind;
 
     LitOp() : Operand(OpKind::Lit), value{}, kind{} {}
-    LitOp(RawVal&& value, LiteralKind&& kind) : Operand(OpKind::Lit), value(std::move(value)), kind(std::move(kind)) {}
+    LitOp(String&& value, LiteralKind&& kind) : Operand(OpKind::Lit), value(std::move(value)), kind(std::move(kind)) {}
 
-    RawVal as_str() const {
+    String as_str() const {
         return value;
     }
 };
 
 struct VarOp : public Operand {
-    RawVal name;
+    String name;
 
     VarOp() : Operand(OpKind::Sym), name{} {}
     VarOp(std::string&& name) : Operand(OpKind::Sym), name{std::move(name)} {}
 
-    RawVal as_str() const {
+    String as_str() const {
         return name;
     }
 };
@@ -120,7 +120,7 @@ struct TempOp : public Operand {
     TempOp() : Operand(OpKind::Temp), id{0} {}
     TempOp(size_t id) : Operand(OpKind::Temp), id{std::move(id)} {}
 
-    RawVal as_str() const {
+    String as_str() const {
         return std::format("%t{}", id);
     }
 };
@@ -129,10 +129,10 @@ struct Instruction {
     using Parts = std::vector<Ptr<Operand>>;
 
     OpCode op;
-    Option<RawVal> dst;
+    Option<String> dst;
     Parts parts;
 
-    Instruction(OpCode&& op, Option<RawVal>&& dst, Parts&& parts) 
+    Instruction(OpCode&& op, Option<String>&& dst, Parts&& parts) 
         : op{std::move(op)},
           dst{std::move(dst)},
           parts{std::move(parts)} {}
@@ -183,18 +183,18 @@ struct Instruction {
 
 };
 
-inline Instruction new_inst(OpCode&& op, Option<RawVal>&& dst, Instruction::Parts&& parts) {
+inline Instruction new_inst(OpCode&& op, Option<String>&& dst, Instruction::Parts&& parts) {
     return Instruction(std::move(op), std::move(dst), std::move(parts));
 };
 
 struct IrFn {
     using Container = std::vector<Instruction>;
 
-    RawVal name;
+    String name;
     Container insts;
 
-    IrFn(RawVal&& name) : name{std::move(name)}, insts() {}
-    IrFn(RawVal&& name, Container insts) 
+    IrFn(String&& name) : name{std::move(name)}, insts() {}
+    IrFn(String&& name, Container insts) 
         : name{std::move(name)},
           insts{std::move(insts)} {}
 

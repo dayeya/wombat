@@ -55,7 +55,7 @@ std::string IrFn::dump() {
             }
             case OpCode::Pop: 
             {
-                ASSERT(inst.parts.capacity() == 0, "unexpected number of operands for push instruction.");
+                ASSERT(inst.parts.capacity() == 0, "unexpected number of operands for pop instruction.");
                 append(format("pop |> {}", inst.dst.value()));
                 break;
             }
@@ -105,7 +105,7 @@ std::string IrFn::dump() {
                     format("unexpected number of operands for {} instruction.", inst.op_as_str())
                 );
                 
-                RawVal dst = inst.dst.value();
+                String dst = inst.dst.value();
                 auto& lhs = inst.parts.at(0);
                 auto& rhs = inst.parts.at(1);
 
@@ -120,7 +120,7 @@ std::string IrFn::dump() {
                     inst.parts.capacity() == 1, 
                     format("unexpected number of operands for {} instruction.", inst.op_as_str())
                 );
-                RawVal dst = inst.dst.value();
+                String dst = inst.dst.value();
                 auto& lhs = inst.parts.front();
                 append(format("{} = {}: {}", std::move(dst), inst.op_as_str(), lhs->as_str()));
                 break;
@@ -129,6 +129,7 @@ std::string IrFn::dump() {
                 append(format("#[unhandled({})]", inst.op_as_str()));
         }
     }
+
     stream << NEWLINE;
     return stream.str();
 }

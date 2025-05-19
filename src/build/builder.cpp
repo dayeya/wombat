@@ -71,6 +71,8 @@ void Builder::parse_option(std::span<char*>& args, size_t& cur, const std::strin
         config.verb = Verbosity::Debug; 
     } else if(opt == "-q") {
         config.verb = Verbosity::Quiet;
+    } else if(opt == "--run") {
+        config.run = true;
     } else if(opt == "-o") {
         parse_out_file(args, cur);
     } else if(opt == "-C") {
@@ -106,6 +108,7 @@ void Builder::init(const std::string& parent_exec) {
         false,
         false,
         false, 
+        false,
         false,
         false,
         Verbosity::Normal
@@ -166,6 +169,7 @@ void Builder::usage(const char* exec) const {
     std::printf("Usage: %s [options] <FILE>", exec);
     std::printf("\n\n");
     std::printf("Options:\n");
+    std::printf("    --run          - Run the executable after compilation.\n");
     std::printf("    -o <FILE>      - Write an exectuable into <EXE_PATH>.\n");
     std::printf("                     Defaults to the ~/cwd/<file_name.wombat.out>.\n");
     std::printf("    --version      - Print version information.\n");

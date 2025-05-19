@@ -26,6 +26,7 @@ target_sources(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/sema_analysis/sema_visitor.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ir/ir.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ir/structs.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/codegen/gen.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)

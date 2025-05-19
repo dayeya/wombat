@@ -72,9 +72,9 @@ struct Type {
 
     static CONST size_t INT_SIZE    = 8;
     static CONST size_t FLOAT_SIZE  = 8;
+    static CONST size_t PTR_SIZE    = 8;
     static CONST size_t BOOL_SIZE   = 1;
     static CONST size_t CHAR_SIZE   = 1;
-    static CONST size_t PTR_SIZE    = 1;
     static CONST size_t FREE_SIZE   = 0;
 
     virtual ~Type() = default;

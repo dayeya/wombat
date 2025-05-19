@@ -7,16 +7,16 @@
 #include "lex.hpp"
 #include "ast.hpp"
 #include "ir.hpp"
+#include "gen.hpp"
 #include "diag.hpp"
-
-namespace fs = std::filesystem;
 
 struct Context {
     LazyTokenStream program_tokens;
     AST program_ast;
     Ptr<IrProgram> ir_program;
+    CodeGen backend;
 
-    Context() : program_tokens(), program_ast(), ir_program() {}
+    Context() : program_tokens(), program_ast(), ir_program(), backend() {}
     ~Context() = default;
 };
 
@@ -39,10 +39,12 @@ private:
     void parse(const BuildConfig& build_config);
     void sema_analyze(const BuildConfig& build_config);
     void lower_into_ir(const BuildConfig& build_config);
-
-    void finish();
-    void build_target_into_exectuable();
+    void generate_asm_code(const BuildConfig& build_config);
     void add_diagnostic(const Diagnostic& diag);
+    void execute(fs::path& exe);
+
+    // Links the .asm file into an object file.
+    fs::path build_target_into_exectuable(fs::path& asm_path, fs::path& out_exe_path);
 
     void log_if_debug(std::string&& info) {
         if(verb == Verbosity::Debug) {

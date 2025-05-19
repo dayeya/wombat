@@ -1,6 +1,11 @@
-#include "env.hpp"
-#include "compiler.hpp"
+#include <cstdlib>
+#include <string>
+#include <filesystem>
+#include <format>
 
+#include "env.hpp"
+#include "file.hpp"
+#include "compiler.hpp"
 #include "lex.hpp"
 #include "parser.hpp"
 
@@ -45,13 +50,22 @@ void Compiler::sema_analyze(const BuildConfig& build_config) {
 }
 
 void Compiler::lower_into_ir(const BuildConfig& build_config) {
-    IrProgram ir{};
-    ir.gen(ctxt.program_ast);
+    Ptr<IrProgram> ir = std::make_unique<IrProgram>();
+    ir->gen(ctxt.program_ast);
 
     if(build_config.print_ir) {
-        ir.src = build_config.src.value();
-        ir.dump();
+        ir->src = build_config.src.value();
+        ir->dump();
     }
+
+    ctxt.ir_program = std::move(ir);
+}
+ 
+void Compiler::generate_asm_code(const BuildConfig& build_config) {
+    CodeGen gen { build_config.src.value() };
+    gen.assemble(*ctxt.ir_program);
+    ctxt.backend = std::move(gen);
+
 }
 
 void Compiler::compile_target(const BuildConfig& build_config) {
@@ -64,8 +78,55 @@ void Compiler::compile_target(const BuildConfig& build_config) {
     parse(build_config);
     sema_analyze(build_config);
     lower_into_ir(build_config);
+    generate_asm_code(build_config);
+
+    fs::path asm_path = ctxt.backend.transform_extension(ctxt.backend.src);
+    fs::path out_path(ctxt.backend.src);
+    out_path.replace_extension(OUT_EXTENSION);
+
+    fs::path exe = build_target_into_exectuable(asm_path, out_path);
+    
+    if(build_config.run) {
+        execute(exe);
+    }
 }
 
-void Compiler::build_target_into_exectuable() {
-    ASSERT(false, "`Compiler::build_target_into_exectuable` is not implemented.");
+fs::path Compiler::build_target_into_exectuable(fs::path& asm_path, fs::path& out_exe_path) {
+    fs::path obj_file = asm_path;
+    obj_file.replace_extension(".o");
+
+    // Assemble with NASM
+    String asm_cmd = format("nasm -f elf64 -o {} {}", obj_file.string(), asm_path.string());
+    log_if_verbose(format("Executing '{}'", asm_cmd));
+    ASSERT(system(asm_cmd.c_str()) == 0, format("[linker::err] assembly process failed: {}", asm_cmd));
+
+    String lnk_cmd = format("ld -o {} {}", out_exe_path.string(), obj_file.string());
+    log_if_verbose(format("Executing '{}'", lnk_cmd));
+    ASSERT(system(lnk_cmd.c_str()) == 0, format("[linker::err] linking failed: {}", lnk_cmd));
+
+    fs::remove(obj_file);
+    return out_exe_path;
+}
+
+void Compiler::execute(fs::path& exe) {
+    // Making sure exe has valid permissions.
+    permissions(exe,
+        fs::perms::owner_exec | 
+        fs::perms::group_exec | 
+        fs::perms::others_exec, 
+        fs::perm_options::add
+    );
+
+    log_if_verbose(format("[INFO] Executing: {}\n", exe.string()));
+
+    int code = system(exe.c_str());
+    ASSERT(code != -1, "failed to launch executable");
+
+    int status = WEXITSTATUS(code);
+    if (WIFEXITED(code)) {
+        ASSERT(status == 0, format("[WARN] program exited with code {}", status));
+        log_if_verbose("program completed successfully");
+    } else {
+        ASSERT(false, "wombat program terminated unexpectedly");
+    }
 }
