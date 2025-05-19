@@ -38,7 +38,7 @@ public:
 private:
     Verbosity verb;
 
-    static CONST char BIN[11] = "wombat_bin";
+    static CONST char BIN[11] = "bin";
 
     void build_project(const BuildConfig& config);
     void lex(const BuildConfig& config);

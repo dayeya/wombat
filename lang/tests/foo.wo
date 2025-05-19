@@ -1,0 +1,4 @@
+fn free main()
+    mut x: int = 69;
+    putnum(x);
+end

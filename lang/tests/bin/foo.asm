@@ -17,8 +17,13 @@ _start:
 main:
 	push rbp
 	mov rbp, rsp
+	sub rsp, 8
 	
-	mov rdi, 69420
+	; #[alloc(8 bytes for x)]
+	mov rax, 69
+	mov qword [rbp - 8], rax
+
+	mov rdi, qword [rbp - 8]
 	call putnum
 	
 	mov rsp, rbp

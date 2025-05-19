@@ -1,3 +1,0 @@
-fn free main()
-    putnum(69420);
-end
