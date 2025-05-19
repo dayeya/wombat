@@ -49,6 +49,8 @@ void IrProgram::flatten_var_decl(LoweredBlock& block, Ptr<StmtNode>& var_decl) {
         var->info.ident.as_str(),
         std::move(ops)
     );
+
+    cur_frame_size += var->info.type->wsizeof();
     block.push_back(std::move(alloc));
 
     if(var->initialized()) {
@@ -129,7 +131,26 @@ LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
 
 Ptr<Operand> IrProgram::flatten_lit_expr(Ptr<ExprNode>& expr) {
     auto* lit = dynamic_cast<LiteralNode*>(expr.get());
-    auto operand = new_lit_op(std::move(lit->str), std::move(lit->kind));
+
+    String buff{""};
+    switch(lit->kind) {
+        case LiteralKind::Int:
+        case LiteralKind::Float:
+        case LiteralKind::Bool:
+        {
+            buff = std::move(lit->str);
+            break;
+        }
+        case LiteralKind::Char:
+        {
+            buff = std::format("\'{}\'", lit->str);
+            break;
+        }
+        default: 
+            ASSERT(false, format("unreachable literal kind {}", lit_kind_str(lit->kind)));
+    }
+
+    auto operand = new_lit_op(std::move(buff), std::move(lit->kind));
     return std::move(operand);
 }
 
@@ -137,6 +158,8 @@ Ptr<Operand> IrProgram::flatten_bin_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr)
     auto* bin = dynamic_cast<BinOpNode*>(expr.get());
     auto lhs = flatten_expr(ctx, bin->lhs);
     auto rhs = flatten_expr(ctx, bin->rhs);
+
+    cur_frame_size += bin->sema_type->wsizeof();
 
     // A temporary to hold the result.
     Ptr<TempOp> temp = new_tmp_op(push_temp());
@@ -159,6 +182,8 @@ Ptr<Operand> IrProgram::flatten_bin_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr)
 Ptr<Operand> IrProgram::flatten_un_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
     auto* un = dynamic_cast<UnaryOpNode*>(expr.get());
     auto lhs = flatten_expr(ctx, un->lhs);
+
+    cur_frame_size += un->sema_type->wsizeof();
 
     // A temporary to hold the result.
     Ptr<TempOp> temp = new_tmp_op(push_temp());
@@ -189,7 +214,11 @@ Ptr<Operand> IrProgram::flatten_fn_call_from_expr(LoweredBlock& ctx, Ptr<ExprNod
         ops.push_back(flatten_expr(ctx, param));
 
         ctx.push_back(new_inst(OpCode::Push, std::nullopt, std::move(ops)));
+        cur_frame_size += param->sema_type->wsizeof();
     }
+    
+    // Increase the needed stack space by the size of the return value.
+    cur_frame_size += call->sema_type->wsizeof();
 
     Instruction::Parts ops;
     ops.push_back(new_var_op(call->ident.as_str()));
@@ -251,6 +280,7 @@ IrFn IrProgram::flatten_function(Ptr<FnNode>& fn) {
         flattened.push_inst(std::move(inst));
     }
 
+    flattened.space_occupied = cur_frame_size;
     return flattened;
 };
 
@@ -258,6 +288,7 @@ void IrProgram::gen(AST& ast) {
     lowered_program.reserve(ast.functions.capacity());
     for(auto& fn : ast.functions) {
         lowered_program.push_back(flatten_function(fn));
+        cur_frame_size = 0;
     }
 }
 

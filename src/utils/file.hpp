@@ -5,6 +5,8 @@
 
 namespace fs = std::filesystem;
 
+using Path = fs::path;
+
 CONST char* SRC_EXTENSTION = ".wo";
 CONST char* OUT_EXTENSION  = ".out";
 

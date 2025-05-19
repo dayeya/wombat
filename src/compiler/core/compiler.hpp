@@ -2,11 +2,14 @@
 #define COMPILER_HPP_
 
 #include <filesystem>
+#include <fstream>
 #include "alias.hpp"
 #include "builder.hpp"
 #include "lex.hpp"
+#include "parser.hpp"
 #include "ast.hpp"
 #include "ir.hpp"
+#include "file.hpp"
 #include "gen.hpp"
 #include "diag.hpp"
 
@@ -30,21 +33,27 @@ public:
 
     Compiler() : ctxt(), diagnostics(Compiler::MAX_DIAG_CAPACITY) {}
     
-    void compile_target(const BuildConfig& build_config);
+    void compile_target(const BuildConfig& config);
     
 private:
     Verbosity verb;
 
-    void lex(const BuildConfig& build_config);
-    void parse(const BuildConfig& build_config);
-    void sema_analyze(const BuildConfig& build_config);
-    void lower_into_ir(const BuildConfig& build_config);
-    void generate_asm_code(const BuildConfig& build_config);
+    static CONST char BIN[11] = "wombat_bin";
+
+    void build_project(const BuildConfig& config);
+    void lex(const BuildConfig& config);
+    void parse(const BuildConfig& config);
+    void sema_analyze(const BuildConfig& config);
+    void lower_into_ir(const BuildConfig& config);
+    void generate_asm_code(const BuildConfig& config);
     void add_diagnostic(const Diagnostic& diag);
-    void execute(fs::path& exe);
+    void execute(Path& exe);
 
     // Links the .asm file into an object file.
-    fs::path build_target_into_exectuable(fs::path& asm_path, fs::path& out_exe_path);
+    Path build_std_lib(const Path& std_path);
+    Path build_bin_dir(const BuildConfig& config);
+    Path build_target_into_executable(const Path& std_object_file, const Path& asm_path, const Path& out_exe_path);
+    std::pair<Path, std::ofstream> create_asm_file(const Path& bin_dir, const String& src);
 
     void log_if_debug(std::string&& info) {
         if(verb == Verbosity::Debug) {

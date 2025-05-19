@@ -4,13 +4,24 @@
 #include <stack>
 #include "ir.hpp"
 
+enum class Register: int {
+    Rax,
+    Rbx,
+    Rdi,
+    Rsi,
+    Rdx,
+    Rcx,
+    R8,
+    R9
+};
+
 enum class AllocRegion: int {
     Stack, 
     Heap
 };
 
 struct AsmVar {
-    // Offest from the beginning of the region. 
+    // Offest from the beginning of the region. (from rbp).
     size_t offset;
     // Size in bytes.
     size_t memsize;
@@ -48,9 +59,11 @@ struct AsmStackFrame {
     }
 
     void alloc(String&& name, size_t&& size) {
-        ASSERT(frame.count(name) == 1, format("[codegen::err] cannot 'realloc', used on '{}'", name));
+        ASSERT(frame.count(name) == 0, format("[codegen::err] cannot 'realloc', used on '{}'", name));
+
         update_offest(size);
         frame[name] = AsmVar { offset, std::move(size), AllocRegion::Stack };
+
         total_size += size;
         align_size();
     }
@@ -61,9 +74,18 @@ struct AsmStackFrame {
             it != frame.end(),
             format("variable not found in stack frame: {}", name)
         );
-        auto pos_offset = it->second.offset;
-        return -pos_offset;
+        return it->second.offset;
     }
+
+    size_t var_memsize(const String& name) const {
+        auto it = frame.find(name);
+        ASSERT(
+            it != frame.end(),
+            format("variable not found in stack frame: {}", name)
+        );
+        return it->second.memsize;
+    }
+
 
     void align_size() {
         if(total_size % 16 == 1) {
@@ -105,7 +127,7 @@ struct AsmStack {
         stack.pop();
     }
 
-    void allocate(String& name, size_t size) {
+    void allocate(String&& name, size_t size) {
         _core_assert("no active functions.");
         stack.top().alloc(std::move(name), std::move(size));
     }
@@ -113,6 +135,11 @@ struct AsmStack {
     size_t offset(const String& name) const {
         _core_assert("no active functions.");
         return stack.top().var_offset(name);
+    }
+
+    size_t memsize(const String& name) const {
+        _core_assert("no active functions.");
+        return stack.top().var_memsize(name);
     }
 
     size_t stack_size() const {

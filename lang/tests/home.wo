@@ -1,4 +1,0 @@
-fn free main()
-    mut num: int = 8;
-    putnum(num);
-end

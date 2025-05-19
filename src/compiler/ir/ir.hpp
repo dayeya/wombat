@@ -14,11 +14,16 @@ public:
     using LoweredBlock = std::vector<Instruction>;
     using LoweredProgram = std::vector<IrFn>;
 
+    // File name for wombat.il file generation.
     Option<StrLoc> src;
+    // Total function bodies.
     LoweredProgram lowered_program;
+    // How many stack bytes does the function need?.
+    // Resets to 0 after every function.
+    size_t cur_frame_size;
 
-    IrProgram() : src{std::nullopt}, lowered_program{} {}
-    IrProgram(StrLoc name) : src{name}, lowered_program{} {}
+    IrProgram() : src{std::nullopt}, lowered_program{}, cur_frame_size{0} {}
+    IrProgram(StrLoc name) : src{name}, lowered_program{}, cur_frame_size{0} {}
 
     // Writes a textual structure of the 'IR' into a file.
     void dump();

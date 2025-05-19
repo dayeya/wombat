@@ -191,12 +191,14 @@ struct IrFn {
     using Container = std::vector<Instruction>;
 
     String name;
+    size_t space_occupied;
     Container insts;
 
     IrFn(String&& name) : name{std::move(name)}, insts() {}
     IrFn(String&& name, Container insts) 
         : name{std::move(name)},
-          insts{std::move(insts)} {}
+          insts{std::move(insts)},
+          space_occupied{0} {}
 
     bool builtin() {
         for(const auto& builtin : BUILTINS) {
