@@ -13,7 +13,6 @@ Option<Register> CodeGen::register_for_arguement_pipelining() {
             return reg;
         }
     }
-
     log("Register spilling is not implemented.");
     return std::nullopt;
 }
@@ -39,29 +38,19 @@ void CodeGen::load_operand(
             break;
         }
         case OpKind::Sym:
+        case OpKind::Temp:
         {
             size_t offset = stack.offset(sym.value());
             size_t memsize = stack.memsize(sym.value());
-            appendln(format(
-                "mov {}, {} [rbp - {}]", 
-                reg, 
-                mem_ident_from_size(memsize), 
-                offset
-            ));
+
+            if (memsize == 1) {
+                appendln(format("movzx {}, byte [rbp - {}]", reg, offset));
+            } else {
+                appendln(format("mov {}, qword [rbp - {}]", reg, offset));
+            }
+
             break;
         }
-        case OpKind::Temp: 
-        {
-            size_t offset = stack.offset(sym.value());
-            size_t memsize = stack.memsize(sym.value());
-            appendln(format(
-                "mov {}, {} [rbp - {}]", 
-                reg, 
-                mem_ident_from_size(memsize), 
-                offset
-            ));
-            break;
-        } 
         default: 
             UNREACHABLE();
     }

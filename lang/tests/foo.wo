@@ -1,7 +1,23 @@
-fn int foo(x: int, y: int, z: int)
-    return x;
+fn free putcharln(out: ch)
+    putchar(out);
+    putchar('\n');
+end
+
+fn free putcharws(out: ch)
+    putchar(out);
+    putchar(' ');
 end
 
 fn free main()
-    putnum(foo(1, 3, 7));
+    putchar('h');
+    putchar('e');
+    putchar('l');
+    putchar('l');
+    putcharws('o');
+
+    putchar('w');
+    putchar('o');
+    putchar('r');
+    putchar('l');
+    putcharln('d');
 end

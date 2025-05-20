@@ -288,19 +288,33 @@ void Lexer::lex_literal() {
 	auto lex_char_literal = [&]() {
 		advance_cursor();
 
-		if (m_cursor.current == '\'') {
-			tok->kind = TokenKind::LiteralChar;
-			tok->value = "";
-			advance_cursor();
-			return;
+		ASSERT(m_cursor.current != '\'', "a char literal must contain a character.");
+
+		if (m_cursor.current == '\\') {
+			advance_cursor(); // skip '\'
+			char esc = m_cursor.current;
+
+			switch (esc) {
+				case 'n':
+				case 't':
+				case 'r':
+				case '\\':
+				case '\'':
+				case '0':
+					tok->value = std::string("\\") + esc; // e.g., "\\n"
+					break;
+				default:
+					ASSERT(false, std::format("unknown escape sequence '\\{}'", esc).c_str());
+			}
+		} else {
+			// Non-escaped character: store as string
+			tok->value = std::string(1, m_cursor.current);
 		}
 
-		tok->extend(m_cursor.current);
-
-		// force termination.
+		// Expect closing quote
 		ASSERT(m_cursor.peek_next() == '\'', "unterminated char literal.");
-
 		advance_cursor();
+
 		tok->kind = TokenKind::LiteralChar;
 	};
 

@@ -27,7 +27,8 @@ target_sources(
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ir/ir.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/ir/structs.cpp
     PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/codegen/gen.cpp
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/codegen/emit.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/codegen/gen_math.cpp
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/compiler/codegen/gen_inst.cpp
 )
 
 set(CMAKE_BUILD_TYPE Debug)

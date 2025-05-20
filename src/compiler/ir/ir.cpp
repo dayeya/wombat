@@ -136,14 +136,45 @@ Ptr<Operand> IrProgram::flatten_lit_expr(Ptr<ExprNode>& expr) {
     switch(lit->kind) {
         case LiteralKind::Int:
         case LiteralKind::Float:
-        case LiteralKind::Bool:
         {
             buff = std::move(lit->str);
             break;
         }
         case LiteralKind::Char:
+        {   
+            char inner;
+            if(lit->str.size() == 1) {
+                // simple char like 'a'
+                inner = lit->str[0];
+            } else if(lit->str.size() == 2 && lit->str[0] == '\\') {
+                switch (lit->str[1]) {
+                    case 'n': inner = '\n'; break;
+                    case 't': inner = '\t'; break;
+                    case 'r': inner = '\r'; break;
+                    case '0': inner = '\0'; break;
+                    case '\\': inner = '\\'; break;
+                    case '\'': inner = '\''; break;
+                    case '\"': inner = '\"'; break;
+                    default:
+                        ASSERT(false, format("unsupported escape sequence '\\{}'", lit->str[1]));
+                }
+            } else {
+                ASSERT(false, format("invalid char literal format: '{}'", lit->str));
+            }
+
+            buff = std::to_string(static_cast<int>(inner));
+            break;
+        }
+        case LiteralKind::Bool: 
         {
-            buff = std::format("{}", static_cast<int>(lit->str[0]));
+            if(lit->str.compare("false") == 0) {
+                buff = "0";
+            }
+            else if(lit->str.compare("true") == 0) {
+                buff = "1";
+            }
+            else 
+                UNREACHABLE();
             break;
         }
         default: 

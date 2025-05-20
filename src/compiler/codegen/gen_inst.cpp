@@ -1,6 +1,5 @@
 #include <fstream>
 #include "gen.hpp"
-#include "builtins.hpp"
 
 void CodeGen::emit_alloc(Instruction& inst) {
     auto ident = inst.dst.value();
@@ -10,7 +9,7 @@ void CodeGen::emit_alloc(Instruction& inst) {
     size_t size = std::stoull(op->as_str());
     stack.allocate(ident, size);
 
-    String doc = format("; '{}' allocation of {} ", ident, size);
+    String doc = format("; '{}' allocation of {} bytes", ident, size);
     appendln(std::move(doc));
 }
 
@@ -21,14 +20,31 @@ void CodeGen::emit_assign(Instruction& inst) {
     size_t offset = stack.offset(ident);
     size_t memsize = stack.memsize(ident);
 
-    if(memsize != 8) {
-        std::printf("we dont support the use of non-8 byte types, got %ld", memsize);
-        UNREACHABLE();
-    }
-    
     // load it into "rax", if op is a temp, we free it.
     load_operand(op, "rax", gain_symbol(op));
-    appendln(format("mov {} [rbp - {}], rax", mem_ident_from_size(memsize), offset));
+
+    switch(memsize)
+    {
+        case 1: {
+            String nasm = format(
+                "mov {} [rbp - {}], al", 
+                mem_ident_from_size(memsize), 
+                offset
+            );
+            appendln(std::move(nasm));
+            break;
+        }
+        case 8: {
+            String nasm = format(
+                "mov {} [rbp - {}], rax", 
+                mem_ident_from_size(memsize), 
+                offset
+            );
+            appendln(std::move(nasm));
+        }
+        default:
+            UNREACHABLE();
+    }
 }
 
 void CodeGen::emit_push(Instruction& inst) {
@@ -59,17 +75,25 @@ void CodeGen::emit_ret(Instruction& inst) {
 void CodeGen::emit_pop(Instruction& inst) {
     auto ident = inst.dst.value();
     auto* size_op = dynamic_cast<LitOp*>(inst.parts.front().get());
-
     size_t size = std::stoull(size_op->value);
+
     stack.allocate(ident, size);
     size_t offset = stack.offset(ident);
+    size_t memsize = stack.memsize(ident);
 
     if (argument_position < abi_registers.size()) 
     {
-        String reg = reg_to_str(abi_registers.at(argument_position));
-        appendln(format("mov qword [rbp - {}], {}", offset, reg));
+        Register slot = abi_registers.at(argument_position);
+        String reg = reg_to_str(slot);
+        String nasm = format(
+            "mov {} [rbp - {}], {}", 
+            mem_ident_from_size(memsize), 
+            offset, 
+            register_variant_from_size(slot, memsize)
+        );
+        appendln(std::move(nasm));
     } 
-    else 
+    else
     {
         size_t stack_offset = 16 + 8 * (argument_position - abi_registers.size());
         appendln(format("mov rax, [rbp + {}]", stack_offset));
@@ -108,7 +132,6 @@ void CodeGen::emit_call(Instruction& inst) {
         appendln(format("add rsp, {}", cleanup_bytes));
         fm.extra_arguments = 0;
     }
-
 }
 
 void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
@@ -143,6 +166,56 @@ void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
             emit_ret(inst);
             break;
         }
+        case OpCode::Add:
+        {
+            emit_add(inst);
+            break;
+        }
+        case OpCode::Sub:
+        {
+            emit_sub(inst);
+            break;
+        }
+        case OpCode::Mul:
+        {
+            emit_mul(inst);
+            break;
+        }
+        case OpCode::Div:
+        {
+            emit_div(inst);
+            break;
+        }
+        case OpCode::Mod:
+        {
+            emit_mod(inst);
+            break;
+        }
+        case OpCode::BitAnd:
+        {
+            emit_bitand(inst);
+            break;
+        }
+        case OpCode::BitXor:
+        {
+            emit_bitxor(inst);
+            break;
+        }
+        case OpCode::BitOr:
+        {
+            emit_bitor(inst);
+            break;
+        }
+        case OpCode::Neg:
+        {
+            emit_neg(inst);
+            break;
+        }
+        case OpCode::BitNot:
+        {
+            emit_bitnot(inst);
+            break;
+        }
         default:
             appendln(format("; #[--unhandled--({})]", inst.op_as_str()));
     }
@@ -153,10 +226,10 @@ void CodeGen::emit_function(IrFn& func) {
         func.insts.front().match_code(OpCode::Label), 
         "function must begin with a label."
     );
-    String fn_name = func.insts.front().dst.value();
-    stack.enter_func(fn_name);
+    stack.enter_func(func.name);
 
-    appendln(format("{}:", fn_name));
+    appendln(format("\n; FUNC {} START_IMPL", func.name));
+    appendln(format("{}:", func.name));
     increase_depth();
     appendln("push rbp");
     appendln("mov rbp, rsp");
@@ -170,12 +243,17 @@ void CodeGen::emit_function(IrFn& func) {
         emit_instruction(func, func.insts[i]);
     }
 
+    decrease_depth();
     appendln("");
+    appendln(format(".end_{}:", func.name));
+    increase_depth();
     appendln("mov rsp, rbp");
     appendln("pop rbp");
     appendln("ret");
 
     decrease_depth();
+    appendln(format("; FUNC {} END_IMPL", func.name));
+
     stack.exit_func();
 }
 
@@ -198,7 +276,6 @@ void CodeGen::emit_text_section(IrProgram& program) {
     appendln("_start:");
     increase_depth();
     appendln("call main");
-    appendln("");
     appendln("mov rax, 60 ; emit syscall: exit");
     appendln("mov rdi, 0 ; exit code of 0 (success)");
     appendln("syscall");
