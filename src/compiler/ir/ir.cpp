@@ -143,7 +143,7 @@ Ptr<Operand> IrProgram::flatten_lit_expr(Ptr<ExprNode>& expr) {
         }
         case LiteralKind::Char:
         {
-            buff = std::format("\'{}\'", lit->str);
+            buff = std::format("{}", static_cast<int>(lit->str[0]));
             break;
         }
         default: 
@@ -206,15 +206,13 @@ Ptr<Operand> IrProgram::flatten_fn_call_from_expr(LoweredBlock& ctx, Ptr<ExprNod
     auto* call = dynamic_cast<FnCallNode*>(expr.get());
 
     // Push all the arguments.
-    for(int cur = call->args.capacity() - 1; cur >= 0; --cur)
+    for(auto it = call->args.rbegin(); it != call->args.rend(); ++it)
     {
-        auto& param = call->args.at(cur);
-
         Instruction::Parts ops;
-        ops.push_back(flatten_expr(ctx, param));
+        ops.push_back(flatten_expr(ctx, *it));
 
         ctx.push_back(new_inst(OpCode::Push, std::nullopt, std::move(ops)));
-        cur_frame_size += param->sema_type->wsizeof();
+        cur_frame_size += (*it)->sema_type->wsizeof();
     }
     
     // Increase the needed stack space by the size of the return value.
@@ -222,7 +220,7 @@ Ptr<Operand> IrProgram::flatten_fn_call_from_expr(LoweredBlock& ctx, Ptr<ExprNod
 
     Instruction::Parts ops;
     ops.push_back(new_var_op(call->ident.as_str()));
-    ops.push_back(new_lit_op(std::format("{}", call->args.capacity()), LiteralKind::Int));
+    ops.push_back(new_lit_op(format("{}", call->args.capacity()), LiteralKind::Int));
 
     // Create a temp to call the value of the call.
     Ptr<TempOp> temp = new_tmp_op(push_temp());
@@ -271,8 +269,11 @@ IrFn IrProgram::flatten_function(Ptr<FnNode>& fn) {
     flattened.push_inst(new_inst(OpCode::Label, flattened.name, {}));
 
     // Push all the parameters.
-    for(auto& param : fn->header->params) {
-        flattened.push_inst(new_inst(OpCode::Pop, param.ident.as_str(), {}));
+    auto& params = fn->header->params;
+    for(auto it = params.rbegin(); it != params.rend(); ++it) {
+        Instruction::Parts ops;
+        ops.push_back(new_lit_op(format("{}", (*it).type->wsizeof()), LiteralKind::Int));
+        flattened.push_inst(new_inst(OpCode::Pop, (*it).ident.as_str(), std::move(ops)));
     }
 
     // Push all remaining instructions.

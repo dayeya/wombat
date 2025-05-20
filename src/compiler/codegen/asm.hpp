@@ -27,12 +27,15 @@ struct AsmVar {
     size_t memsize;
     // In 'what' region does the variable live. heap / stack.
     AllocRegion where;
+    // Is it a temporary.
+    bool temp;
 
     AsmVar() : offset{0}, memsize{0}, where{AllocRegion::Stack} {}
-    AsmVar(size_t offset, size_t&& memsize, AllocRegion&& where) 
+    AsmVar(size_t offset, size_t&& memsize, AllocRegion&& where, bool&& temp) 
         : offset{std::move(offset)}, 
           memsize{std::move(memsize)},
-          where{std::move(where)} {}
+          where{std::move(where)}, 
+          temp{std::move(temp)} {}
 }; 
 
 struct AsmStackFrame {
@@ -48,6 +51,7 @@ struct AsmStackFrame {
     size_t offset = 0;
     size_t total_size = 0;
     size_t aligned_size = 0;
+    size_t extra_arguments = 0;
 
     AsmStackFrame(size_t seq_num, String name) 
         : seq_num{std::move(seq_num)},
@@ -58,11 +62,11 @@ struct AsmStackFrame {
         offset += chunk;
     }
 
-    void alloc(String&& name, size_t&& size) {
+    void alloc(String&& name, size_t&& size, bool temp = false) {
         ASSERT(frame.count(name) == 0, format("[codegen::err] cannot 'realloc', used on '{}'", name));
 
         update_offest(size);
-        frame[name] = AsmVar { offset, std::move(size), AllocRegion::Stack };
+        frame[name] = AsmVar { offset, std::move(size), AllocRegion::Stack, std::move(temp) };
 
         total_size += size;
         align_size();
@@ -86,6 +90,13 @@ struct AsmStackFrame {
         return it->second.memsize;
     }
 
+    void free(String name) {
+        auto it = frame.find(name);
+        ASSERT(it == frame.end(), format("cannot free unknown variable {}", name));
+        AsmVar& var = it->second;
+        ASSERT(var.temp, format("{} is not a temporary.", name));
+        frame.erase(it);
+    }
 
     void align_size() {
         if(total_size % 16 == 1) {
@@ -122,14 +133,28 @@ struct AsmStack {
         ASSERT(!stack.empty(), log);
     }
 
+    AsmStackFrame& get_current() {
+        return stack.top();
+    }
+
     void exit_func() {
         _core_assert("cannot exit from a nonexistent frame");
         stack.pop();
     }
 
-    void allocate(String&& name, size_t size) {
+    void allocate_temp(String name, size_t size) {
+        _core_assert("no active functions.");
+        stack.top().alloc(std::move(name), std::move(size), true);
+    }
+
+    void allocate(String name, size_t size) {
         _core_assert("no active functions.");
         stack.top().alloc(std::move(name), std::move(size));
+    }
+
+    void free(String name) {
+        _core_assert("no active functions.");
+        stack.top().free(std::move(name));
     }
 
     size_t offset(const String& name) const {

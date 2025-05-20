@@ -55,8 +55,9 @@ std::string IrFn::dump() {
             }
             case OpCode::Pop: 
             {
-                ASSERT(inst.parts.capacity() == 0, "unexpected number of operands for pop instruction.");
-                append(format("pop |> {}", inst.dst.value()));
+                ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for pop instruction.");
+                auto& op = inst.parts.front();
+                append(format("pop |{} bytes|> {}", op->as_str(), inst.dst.value()));
                 break;
             }
             case OpCode::Call: 

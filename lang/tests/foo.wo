@@ -1,4 +1,7 @@
+fn int foo(x: int, y: int, z: int)
+    return x;
+end
+
 fn free main()
-    mut x: int = 69;
-    putnum(x);
+    putnum(foo(1, 3, 7));
 end
