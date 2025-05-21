@@ -164,6 +164,44 @@ void IrProgram::flatten_branch(LoweredBlock& ctx, Ptr<StmtNode>& stmt) {
     }
 }
 
+void IrProgram::flatten_loop_stmt(LoweredBlock& ctx, Ptr<StmtNode>& stmt) {
+    auto* loop = dynamic_cast<LoopNode*>(stmt.get());
+
+    push_loop();
+    auto loop_labels = loop_stack.back();
+
+    // Emit the start label
+    ctx.push_back(new_inst(OpCode::Label, loop_labels.cnt, {}));
+
+    // Flatten the loop block body
+    for (auto& inst : flatten_block(loop->body)) {
+        ctx.push_back(std::move(inst));
+    }
+
+    // Jump back to start of loop
+    Instruction::Parts ops;
+    ops.push_back(new_lbl_op(loop_labels.cnt));
+    ctx.push_back(new_inst(OpCode::Jmp, std::nullopt, std::move(ops)));
+
+    // Emit the end label (where `break` jumps to)
+    ctx.push_back(new_inst(OpCode::Label, loop_labels.brk, {}));
+    pop_loop();
+}
+
+void IrProgram::flatten_brk_stmt(LoweredBlock& ctx, Ptr<StmtNode>& break_stmt) {
+    if(loop_stack.empty()) {
+        ASSERT(false, "cannot break out a nonexistent loop.");
+    } else {
+        Instruction::Parts ops;
+        ops.push_back(new_lbl_op(loop_stack.back().brk));
+        ctx.push_back(new_inst(
+            OpCode::Jmp,
+            std::nullopt,
+            std::move(ops)
+        ));
+    }
+}
+
 LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
     LoweredBlock body;
     body.reserve(block->children.capacity());
@@ -172,33 +210,14 @@ LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
     {
         switch(child->id) 
         {
-            case NodeId::VarDecl: 
-            {
-                flatten_var_decl(body, child);
-                break;
-            }
-            case NodeId::Assign:
-            {
-                flatten_assignment(body, child);
-                break;
-            }
-            case NodeId::If: 
-            {
-                flatten_branch(body, child);
-                break;
-            }
-            case NodeId::FnCall:
-            {
-                flatten_fn_call_from_stmt(body, child);
-                break;
-            }
-            case NodeId::Return:
-            {
-                flatten_ret_stmt(body, child);
-                break;
-            }
-            default: 
-            {
+            case NodeId::VarDecl: flatten_var_decl(body, child);          break;
+            case NodeId::Assign: flatten_assignment(body, child);         break;
+            case NodeId::If: flatten_branch(body, child);                 break;
+            case NodeId::FnCall: flatten_fn_call_from_stmt(body, child);  break;
+            case NodeId::Return: flatten_ret_stmt(body, child);           break;
+            case NodeId::Loop: flatten_loop_stmt(body, child);            break;
+            case NodeId::Break: flatten_brk_stmt(body, child);            break;
+            default: {
                 ASSERT(
                     false,
                     format("cannot generate IR code from {}", child->id_str())

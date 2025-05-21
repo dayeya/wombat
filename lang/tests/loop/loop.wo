@@ -1,0 +1,34 @@
+fn free main()
+    mut iter: int = 0;
+    mut xs: int = 1;
+    loop {
+        # iterate 3 times.
+        if(iter == 3) {
+            # header
+            putchar('-');
+            putchar('-');
+            putchar('-');
+            putchar('\n');
+            break;
+        }
+
+        # header
+        putchar('-');
+        putchar('-');
+        putchar('-');
+        putchar('\n');
+
+        # print 1..10
+        xs = 1;
+        loop {
+            if xs > 10 {
+                break;
+            }
+            putnum(xs);
+            xs = xs + 1;
+        }
+
+        # increase counter.
+        iter = iter + 1;
+    }
+end

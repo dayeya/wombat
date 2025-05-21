@@ -23,7 +23,13 @@ public:
     size_t cur_frame_size;
 
     IrProgram() : src{std::nullopt}, lowered_program{}, cur_frame_size{0} {}
-    IrProgram(StrLoc name) : src{name}, lowered_program{}, cur_frame_size{0} {}
+    IrProgram(StrLoc name) 
+        : src{name}, 
+          lowered_program{},
+          loop_stack(), 
+          cur_frame_size{0},
+          branch_counter{0},
+          temp_counter{0} {}
 
     // Writes a textual structure of the 'IR' into a file.
     void dump();
@@ -32,8 +38,14 @@ public:
     void gen(AST& ast);
 
 private:
+    struct LoopCtx {
+        String brk;
+        String cnt;
+    };
+    using LoopStack = std::vector<LoopCtx>;
+
+    LoopStack loop_stack;
     size_t temp_counter = 0;
-    size_t loop_counter = 0;
     size_t branch_counter = 0;
 
     static CONST char EXT[11] = ".wombat.il";
@@ -64,7 +76,7 @@ private:
 
     // Dev wants to create a `.wombat.il` file.
     bool dumpable() {
-        return src.has_value();
+        return src.has_value(); 
     }
 
     fs::path transform_extension(const fs::path& from) {
@@ -117,10 +129,6 @@ private:
         return std::format(".br_{}{}", ty, branch_counter);
     }
 
-    inline String gen_loop_label(String& parent) {
-        return std::format(".{}_loop{}", parent, loop_counter);
-    }
-
     inline Ptr<LitOp> new_lit_op(String&& value, LiteralKind&& kind) {
         return mk_ptr(LitOp{ std::move(value), std::move(kind) });
     }
@@ -137,12 +145,17 @@ private:
         return mk_ptr(LabelOp{ std::move(ident) });
     }
 
-    inline size_t push_temp() {
-        return temp_counter++;
+    inline void push_loop() {
+        push_branch();
+        loop_stack.push_back(LoopCtx{gen_branch_label("loop_brk"), gen_branch_label("loop_cnt")});
     }
 
-    inline size_t push_loop() {
-        return loop_counter++;
+    inline void pop_loop() {
+        loop_stack.pop_back();
+    }
+
+    inline size_t push_temp() {
+        return temp_counter++;
     }
 
     inline size_t push_branch() {
