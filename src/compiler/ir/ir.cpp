@@ -79,6 +79,7 @@ void IrProgram::flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign) {
 }
 
 void IrProgram::flatten_only_if(LoweredBlock& ctx, Ptr<Operand>& op, Ptr<BlockNode>& if_block) {
+    push_branch();
     String after = gen_branch_label("after");
 
     Instruction::Parts false_jump_ops;
@@ -100,7 +101,6 @@ void IrProgram::flatten_only_if(LoweredBlock& ctx, Ptr<Operand>& op, Ptr<BlockNo
         std::move(after),
         {}
     ));
-    push_branch();
 }
 
 void IrProgram::flatten_if_and_else(
@@ -109,6 +109,7 @@ void IrProgram::flatten_if_and_else(
     Ptr<BlockNode>& if_block,
     Ptr<BlockNode>& else_block
 ) {
+    push_branch();
     String else_label = gen_branch_label("else"), end_label = gen_branch_label("end");
 
     // JmpFalse to else_label if condition fails
@@ -122,7 +123,6 @@ void IrProgram::flatten_if_and_else(
         std::move(cond_jump_ops)
     ));
 
-    // Flatten the 'if' block
     for (auto& inst : flatten_block(if_block)) {
         ctx.push_back(std::move(inst));
     }
@@ -151,7 +151,6 @@ void IrProgram::flatten_if_and_else(
         std::move(end_label),
         {}
     ));
-    push_branch();
 }
 
 void IrProgram::flatten_branch(LoweredBlock& ctx, Ptr<StmtNode>& stmt) {

@@ -41,9 +41,10 @@ void CodeGen::emit_assign(Instruction& inst) {
                 offset
             );
             appendln(std::move(nasm));
+            break;
         }
         default:
-            UNREACHABLE();
+            log(format("'{}' is of size {}, therefore we dont support it.", ident, memsize));
     }
 }
 
