@@ -55,9 +55,12 @@ private:
     void flatten_var_decl(LoweredBlock& ctx, Ptr<StmtNode>& var_decl);
     void flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign);
     void flatten_ret_stmt(LoweredBlock& ctx, Ptr<StmtNode>& ret_stmt);
-    void flatten_if_stmt(LoweredBlock& ctx, Ptr<StmtNode>& if_stmt);
     void flatten_loop_stmt(LoweredBlock& ctx, Ptr<StmtNode>& loop_stmt);
     void flatten_brk_stmt(LoweredBlock& ctx, Ptr<StmtNode>& break_stmt);
+
+    void flatten_branch(LoweredBlock& ctx, Ptr<StmtNode>& if_stmt);
+    void flatten_only_if(LoweredBlock& ctx, Ptr<Operand>& op, Ptr<BlockNode>& if_block);
+    void flatten_if_and_else(LoweredBlock& ctx, Ptr<Operand>& op, Ptr<BlockNode>& if_block, Ptr<BlockNode>& else_block);
 
     // Dev wants to create a `.wombat.il` file.
     bool dumpable() {
@@ -110,6 +113,14 @@ private:
         }
     }
 
+    inline String gen_branch_label(String&& ty) {
+        return std::format(".br_{}{}", ty, branch_counter);
+    }
+
+    inline String gen_loop_label(String& parent) {
+        return std::format(".{}_loop{}", parent, loop_counter);
+    }
+
     inline Ptr<LitOp> new_lit_op(String&& value, LiteralKind&& kind) {
         return mk_ptr(LitOp{ std::move(value), std::move(kind) });
     }
@@ -122,6 +133,9 @@ private:
         return mk_ptr(TempOp{ std::move(id) });
     }
 
+    inline Ptr<LabelOp> new_lbl_op(String ident) {
+        return mk_ptr(LabelOp{ std::move(ident) });
+    }
 
     inline size_t push_temp() {
         return temp_counter++;

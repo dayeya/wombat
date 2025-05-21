@@ -78,9 +78,91 @@ void IrProgram::flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign) {
     ));
 }
 
-void IrProgram::flatten_if_stmt(LoweredBlock& ctx, Ptr<StmtNode>& stmt) {
-    auto* control_flow = dynamic_cast<IfNode*>(stmt.get());
-    ctx.push_back(new_inst(OpCode::Label, "", {}));
+void IrProgram::flatten_only_if(LoweredBlock& ctx, Ptr<Operand>& op, Ptr<BlockNode>& if_block) {
+    String after = gen_branch_label("after");
+
+    Instruction::Parts false_jump_ops;
+    false_jump_ops.push_back(std::move(op));
+    false_jump_ops.push_back(new_lbl_op(after));
+
+    ctx.push_back(new_inst(
+        OpCode::JmpFalse, 
+        std::nullopt, 
+        std::move(false_jump_ops)
+    ));
+
+    for (auto& inst : flatten_block(if_block)) {
+        ctx.push_back(std::move(inst));
+    }
+
+    ctx.push_back(new_inst(
+        OpCode::Label,
+        std::move(after),
+        {}
+    ));
+    push_branch();
+}
+
+void IrProgram::flatten_if_and_else(
+    LoweredBlock& ctx, 
+    Ptr<Operand>& op, 
+    Ptr<BlockNode>& if_block,
+    Ptr<BlockNode>& else_block
+) {
+    String else_label = gen_branch_label("else"), end_label = gen_branch_label("end");
+
+    // JmpFalse to else_label if condition fails
+    Instruction::Parts cond_jump_ops;
+    cond_jump_ops.push_back(std::move(op));
+    cond_jump_ops.push_back(new_lbl_op(else_label));
+
+    ctx.push_back(new_inst(
+        OpCode::JmpFalse,
+        std::nullopt,
+        std::move(cond_jump_ops)
+    ));
+
+    // Flatten the 'if' block
+    for (auto& inst : flatten_block(if_block)) {
+        ctx.push_back(std::move(inst));
+    }
+
+    // Unconditional jump to end after the 'if' block
+    Instruction::Parts end_jump_ops;
+    end_jump_ops.push_back(new_lbl_op(end_label));
+
+    ctx.push_back(new_inst(
+        OpCode::Jmp,
+        std::nullopt,
+        std::move(end_jump_ops)
+    ));
+    ctx.push_back(new_inst(
+        OpCode::Label,
+        std::move(else_label),
+        {}
+    ));
+
+    for (auto& inst : flatten_block(else_block)) {
+        ctx.push_back(std::move(inst));
+    }
+
+    ctx.push_back(new_inst(
+        OpCode::Label,
+        std::move(end_label),
+        {}
+    ));
+    push_branch();
+}
+
+void IrProgram::flatten_branch(LoweredBlock& ctx, Ptr<StmtNode>& stmt) {
+    auto* branch = dynamic_cast<IfNode*>(stmt.get());
+    auto op = flatten_expr(ctx, branch->condition);
+
+    if(branch->else_block == nullptr) {
+        flatten_only_if(ctx, op, branch->if_block);
+    } else {
+        flatten_if_and_else(ctx, op, branch->if_block, branch->else_block);
+    }
 }
 
 LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
@@ -103,7 +185,7 @@ LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
             }
             case NodeId::If: 
             {
-                flatten_if_stmt(body, child);
+                flatten_branch(body, child);
                 break;
             }
             case NodeId::FnCall:

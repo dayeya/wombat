@@ -26,8 +26,8 @@ std::string IrFn::dump() {
                     append(format("@{}:", inst.dst.value()));
                 }
                 else {
-                    // Label is a control flow label.
-                    break;
+                    decrease_depth();
+                    append(format("{}:", inst.dst.value()));
                 }
                 increase_depth();
                 break;
@@ -57,7 +57,7 @@ std::string IrFn::dump() {
             {
                 ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for pop instruction.");
                 auto& op = inst.parts.front();
-                append(format("pop |{} bytes|> {}", op->as_str(), inst.dst.value()));
+                append(format("pop @local({}) < |{} bytes|", inst.dst.value(), op->as_str()));
                 break;
             }
             case OpCode::Call: 
@@ -82,6 +82,29 @@ std::string IrFn::dump() {
                 ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for ret instruction.");
                 auto& op = inst.parts.front();
                 append(format("ret {}", op->as_str()));
+                break;
+            }
+            case OpCode::Jmp:
+            {
+                ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for jmp instruction.");
+                auto& label = inst.parts.front();
+                append(format("jmp {}", label->as_str()));
+                break;
+            }
+            case OpCode::JmpFalse:
+            {
+                ASSERT(inst.parts.capacity() == 2, "unexpected number of operands for jmpFalse instruction.");
+                auto& cond = inst.parts.at(0);
+                auto& label = inst.parts.at(1);
+                append(format("jmp_false {}, {}", cond->as_str(), label->as_str()));
+                break;
+            }
+            case OpCode::JmpTrue:
+            {
+                ASSERT(inst.parts.capacity() == 2, "unexpected number of operands for jmpTrue instruction.");
+                auto& cond = inst.parts.at(0);
+                auto& label = inst.parts.at(1);
+                append(format("jmp_true {}, {}", cond->as_str(), label->as_str()));
                 break;
             }
             case OpCode::Add:

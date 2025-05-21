@@ -69,6 +69,10 @@ enum class OpCode: int {
     Neg,        // neg: -a
     Not,        // not: true
     BitNot,     // bitwise(not): !a
+    // Jumps
+    Jmp,
+    JmpTrue,
+    JmpFalse,
     // No operation (placeholder)
     Nop
 };
@@ -79,7 +83,9 @@ enum class OpKind : int {
     // Operand is variable name. 
     Sym,
     // Operand is a temporary.
-    Temp
+    Temp,
+    // Operand is a label.
+    Label
 };
 
 struct Operand {
@@ -122,6 +128,18 @@ struct TempOp : public Operand {
 
     String as_str() const {
         return std::format("%t{}", id);
+    }
+};
+
+
+struct LabelOp : public Operand {
+    String ident;
+
+    LabelOp() : Operand(OpKind::Label), ident{""} {}
+    LabelOp(String ident) : Operand(OpKind::Temp), ident{std::move(ident)} {}
+
+    String as_str() const {
+        return ident;
     }
 };
 
@@ -176,6 +194,9 @@ struct Instruction {
             case OpCode::Gt:          return "gt";
             case OpCode::Neg:         return "neg";
             case OpCode::Not:         return "not";
+            case OpCode::Jmp:         return "jmp";
+            case OpCode::JmpFalse:    return "jmp_if_false";
+            case OpCode::JmpTrue:     return "jmp_if_true";
             case OpCode::Nop:         return "nop";
             default:                  return "unknown";
         }

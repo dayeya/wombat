@@ -134,8 +134,33 @@ void CodeGen::emit_call(Instruction& inst) {
     }
 }
 
+void CodeGen::emit_label(Instruction& inst) {
+    auto addr = inst.dst.value();
+    decrease_depth();
+    appendln(format("{}:", addr));
+    increase_depth();
+}
+
+void CodeGen::emit_jmp(Instruction& inst) {
+    auto& label_op = inst.parts.front();
+    appendln(format("jmp {}", label_op->as_str()));    
+}
+
+void CodeGen::emit_jmp_false(Instruction& inst) {
+    auto& condition_op = inst.parts.at(0);
+    auto& addr_op = inst.parts.at(1);
+
+    load_operand(condition_op, "rax", gain_symbol(condition_op));
+    appendln("cmp rax, 0");
+    appendln(format("je {}", addr_op->as_str()));
+}
+
 void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
     switch (inst.op) {
+        case OpCode::Label: {
+            emit_label(inst);
+            break;
+        }
         case OpCode::Alloc: 
         {
             emit_alloc(inst);
@@ -214,6 +239,24 @@ void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
         case OpCode::BitNot:
         {
             emit_bitnot(inst);
+            break;
+        }
+        case OpCode::Eq:
+        case OpCode::NotEq:
+        case OpCode::Le:
+        case OpCode::Lt:
+        case OpCode::Ge:
+        case OpCode::Gt:
+        { 
+            emit_cmp(inst);
+            break;
+        }
+        case OpCode::Jmp: {
+            emit_jmp(inst);
+            break;
+        }
+        case OpCode::JmpFalse: {
+            emit_jmp_false(inst);
             break;
         }
         default:

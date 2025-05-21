@@ -1,0 +1,10 @@
+fn free main()
+    if 1 > 1 {
+        putnum(2);
+    }
+    else {
+        putchar('n');
+        putchar('o');
+        putchar('\n');
+    }
+end

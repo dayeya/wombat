@@ -156,3 +156,41 @@ void CodeGen::emit_bitnot(Instruction& inst) {
     appendln(format("mov qword [rbp - {}], rax", stack.offset(sym)));
     appendln("");
 }
+
+void CodeGen::emit_cmp(Instruction& inst) {
+    auto sym = inst.dst.value();
+    stack.allocate(sym, TEMP_SIZE);
+
+    auto& lhs = inst.parts.at(0);
+    auto& rhs = inst.parts.at(1);
+
+    // loads both sides.
+    load_operand(lhs, "rax", gain_symbol(lhs)); 
+    load_operand(rhs, "rbx", gain_symbol(rhs));
+
+    String set;
+    switch (inst.op)
+    {
+        case OpCode::Eq:    set = "sete";  break; 
+        case OpCode::NotEq: set = "setne"; break; 
+        case OpCode::Lt:    set = "setl";  break; 
+        case OpCode::Le:    set = "setle"; break; 
+        case OpCode::Gt:    set = "setg";  break; 
+        case OpCode::Ge:    set = "setge"; break; 
+        default:
+            UNREACHABLE();
+    }
+
+    appendln("cmp rax, rbx");
+    appendln(format("{} al", set));
+    appendln("movzx rax, al");
+
+    size_t memsize = stack.memsize(sym);
+    String nasm = format(
+        "mov {} [rbp - {}], rax",
+        mem_ident_from_size(memsize),
+        stack.offset(sym)
+    );
+    appendln(std::move(nasm));
+    appendln("");
+}
