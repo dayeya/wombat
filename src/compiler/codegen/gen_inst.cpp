@@ -245,13 +245,9 @@ void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
             break;
         }
         case OpCode::And:
-        {
-            emit_logical_and(inst);
-            break;
-        }
         case OpCode::Or:
         {
-            emit_logical_or(inst);
+            emit_logical_binary_op(inst);
             break;
         }
         case OpCode::Not:

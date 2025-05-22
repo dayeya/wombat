@@ -195,7 +195,7 @@ void CodeGen::emit_cmp(Instruction& inst) {
     appendln("");
 }
 
-void CodeGen::emit_logical_and(Instruction& inst) {
+void CodeGen::emit_logical_binary_op(Instruction& inst) {
     auto sym = inst.dst.value();
     stack.allocate(sym, TEMP_SIZE);
 
@@ -205,28 +205,14 @@ void CodeGen::emit_logical_and(Instruction& inst) {
     load_operand(lhs, "rax", gain_symbol(lhs)); 
     load_operand(rhs, "rbx", gain_symbol(rhs));
 
-    appendln("cmp rax, 0");
-    appendln("setne al");        // set al = 1 if rax != 0
-    appendln("movzx rax, al");   // zero-extend al to full rax
-
-    appendln("cmp rbx, 0");
-    appendln("setne bl");
-    appendln("movzx rbx, bl");
-
-    appendln("and rax, rbx");
-    appendln(format("mov qword [rbp - {}], rax", stack.offset(sym)));
-    appendln("");
-}
-
-void CodeGen::emit_logical_or(Instruction& inst) {
-    auto sym = inst.dst.value();
-    stack.allocate(sym, TEMP_SIZE);
-
-    auto& lhs = inst.parts.at(0);
-    auto& rhs = inst.parts.at(1);
-
-    load_operand(lhs, "rax", gain_symbol(lhs)); 
-    load_operand(rhs, "rbx", gain_symbol(rhs));
+    String op;
+    switch(inst.op)
+    {
+        case OpCode::And: op = "and"; break;
+        case OpCode::Or:  op = "or";  break;
+        default:
+            UNREACHABLE();
+    }
 
     appendln("cmp rax, 0");
     appendln("setne al");        // set al = 1 if rax != 0
@@ -236,7 +222,7 @@ void CodeGen::emit_logical_or(Instruction& inst) {
     appendln("setne bl");
     appendln("movzx rbx, bl");
 
-    appendln("or rax, rbx");
+    appendln(format("{} rax, rbx", op));
     appendln(format("mov qword [rbp - {}], rax", stack.offset(sym)));
     appendln("");
 }

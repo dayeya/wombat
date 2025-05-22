@@ -67,9 +67,8 @@ private:
     void emit_bitand(Instruction& inst);
     void emit_bitxor(Instruction& inst);
     void emit_bitor(Instruction& inst);
+    void emit_logical_binary_op(Instruction& inst);
     void emit_logical_not(Instruction& inst);
-    void emit_logical_and(Instruction& inst);
-    void emit_logical_or(Instruction& inst);
     void emit_label(Instruction& inst);
     void emit_jmp(Instruction& inst);
     void emit_jmp_false(Instruction& inst);
