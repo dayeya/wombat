@@ -115,6 +115,10 @@ private:
         register_map[reg_to_str(reg)] = false;
     }
 
+    inline size_t align_to(size_t n, size_t align) {
+        return (n + align - 1) & ~(align - 1);
+    }
+
     std::string mem_ident_from_size(size_t size) {
         switch(size) {
             case 8: return "qword"; 
@@ -181,10 +185,6 @@ private:
             default:
                 UNREACHABLE();
         }
-    }
-
-    size_t align_to(size_t n, size_t align) {
-        return (n + align - 1) & ~(align - 1);
     }
 
     void append_inline_comment(String&& line) { 

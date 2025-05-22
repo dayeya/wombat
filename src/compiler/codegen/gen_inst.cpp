@@ -69,8 +69,10 @@ void CodeGen::emit_push(Instruction& inst) {
 }
 
 void CodeGen::emit_ret(Instruction& inst) {
-    auto& op = inst.parts.front();
+    auto& op = inst.parts.at(0);
+    auto& label = inst.parts.at(1);
     load_operand(op, "rax", gain_symbol(op));
+    appendln(format("jmp .end_{}", label->as_str()));
 }
 
 void CodeGen::emit_pop(Instruction& inst) {
@@ -279,7 +281,7 @@ void CodeGen::emit_function(IrFn& func) {
     appendln("mov rbp, rsp");
 
     if (func.space_occupied > 0) {
-        appendln(format("sub rsp, {}", func.space_occupied));
+        appendln(format("sub rsp, {}", align_to(func.space_occupied, 16)));
     }
 
     appendln("");

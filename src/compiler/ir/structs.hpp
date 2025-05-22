@@ -1,9 +1,8 @@
 #ifndef STRUCTS_HPP
 #define STRUCTS_HPP
 
-#include "token.hpp"
-#include "builtins.hpp"
 #include <format>
+#include "token.hpp"
 
 using String = std::string;
 using Tokenizer::LiteralKind;
@@ -221,13 +220,6 @@ struct IrFn {
           insts{std::move(insts)},
           space_occupied{0} {}
 
-    bool builtin() {
-        for(const auto& builtin : BUILTINS) {
-            if(name.compare(builtin.ident) == 0) return true;
-        }
-        return false;
-    }
-    
     // Is 'inst' a label that defines a start of a function?
     bool fn_label(Instruction& inst) {
         ASSERT(inst.match_code(OpCode::Label), "instruction must be of type 'label'");

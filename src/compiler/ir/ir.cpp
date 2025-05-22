@@ -34,7 +34,9 @@ void IrProgram::flatten_ret_stmt(LoweredBlock& block, Ptr<StmtNode>& ret_stmt) {
 
     Instruction::Parts ops;
     ops.push_back(flatten_expr(block, ret->expr));
+    ops.push_back(new_lbl_op(ret->fn.as_str()));
 
+    cur_frame_size += ret->expr->sema_type->wsizeof();
     block.push_back(new_inst(OpCode::Ret, ret->fn.as_str(), std::move(ops)));
 }
 

@@ -35,31 +35,13 @@ struct SemanticVisitor {
     SemanticVisitor() : table() {}
     
     void include_builtins() {
-        SharedPtr<PrimitiveType> type = std::make_shared<PrimitiveType>(PrimitiveType{Primitive::Free});
-        SharedPtr<SymFunction> fn = std::make_shared<SymFunction>(SymFunction{
-            {
-                Declaration::Parameter(
-                    Mutability::Immutable, 
-                    Identifier{"out"}, 
-                    std::make_shared<PrimitiveType>(PrimitiveType{Primitive::Char})
-                )
-            },
-            std::move(type)
-        });
-        table.insert_symbol(BUILTINS.at(0).ident, std::move(fn));
-        
-        type = std::make_shared<PrimitiveType>(PrimitiveType{Primitive::Free});
-        fn = std::make_shared<SymFunction>(SymFunction{
-            {
-                Declaration::Parameter(
-                    Mutability::Immutable, 
-                    Identifier{"num"}, 
-                    std::make_shared<PrimitiveType>(PrimitiveType{Primitive::Int})
-                )
-            },
-            std::move(type)
-        });
-        table.insert_symbol(BUILTINS.at(1).ident, std::move(fn));
+        for (const auto& builtin : BUILTINS) {
+            auto sym = sig_to_sym(builtin.signature);
+            ASSERT(sym.has_value(), format("caught an invalid signature parsing attempt: '{}'", builtin.signature));
+            
+            SharedPtr<SymFunction> fn = std::make_shared<SymFunction>(std::move(sym.value()));
+            table.insert_symbol(builtin.ident, std::move(fn));
+        }
     };
 
     inline bool is_builtin(const Identifier& ident) {

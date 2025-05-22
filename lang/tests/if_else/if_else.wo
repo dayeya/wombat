@@ -1,3 +1,19 @@
+fn free putbool(out: bool)
+    if out {
+        putchar('t');
+        putchar('r');
+        putchar('u');
+        putchar('e');
+    } else {
+        putchar('f');
+        putchar('a');
+        putchar('l');
+        putchar('s');
+        putchar('e');
+    }
+    putchar('\n');
+end
+
 fn free main()
     # something magical...
     let MAGIC: int = 69;
@@ -14,4 +30,7 @@ fn free main()
 
     mut xs: int = (MAGIC / 2) + 4;
     putnum(xs);
+
+    mut b: bool = xs == 38;
+    putbool(b);
 end

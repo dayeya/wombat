@@ -3,7 +3,7 @@ fn free main()
     mut xs: int = 1;
     loop {
         # iterate 3 times.
-        if(iter == 3) {
+        if iter == 3 {
             # header
             putchar('-');
             putchar('-');
