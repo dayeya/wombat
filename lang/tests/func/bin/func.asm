@@ -14,101 +14,144 @@ _start:
 	mov rdi, 0 ; exit code of 0 (success)
 	syscall
 
-; FUNC fib START_IMPL
-fib:
+; FUNC putbool START_IMPL
+putbool:
 	push rbp
 	mov rbp, rsp
-	sub rsp, 96
 	
-	mov qword [rbp - 8], rdi
-	mov rax, qword [rbp - 8]
-	mov rbx, 0
-	cmp rax, rbx
-	setl al
-	movzx rax, al
-	mov qword [rbp - 16], rax
-	
-	mov rax, qword [rbp - 16]
+	mov byte [rbp - 1], dil
+	movzx rax, byte [rbp - 1]
 	cmp rax, 0
-	je .br_after1
-	mov rdi, 110
+	je .br_else1
+	mov rdi, 116
 	call putchar
-	mov rdi, 111
+	mov rdi, 114
 	call putchar
-	mov rdi, 112
+	mov rdi, 117
 	call putchar
+	mov rdi, 101
+	call putchar
+	jmp .br_end1
+.br_else1:
+	mov rdi, 102
+	call putchar
+	mov rdi, 97
+	call putchar
+	mov rdi, 108
+	call putchar
+	mov rdi, 115
+	call putchar
+	mov rdi, 101
+	call putchar
+.br_end1:
 	mov rdi, 10
 	call putchar
-	mov rax, 0
-	jmp .end_fib
-.br_after1:
-	mov rax, qword [rbp - 8]
-	mov rbx, 0
-	cmp rax, rbx
-	sete al
-	movzx rax, al
-	mov qword [rbp - 24], rax
-	
-	mov rax, qword [rbp - 24]
-	cmp rax, 0
-	je .br_after2
-	mov rax, 0
-	jmp .end_fib
-.br_after2:
-	mov rax, qword [rbp - 8]
-	mov rbx, 2
-	cmp rax, rbx
-	setle al
-	movzx rax, al
-	mov qword [rbp - 32], rax
-	
-	mov rax, qword [rbp - 32]
-	cmp rax, 0
-	je .br_after3
-	mov rax, 1
-	jmp .end_fib
-.br_after3:
-	mov rax, qword [rbp - 8]
-	mov rbx, 1
-	sub rax, rbx
-	mov qword [rbp - 40], rax
-	
-	mov rdi, qword [rbp - 40]
-	call fib
-	mov qword [rbp - 48], rax
-	mov rax, qword [rbp - 8]
-	mov rbx, 2
-	sub rax, rbx
-	mov qword [rbp - 56], rax
-	
-	mov rdi, qword [rbp - 56]
-	call fib
-	mov qword [rbp - 64], rax
-	mov rax, qword [rbp - 48]
-	mov rbx, qword [rbp - 64]
-	add rax, rbx
-	mov qword [rbp - 72], rax
-	
-	mov rax, qword [rbp - 72]
-	jmp .end_fib
 
-.end_fib:
+.end_putbool:
 	mov rsp, rbp
 	pop rbp
 	ret
-; FUNC fib END_IMPL
+; FUNC putbool END_IMPL
 
 ; FUNC main START_IMPL
 main:
 	push rbp
 	mov rbp, rsp
-	sub rsp, 16
+	sub rsp, 32
 	
-	mov rdi, 6
-	call fib
-	mov qword [rbp - 8], rax
-	mov rdi, qword [rbp - 8]
-	call putnum
+	; 't' allocation of 1 bytes
+	mov rax, 1
+	mov byte [rbp - 1], al
+	; 'f' allocation of 1 bytes
+	mov rax, 0
+	mov byte [rbp - 2], al
+	movzx rax, byte [rbp - 1]
+	movzx rbx, byte [rbp - 1]
+	cmp rax, 0
+	setne al
+	movzx rax, al
+	cmp rbx, 0
+	setne bl
+	movzx rbx, bl
+	or rax, rbx
+	mov qword [rbp - 10], rax
+	
+	mov rax, qword [rbp - 10]
+	cmp rax, 0
+	sete al
+	movzx rax, al
+	mov qword [rbp - 18], rax
+	
+	mov rdi, qword [rbp - 18]
+	call putbool
+	movzx rax, byte [rbp - 2]
+	movzx rbx, byte [rbp - 2]
+	cmp rax, 0
+	setne al
+	movzx rax, al
+	cmp rbx, 0
+	setne bl
+	movzx rbx, bl
+	or rax, rbx
+	mov qword [rbp - 26], rax
+	
+	mov rax, qword [rbp - 26]
+	cmp rax, 0
+	sete al
+	movzx rax, al
+	mov qword [rbp - 34], rax
+	
+	mov rdi, qword [rbp - 34]
+	call putbool
+	movzx rax, byte [rbp - 1]
+	movzx rbx, byte [rbp - 1]
+	cmp rax, 0
+	setne al
+	movzx rax, al
+	cmp rbx, 0
+	setne bl
+	movzx rbx, bl
+	and rax, rbx
+	mov qword [rbp - 42], rax
+	
+	mov rdi, qword [rbp - 42]
+	call putbool
+	movzx rax, byte [rbp - 1]
+	movzx rbx, byte [rbp - 2]
+	cmp rax, 0
+	setne al
+	movzx rax, al
+	cmp rbx, 0
+	setne bl
+	movzx rbx, bl
+	and rax, rbx
+	mov qword [rbp - 50], rax
+	
+	mov rdi, qword [rbp - 50]
+	call putbool
+	movzx rax, byte [rbp - 1]
+	movzx rbx, byte [rbp - 2]
+	cmp rax, 0
+	setne al
+	movzx rax, al
+	cmp rbx, 0
+	setne bl
+	movzx rbx, bl
+	or rax, rbx
+	mov qword [rbp - 58], rax
+	
+	mov rdi, qword [rbp - 58]
+	call putbool
+	movzx rax, byte [rbp - 1]
+	cmp rax, 0
+	sete al
+	movzx rax, al
+	mov qword [rbp - 66], rax
+	
+	mov rdi, qword [rbp - 66]
+	call putbool
+	mov rax, 0
+	jmp .end_main
 
 .end_main:
 	mov rsp, rbp

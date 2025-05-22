@@ -194,3 +194,64 @@ void CodeGen::emit_cmp(Instruction& inst) {
     appendln(std::move(nasm));
     appendln("");
 }
+
+void CodeGen::emit_logical_and(Instruction& inst) {
+    auto sym = inst.dst.value();
+    stack.allocate(sym, TEMP_SIZE);
+
+    auto& lhs = inst.parts.at(0);
+    auto& rhs = inst.parts.at(1);
+
+    load_operand(lhs, "rax", gain_symbol(lhs)); 
+    load_operand(rhs, "rbx", gain_symbol(rhs));
+
+    appendln("cmp rax, 0");
+    appendln("setne al");        // set al = 1 if rax != 0
+    appendln("movzx rax, al");   // zero-extend al to full rax
+
+    appendln("cmp rbx, 0");
+    appendln("setne bl");
+    appendln("movzx rbx, bl");
+
+    appendln("and rax, rbx");
+    appendln(format("mov qword [rbp - {}], rax", stack.offset(sym)));
+    appendln("");
+}
+
+void CodeGen::emit_logical_or(Instruction& inst) {
+    auto sym = inst.dst.value();
+    stack.allocate(sym, TEMP_SIZE);
+
+    auto& lhs = inst.parts.at(0);
+    auto& rhs = inst.parts.at(1);
+
+    load_operand(lhs, "rax", gain_symbol(lhs)); 
+    load_operand(rhs, "rbx", gain_symbol(rhs));
+
+    appendln("cmp rax, 0");
+    appendln("setne al");        // set al = 1 if rax != 0
+    appendln("movzx rax, al");   // zero-extend al to full rax
+
+    appendln("cmp rbx, 0");
+    appendln("setne bl");
+    appendln("movzx rbx, bl");
+
+    appendln("or rax, rbx");
+    appendln(format("mov qword [rbp - {}], rax", stack.offset(sym)));
+    appendln("");
+}
+
+void CodeGen::emit_logical_not(Instruction& inst) {
+    auto sym = inst.dst.value();
+    stack.allocate(sym, TEMP_SIZE);
+
+    auto& operand = inst.parts.at(0);
+    load_operand(operand, "rax", gain_symbol(operand));
+
+    appendln("cmp rax, 0");
+    appendln("sete al");         // al = (rax == 0) ? 1 : 0
+    appendln("movzx rax, al");   // zero-extend al to full rax
+
+    appendln(format("mov qword [rbp - {}], rax", stack.offset(sym)));
+    appendln("");
+}

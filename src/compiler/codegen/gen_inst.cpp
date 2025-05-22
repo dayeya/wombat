@@ -244,6 +244,21 @@ void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
             emit_bitnot(inst);
             break;
         }
+        case OpCode::And:
+        {
+            emit_logical_and(inst);
+            break;
+        }
+        case OpCode::Or:
+        {
+            emit_logical_or(inst);
+            break;
+        }
+        case OpCode::Not:
+        {
+            emit_logical_not(inst);
+            break;
+        }
         case OpCode::Eq:
         case OpCode::NotEq:
         case OpCode::Le:

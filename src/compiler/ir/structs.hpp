@@ -63,7 +63,7 @@ enum class OpCode: int {
     Lt,         // lt: a < b
     Le,         // le: a <= b
     NotEq,      // neq: a != b
-    Ge,         // gw: a >= b
+    Ge,         // ge: a >= b
     Gt,         // gt: a > b
     Neg,        // neg: -a
     Not,        // not: true
@@ -177,8 +177,8 @@ struct Instruction {
             case OpCode::Div:         return "div";
             case OpCode::FlooredDiv:  return "floor";
             case OpCode::Mod:         return "mod";
-            case OpCode::And:         return "and";
-            case OpCode::Or:          return "or";
+            case OpCode::And:         return "logical_and";
+            case OpCode::Or:          return "logical_or";
             case OpCode::BitXor:      return "bit_xor";
             case OpCode::BitAnd:      return "bit_and";
             case OpCode::BitOr:       return "bit_or";
@@ -192,7 +192,7 @@ struct Instruction {
             case OpCode::Ge:          return "ge";
             case OpCode::Gt:          return "gt";
             case OpCode::Neg:         return "neg";
-            case OpCode::Not:         return "not";
+            case OpCode::Not:         return "logical_not";
             case OpCode::Jmp:         return "jmp";
             case OpCode::JmpFalse:    return "jmp_if_false";
             case OpCode::JmpTrue:     return "jmp_if_true";

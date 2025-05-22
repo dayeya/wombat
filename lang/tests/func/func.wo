@@ -1,18 +1,40 @@
-fn int fib(n: int)
-    if(n < 0) {
-        putchar('n');
-        putchar('o');
-        putchar('p');
-        putchar('\n');
-        return 0;
+fn free putbool(out: bool)
+    if out {
+        putchar('t');
+        putchar('r');
+        putchar('u');
+        putchar('e');
+    } else {
+        putchar('f');
+        putchar('a');
+        putchar('l');
+        putchar('s');
+        putchar('e');
     }
-    if n == 0 { return 0; }
-    if n <= 2 {
-        return 1;
-    }
-    return fib(n - 1) + fib(n - 2);
+    putchar('\n');
 end
 
 fn int main()
-    putnum(fib(6));
+    let t: bool = true;
+    let f: bool = false;
+
+    # Should print false
+    putbool(not (t or t));
+
+    # Should print true
+    putbool(not (f or f));
+
+    # Should print true
+    putbool(t and t);
+
+    # Should print false
+    putbool(t and f);
+
+    # Should print true
+    putbool(t or f);
+
+    # Should print false
+    putbool(not t);
+    
+    return 0;
 end
