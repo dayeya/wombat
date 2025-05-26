@@ -51,28 +51,6 @@ Ptr<Type> Parser::parse_type() {
 
         return mk_ptr(PointerType(std::move(type)));
     }
-    if(cur_tok().match_kind(TokenKind::OpenBracket)) 
-    {
-        eat();
-        size_t array_size = 0;
-        
-        ASSERT(
-            cur_tok().match_kind(TokenKind::LiteralNum),
-            std::format("expected a constant array size but got '{}'", cur_tok().value)
-        );
-
-        array_size = std::stoul(cur_tok().value);
-        eat();
-        
-        ASSERT(
-            cur_tok().match_kind(TokenKind::CloseBracket),
-            std::format("expected `]` after array type but got '{}'", cur_tok().value)
-        );
-        eat();
-
-        Ptr<Type> type = parse_type();
-        return mk_ptr(ArrayType(std::move(array_size), std::move(type))); 
-    }
     ASSERT(
         false,
         std::format("expected type but got '{}'", cur_tok().value)

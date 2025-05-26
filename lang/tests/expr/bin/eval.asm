@@ -3,7 +3,8 @@ global _start
 extern putchar
 extern putnum
 extern quit
-extern assert
+extern readnum
+extern readchar
 
 section .data
 
@@ -18,9 +19,21 @@ _start:
 main:
 	push rbp
 	mov rbp, rsp
+	sub rsp, 32
 	
-	mov rdi, 10
-	call putchar
+	mov rax, 100
+	neg rax
+	mov qword [rbp - 8], rax
+	
+	mov rax, qword [rbp - 8]
+	mov rbx, 4
+	add rax, rbx
+	mov qword [rbp - 16], rax
+	
+	mov rdi, qword [rbp - 16]
+	call putnum
+	mov rax, 0
+	jmp .end_main
 
 .end_main:
 	mov rsp, rbp

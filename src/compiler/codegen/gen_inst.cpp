@@ -244,6 +244,12 @@ void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
             emit_bitnot(inst);
             break;
         }
+        case OpCode::Shl:
+        case OpCode::Shr:
+        {
+            emit_shift(inst);
+            break;
+        }
         case OpCode::And:
         case OpCode::Or:
         {

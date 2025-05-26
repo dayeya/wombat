@@ -16,7 +16,8 @@ const std::vector<Builtin> BUILTINS = {
     Builtin{"putchar",  "fn free putchar(_1: char);"},
     Builtin{"putnum",   "fn free putnum(_1: int);"},
     Builtin{"quit",     "fn free quit(_1: int);"},
-    Builtin{"assert",   "fn free assert(_1: bool);"}
+    Builtin{"readnum",  "fn int readnum();"},
+    Builtin{"readchar",  "fn char readchar();"}
 };
 
 Option<SymFunction> sig_to_sym(const std::string& wombat_sig);

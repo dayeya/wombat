@@ -158,14 +158,6 @@ struct UnaryExpr : public BaseExpr {
     UnaryExpr(UnOpKind op, Ptr<BaseExpr>& e) : BaseExpr(ExprKind::Unary), op(op), expr(std::move(e)) {}
 };
 
-struct ArraySubscription : public BaseExpr {
-    Identifier arr;
-    Ptr<BaseExpr> index;
-
-    ArraySubscription(Identifier&& arr, Ptr<BaseExpr>&& index) 
-        : BaseExpr(ExprKind::ArraySubscription), arr(std::move(arr)), index(std::move(index)) {}
-};
-
 enum class Precedence : int {
     Dummy       = 0,  // Lowest precedence (used for undefined cases)
     LogicalOr   = 1,  // `or`

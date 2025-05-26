@@ -3,7 +3,8 @@ global _start
 extern putchar
 extern putnum
 extern quit
-extern assert
+extern readnum
+extern readchar
 
 section .data
 
@@ -144,20 +145,25 @@ process_integer:
 main:
 	push rbp
 	mov rbp, rsp
-	sub rsp, 32
+	sub rsp, 48
 	
 	; 'i' allocation of 8 bytes
 	mov rax, 1
 	mov qword [rbp - 8], rax
+	; 'LIMIT' allocation of 8 bytes
+	call readnum
+	mov qword [rbp - 24], rax
+	mov rax, qword [rbp - 24]
+	mov qword [rbp - 16], rax
 .br_loop_cnt4:
 	mov rax, qword [rbp - 8]
-	mov rbx, 100
+	mov rbx, qword [rbp - 16]
 	cmp rax, rbx
 	setg al
 	movzx rax, al
-	mov qword [rbp - 16], rax
+	mov qword [rbp - 32], rax
 	
-	mov rax, qword [rbp - 16]
+	mov rax, qword [rbp - 32]
 	cmp rax, 0
 	je .br_after5
 	jmp .br_loop_brk4
@@ -167,9 +173,9 @@ main:
 	mov rax, qword [rbp - 8]
 	mov rbx, 1
 	add rax, rbx
-	mov qword [rbp - 24], rax
+	mov qword [rbp - 40], rax
 	
-	mov rax, qword [rbp - 24]
+	mov rax, qword [rbp - 40]
 	mov qword [rbp - 8], rax
 	jmp .br_loop_cnt4
 .br_loop_brk4:

@@ -195,6 +195,31 @@ void CodeGen::emit_cmp(Instruction& inst) {
     appendln("");
 }
 
+void CodeGen::emit_shift(Instruction& inst) {
+    auto sym = inst.dst.value();
+    stack.allocate(sym, TEMP_SIZE);
+
+    auto& lhs = inst.parts.at(0);
+    auto& rhs = inst.parts.at(1);
+
+    // load both sides.
+    load_operand(lhs, "rax", gain_symbol(lhs)); 
+    load_operand(rhs, "rcx", gain_symbol(rhs));
+
+    String op;
+    switch(inst.op)
+    {
+        case OpCode::Shl: op = "shl"; break;
+        case OpCode::Shr: op = "sar"; break;
+        default:
+            UNREACHABLE();
+    }
+
+    appendln(format("{} rax, cl", op));
+    appendln(format("mov qword [rbp - {}], rax", stack.offset(sym)));
+    appendln("");
+}
+
 void CodeGen::emit_logical_binary_op(Instruction& inst) {
     auto sym = inst.dst.value();
     stack.allocate(sym, TEMP_SIZE);

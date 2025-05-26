@@ -166,25 +166,6 @@ struct VarTerminalNode : public ExprNode {
   }
 };
 
-struct ArraySubscriptionNode : public ExprNode {
-  Identifier arr;
-  Ptr<ExprNode> index;
-
-  ArraySubscriptionNode(Identifier&& arr, Ptr<ExprNode>&& index)
-    : Node(NodeId::ArrSub),
-      ExprNode(NodeId::ArrSub), 
-      arr(std::move(arr)), 
-      index(std::move(index)) {}
-
-  void analyze(SemanticVisitor& analyzer) override {
-    analyzer.sema_analyze(*this);
-  }
-
-  void accept(PPVisitor& visitor) override {
-    visitor.visit(*this);
-  }
-};
-
 struct BinOpNode : public ExprNode {
   BinOpKind op;
   Ptr<ExprNode> lhs;

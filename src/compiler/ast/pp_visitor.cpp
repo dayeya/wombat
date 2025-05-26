@@ -44,14 +44,6 @@ void PPVisitor::visit(VarTerminalNode& vn) {
     decrease_depth();
 }
 
-void PPVisitor::visit(ArraySubscriptionNode& an) {
-    print_node_header("ArraySubscription");
-    print(format("Name: {}\n ", an.arr.as_str()));
-    print_node_header("Index");
-    an.index->accept(*this);
-    decrease_depth(2);
-}
-
 void PPVisitor::visit(VarDeclarationNode& vdn) {
     print_node_header("Var");
     print(format("Mut: {}\n", mut_str(vdn.info.mut)));

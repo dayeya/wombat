@@ -1,9 +1,6 @@
 fn int main()
-    let xs: int = 1;
-    mut p: ptr<int> = &xs;
-    
-    @p = 4;
-    putnum(@p);
-
-    return 0;
+    putnum(32 >> 5);
+    putnum(-100 >> 2); 
+    putnum(-1 >> 1);
+    putnum(-8 >> 3);
 end

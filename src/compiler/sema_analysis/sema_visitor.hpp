@@ -14,7 +14,6 @@ struct BinOpNode;
 struct UnaryOpNode;
 struct VarDeclarationNode;
 struct VarTerminalNode;
-struct ArraySubscriptionNode;
 struct AssignmentNode;
 struct FnHeaderNode;
 struct FnNode;
@@ -73,7 +72,6 @@ struct SemanticVisitor {
     void sema_analyze(UnaryOpNode& un);
     void sema_analyze(VarTerminalNode& term);
     void sema_analyze(VarDeclarationNode& decl);
-    void sema_analyze(ArraySubscriptionNode& arr_sub);
     void sema_analyze(FnHeaderNode& fn_header);
     void sema_analyze(FnNode& fn);
     void sema_analyze(BlockNode& block);

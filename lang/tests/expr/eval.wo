@@ -9,5 +9,6 @@
 # end
 
 fn int main()
-    putnum(-84);
+    putnum(84);
+    return 0;
 end

@@ -151,7 +151,6 @@ private:
     Ptr<Expr::UnaryExpr> expr_unary();
     Ptr<Expr::GroupExpr> expr_group();
     Ptr<Expr::Literal> expr_literal();
-    Ptr<Expr::ArraySubscription> expr_array_subscription();
 
     // Computes the precedence of the right sibling of the current node.
     // This precedence will be using in the recursive manner when parsing expressions.

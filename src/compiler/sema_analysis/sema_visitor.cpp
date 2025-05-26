@@ -113,6 +113,15 @@ SharedPtr<Type> SemanticVisitor::sema_process_type(
         {
             return lhs;
         }
+        case BinOpKind::Shl:
+        case BinOpKind::Shr:
+        {
+            if (sema_type_primitive_cmp(rhs, Primitive::Int)) {
+                return std::make_shared<PrimitiveType>(Primitive::Int);
+            }
+            ASSERT(false, format("cannot shift type '{}'", lhs->as_str()));
+            return nullptr;
+        }
         case BinOpKind::Eq:
         case BinOpKind::NotEq:
         case BinOpKind::Lt:
@@ -188,7 +197,7 @@ void SemanticVisitor::sema_analyze(UnaryOpNode& un) {
     un.lhs->analyze(*this);
 
     switch (un.op) {
-        case UnOpKind::Neg: 
+        case UnOpKind::Neg:
         {
             if (
                 sema_type_primitive_cmp(un.lhs->sema_type, Primitive::Int) ||
@@ -208,13 +217,14 @@ void SemanticVisitor::sema_analyze(UnaryOpNode& un) {
             }
             ASSERT(false, format("cannot apply 'not' to type '{}'", un.lhs->sema_type->as_str()));
         }
-        case UnOpKind::BitNot: 
+        case UnOpKind::BitNot:
         {
             if (
                 sema_type_primitive_cmp(un.lhs->sema_type, Primitive::Int) ||
-                sema_type_primitive_cmp(un.lhs->sema_type, Primitive::Boolean)
+                sema_type_primitive_cmp(un.lhs->sema_type, Primitive::Boolean) ||
+                sema_type_primitive_cmp(un.lhs->sema_type, Primitive::Char)
             ) {
-                un.sema_type = un.lhs->sema_type;
+                un.sema_type = std::make_shared<PrimitiveType>(Primitive::Int);
                 return;
             }
             ASSERT(false, format("cannot apply '!' to type '{}'", un.lhs->sema_type->as_str()));
@@ -246,40 +256,6 @@ void SemanticVisitor::sema_analyze(VarTerminalNode& term) {
         default:
             ASSERT(false, "unreachable.");
     }
-};
-
-void SemanticVisitor::sema_analyze(ArraySubscriptionNode& arr_sub) {
-    ASSERT(
-        table.sym_exists(arr_sub.arr), 
-        format("'{}' was not declared in this scope.", arr_sub.arr.as_str())
-    );
-
-    SharedPtr<Symbol> sym = table.fetch_symbol(arr_sub.arr);
-    ASSERT(sym->sym_kind == SymKind::Var, "cannot subscript a function.");
-
-    auto& expr = arr_sub.index;
-    expr->analyze(*this);
-
-    // We must only accept indexes of type 'int'.
-    PrimitiveType expected{Primitive::Int};
-
-    if(!sema_type_cmp(*expr->sema_type, expected)) {
-        ASSERT(
-            false,
-            format("array index must be an integer: got '{}'", expr->sema_type->as_str())
-        );
-        return;
-    }
-
-    SharedPtr<VarSymbol> metadata = std::dynamic_pointer_cast<VarSymbol>(sym);
-    ASSERT(
-        metadata->type->fam == TypeFamily::Array, 
-        format("must use a subscriptable item, got: '{}' but expected an array", metadata->type->as_str())
-    );
-
-    SharedPtr<ArrayType> array_type = std::dynamic_pointer_cast<ArrayType>(metadata->type);
-    arr_sub.sema_type = array_type->underlying;
-    arr_sub.category = ValueCategory::LValue;
 };
 
 void SemanticVisitor::sema_analyze(AssignmentNode& assign) {

@@ -124,6 +124,8 @@ std::string IrFn::dump() {
             case OpCode::BitAnd:
             case OpCode::BitXor:
             case OpCode::BitOr:
+            case OpCode::Shl:
+            case OpCode::Shr:
             {   
                 ASSERT(
                     inst.parts.capacity() == 2, 

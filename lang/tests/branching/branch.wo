@@ -34,9 +34,10 @@ end
 
 fn free main()
     mut i: int = 1;
+    let LIMIT: int = readnum();
     loop {
         # Condition.
-        if i > 100 { break; }
+        if i > LIMIT { break; }
         process_integer(i);
         i = i + 1;
     }
