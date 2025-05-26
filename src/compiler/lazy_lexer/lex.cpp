@@ -76,6 +76,7 @@ void Lexer::lex_symbol() {
 		case ';': tok->fill_with(";", TokenKind::SemiColon);    break;
 		case ',': tok->fill_with(",", TokenKind::Comma);        break;
 		case '.': tok->fill_with(".", TokenKind::Dot);          break;
+		case '@': tok->fill_with("@", TokenKind::At);           break;
 		default: break;
 	}
 

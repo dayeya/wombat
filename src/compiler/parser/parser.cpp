@@ -58,17 +58,6 @@ Ptr<ExprNode> Parser::expr_to_node(const Ptr<Expr::BaseExpr>& expr) {
             FnCallNode node(std::move(fn_call->ident), std::move(args));
             return mk_ptr<FnCallNode>(std::move(node));
         }
-        case ExprKind::ArraySubscription:
-        {
-            auto* array_sub = dynamic_cast<Expr::ArraySubscription*>(expr.get());
-            ASSERT(array_sub != nullptr, "unexpected behavior: failed to cast to an array subscription expression.");
-
-            ArraySubscriptionNode node(
-                std::move(array_sub->arr), 
-                expr_to_node(array_sub->index)
-            );
-            return mk_ptr<ArraySubscriptionNode>(std::move(node));
-        }
         default:
         {
             ASSERT(false, std::format(
@@ -198,7 +187,11 @@ Ptr<StmtNode> Parser::stmt_to_node(const Ptr<Statement::Stmt>& stmt) {
             auto* assign_stmt = dynamic_cast<Assignment*>(stmt.get());
             ASSERT(assign_stmt != nullptr, "unexpected behavior: failed to cast to an assignment statement.");
 
-            AssignmentNode node(assign_stmt->init.assignment, assign_stmt->ident, expr_to_node(assign_stmt->init.expr));
+            AssignmentNode node(
+                assign_stmt->init.assignment, 
+                expr_to_node(assign_stmt->lvalue), 
+                expr_to_node(assign_stmt->init.expr)
+            );
             return mk_ptr<AssignmentNode>(std::move(node));
         }
         case StmtKind::Import:

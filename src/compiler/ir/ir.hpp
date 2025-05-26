@@ -47,7 +47,8 @@ private:
     LoopStack loop_stack;
     size_t temp_counter = 0;
     size_t branch_counter = 0;
-
+    
+    static CONST int TEMP_SIZE = 8;
     static CONST char EXT[11] = ".wombat.il";
     
     // Compound types.
@@ -56,9 +57,9 @@ private:
 
     // expression flattening.
     Ptr<Operand> flatten_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
+    Ptr<Operand> flatten_lit_expr(Ptr<ExprNode>& expr);
     Ptr<Operand> flatten_bin_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
     Ptr<Operand> flatten_un_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
-    Ptr<Operand> flatten_lit_expr(Ptr<ExprNode>& expr);
     Ptr<Operand> flatten_terminal(LoweredBlock& ctx, Ptr<ExprNode>& expr);
     Ptr<Operand> flatten_fn_call_from_expr(LoweredBlock& ctx, Ptr<ExprNode>& fn_call);
 
@@ -69,7 +70,6 @@ private:
     void flatten_ret_stmt(LoweredBlock& ctx, Ptr<StmtNode>& ret_stmt);
     void flatten_loop_stmt(LoweredBlock& ctx, Ptr<StmtNode>& loop_stmt);
     void flatten_brk_stmt(LoweredBlock& ctx, Ptr<StmtNode>& break_stmt);
-
     void flatten_branch(LoweredBlock& ctx, Ptr<StmtNode>& if_stmt);
     void flatten_only_if(LoweredBlock& ctx, Ptr<Operand>& op, Ptr<BlockNode>& if_block);
     void flatten_if_and_else(LoweredBlock& ctx, Ptr<Operand>& op, Ptr<BlockNode>& if_block, Ptr<BlockNode>& else_block);

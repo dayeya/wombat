@@ -56,12 +56,13 @@ enum class TokenKind: int {
     Colon,              // Symbol for ':'
     SemiColon,          // Symbol for ';'
     Comma,              // Symbol for ','
-    Dot,                // Symbol for ','
+    Dot,                // Symbol for '.'
     Bang,               // Symbol for '!'
     Ampersand,          // Symbol for '&'
     Pipe,               // Symbol for '|'
     Hat,                // Symbol for '^'
     Tilde,              // Symbol for '~'
+    At,                 // Symbol for '@'
 
     Whitespace,         // Sequence of non-meaningful characters like spaces or tabs
 
@@ -228,7 +229,11 @@ enum class UnOpKind: int {
     // }`
     Not,
     // A bitwise not. marked by '~'.
-    BitNot
+    BitNot,
+    // Pointer dereference, marked by '@'.
+    Dereference,
+     // Address of, marked by '&'.
+    AddrOf
 };
 
 // Converts the value of a token into a keyword.

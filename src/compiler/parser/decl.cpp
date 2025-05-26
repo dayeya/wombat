@@ -194,7 +194,7 @@ Option<Initializer> Parser::parse_local_initializer() {
         eat();
         return std::nullopt;
     }
-
+    
     ASSERT(
         cur_tok().matches_any(
             TokenKind::Eq,
@@ -273,7 +273,7 @@ Var Parser::parse_local_decl() {
 }
 
 Assignment Parser::parse_local_assignment() {
-    Identifier ident(cur_tok().value);
+    Identifier lvalue(cur_tok().value);
     eat();
 
     Option<Initializer> init = parse_local_initializer();
@@ -281,9 +281,9 @@ Assignment Parser::parse_local_assignment() {
         init.has_value(),
         std::format(
             "expected an assignment operator or but got '{}'", 
-            Tokenizer::tok_kind_str(cur_tok().kind)
+            tok_kind_str(cur_tok().kind)
         )
     );
 
-    return Assignment(std::move(ident), std::move(init.value()));
+    return Assignment(std::move(lvalue), std::move(init.value()));
 }

@@ -88,7 +88,7 @@ enum class ExprKind: int {
     Local,
     // An array subscription.
     // E.g 'foo[0]'
-    ArraySubscription,
+    ArraySubscription
 };
 
 struct BaseExpr {
@@ -178,7 +178,7 @@ enum class Precedence : int {
     Sum         = 8,  // +, -
     Product     = 9,  // *, /, %, //
     Pow         = 10, // **
-    Prefix      = 11, // Unary -, `not`
+    Prefix      = 11, // Unary -, `not`, '&', '!'
     Unambiguous = 12  // Function calls (highest precedence)
 };
 

@@ -83,6 +83,8 @@ Option<UnOpKind> Tokenizer::un_op_from_token(const Token& tok) {
   switch (tok.kind) {
     case TokenKind::Bang: return UnOpKind::BitNot;
     case TokenKind::Minus: return UnOpKind::Neg;
+    case TokenKind::At: return UnOpKind::Dereference;
+    case TokenKind::Ampersand: return UnOpKind::AddrOf;
     default: {
       if(tok.match_keyword(Keyword::Not)) {
         return UnOpKind::Not;
@@ -146,6 +148,7 @@ std::string Tokenizer::tok_kind_str(const TokenKind& kind) {
       case TokenKind::SemiColon: return "Semi_Colon";
       case TokenKind::Comma: return "Comma";
       case TokenKind::Dot: return "Dot";
+      case TokenKind::At: return "At";
       case TokenKind::LiteralNum: return "Literal_NUMBER";
       case TokenKind::LiteralFloat: return "Literal_FLOAT";
       case TokenKind::LiteralString: return "Literal_STRING";
@@ -230,9 +233,11 @@ std::string Tokenizer::bin_op_str(const BinOpKind& kind) {
 
 std::string Tokenizer::un_op_str(const UnOpKind& kind) {
   switch (kind) {
-    case UnOpKind::Neg:    return "-";
-    case UnOpKind::Not:    return "not";
-    case UnOpKind::BitNot: return "!";
+    case UnOpKind::Neg:         return "-";
+    case UnOpKind::Not:         return "not";
+    case UnOpKind::BitNot:      return "!";
+    case UnOpKind::Dereference: return "@";
+    case UnOpKind::AddrOf:      return "&";
     default: {
       ASSERT(false, "unknown");
       return "unknown";

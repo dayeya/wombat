@@ -96,6 +96,13 @@ struct Node {
   }
 };
 
+enum class ValueCategory : int {
+    // Represents a value that can be assigned to, i.e., an l-value.
+    LValue,
+    // Represents a value that can be read from, i.e., an r-value.
+    RValue
+};
+
 struct StmtNode : virtual public Node {
   ~StmtNode() = default;
   StmtNode(NodeId&& id) : Node(std::move(id)) {}
@@ -104,6 +111,8 @@ struct StmtNode : virtual public Node {
 struct ExprNode : virtual public Node {
   // A type attached to the expression during sema analysis.
   SharedPtr<Type> sema_type;
+  // The value category of the expression, which can be either l-value or r-value.
+  ValueCategory category = ValueCategory::RValue;
 
   ExprNode(NodeId&& id) : Node(std::move(id)), sema_type{nullptr} {}
   ExprNode(ExprNode&&) noexcept = default;
@@ -166,6 +175,40 @@ struct ArraySubscriptionNode : public ExprNode {
       ExprNode(NodeId::ArrSub), 
       arr(std::move(arr)), 
       index(std::move(index)) {}
+
+  void analyze(SemanticVisitor& analyzer) override {
+    analyzer.sema_analyze(*this);
+  }
+
+  void accept(PPVisitor& visitor) override {
+    visitor.visit(*this);
+  }
+};
+
+struct AddrOf : public ExprNode {
+  Ptr<ExprNode> expr;
+
+  AddrOf(Ptr<ExprNode>&& expr)
+    : Node(NodeId::Un), 
+      ExprNode(NodeId::Un), 
+      expr(std::move(expr)) {}
+
+  void analyze(SemanticVisitor& analyzer) override {
+    analyzer.sema_analyze(*this);
+  }
+
+  void accept(PPVisitor& visitor) override {
+    visitor.visit(*this);
+  }
+};
+
+struct DereferenceNode : public ExprNode {
+  Ptr<ExprNode> expr;
+
+  Dereference(Ptr<ExprNode>&& expr)
+    : Node(NodeId::Un), 
+      ExprNode(NodeId::Un), 
+      expr(std::move(expr)) {}
 
   void analyze(SemanticVisitor& analyzer) override {
     analyzer.sema_analyze(*this);
@@ -242,16 +285,16 @@ struct VarDeclarationNode : public StmtNode {
 };
 
 struct AssignmentNode : public StmtNode {
-  Identifier ident;
   Tokenizer::AssignOp op;
-  Ptr<ExprNode> expr;
+  Identifier lvalue;
+  Ptr<ExprNode> rvalue;
 
-  AssignmentNode(Tokenizer::AssignOp op, Identifier ident, Ptr<ExprNode>&& expr)
+  AssignmentNode(Tokenizer::AssignOp op, Identifier lvalue, Ptr<ExprNode>&& rvalue)
     : Node(NodeId::Assign), 
       StmtNode(NodeId::Assign), 
       op{std::move(op)}, 
-      ident(std::move(ident)), 
-      expr(std::move(expr)) {}
+      lvalue(std::move(lvalue)), 
+      rvalue(std::move(rvalue)) {}
 
   void analyze(SemanticVisitor& analyzer) override {
     analyzer.sema_analyze(*this);

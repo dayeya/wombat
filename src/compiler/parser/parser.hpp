@@ -121,7 +121,7 @@ private:
     }
 
     inline bool unary() {
-        return Tokenizer::un_op_from_token(cur_tok()) != std::nullopt;
+        return un_op_from_token(cur_tok()) != std::nullopt;
     }
 
     inline bool group_start() {

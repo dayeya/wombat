@@ -145,19 +145,12 @@ void SemanticVisitor::sema_analyze(LiteralNode& lit) {
             lit.sema_type = std::make_shared<PrimitiveType>(Primitive::Char);
             break;
         case LiteralKind::Str:
-        {
-            size_t new_len = lit.str.length() - 2; // Chop 2 quotes;
-            lit.sema_type = std::make_shared<ArrayType>(
-                std::move(new_len),
-                std::make_shared<PrimitiveType>(Primitive::Char)
-            );
-            break;
-        }
+            ASSERT(false, "unimplemented");
         case LiteralKind::Bool:
             lit.sema_type = std::make_shared<PrimitiveType>(Primitive::Boolean);
             break;
         default:
-            ASSERT(false, "unreachable");
+            UNREACHABLE();
     }
 };
 
@@ -207,7 +200,7 @@ void SemanticVisitor::sema_analyze(UnaryOpNode& un) {
             ASSERT(false, format("cannot negate type '{}'", un.lhs->sema_type->as_str()));
         }
 
-        case UnOpKind::Not: 
+        case UnOpKind::Not:
         {
             if (sema_type_primitive_cmp(un.lhs->sema_type, Primitive::Boolean)) {
                 un.sema_type = std::make_shared<PrimitiveType>(Primitive::Boolean);
@@ -226,9 +219,8 @@ void SemanticVisitor::sema_analyze(UnaryOpNode& un) {
             }
             ASSERT(false, format("cannot apply '!' to type '{}'", un.lhs->sema_type->as_str()));
         }
-        default: {
-            ASSERT(false, "unreachable unary op");
-        }
+        default:
+            UNREACHABLE();
     }
 };
 
@@ -248,6 +240,7 @@ void SemanticVisitor::sema_analyze(VarTerminalNode& term) {
         {
             SharedPtr<VarSymbol> metadata = std::dynamic_pointer_cast<VarSymbol>(sym);
             term.sema_type = metadata->type;
+            term.category = ValueCategory::LValue;
             break;
         }
         default:
@@ -286,14 +279,15 @@ void SemanticVisitor::sema_analyze(ArraySubscriptionNode& arr_sub) {
 
     SharedPtr<ArrayType> array_type = std::dynamic_pointer_cast<ArrayType>(metadata->type);
     arr_sub.sema_type = array_type->underlying;
+    arr_sub.category = ValueCategory::LValue;
 };
 
 void SemanticVisitor::sema_analyze(AssignmentNode& assign) {
     ASSERT(
-        table.sym_exists(assign.ident), 
-        format("'{}' was not declared in this scope.", assign.ident.as_str())
+        table.sym_exists(assign.lvalue), 
+        format("'{}' was not declared in this scope.", assign.lvalue.as_str())
     );
-    SharedPtr<Symbol> sym = table.fetch_symbol(assign.ident);
+    SharedPtr<Symbol> sym = table.fetch_symbol(assign.lvalue);
     switch (sym->sym_kind)
     {
         case SymKind::Var:
@@ -301,10 +295,10 @@ void SemanticVisitor::sema_analyze(AssignmentNode& assign) {
             SharedPtr<VarSymbol> metadata = std::dynamic_pointer_cast<VarSymbol>(sym);
             ASSERT(
                 metadata->mut == Mutability::Mutable, 
-                format("'{}' is not mutable.", assign.ident.as_str())
+                format("'{}' is not mutable.", assign.lvalue.as_str())
             );
             
-            auto& expr = assign.expr;
+            auto& expr = assign.rvalue;
             expr->analyze(*this);
         
             if(!sema_type_cmp(*expr->sema_type, *metadata->type)) {
@@ -312,7 +306,7 @@ void SemanticVisitor::sema_analyze(AssignmentNode& assign) {
                     false,
                     format(
                         "{} is of type: '{}', but got: '{}'", 
-                        assign.ident.as_str(), 
+                        assign.lvalue.as_str(), 
                         metadata->type->as_str(),
                         expr->sema_type->as_str()
                     )
@@ -323,14 +317,14 @@ void SemanticVisitor::sema_analyze(AssignmentNode& assign) {
         }
         case SymKind::Fn:
         {
-            ASSERT(false, format("'{}' is a function and cannot be assigned to.", assign.ident.as_str()));
+            ASSERT(
+                false, 
+                format("'{}' is a function and cannot be assigned to.", assign.lvalue.as_str())
+            );
             break;
         }
         default:
-        {
-            ASSERT(false, "found an unsupported symbol kind.");
-            break;
-        }
+            UNREACHABLE();
     }    
 }
 
@@ -350,7 +344,7 @@ void SemanticVisitor::sema_analyze(VarDeclarationNode& decl) {
     }
 
     auto& expr = decl.init;
-    expr->analyze(*this);
+    expr->analyze(*this);   
     ASSERT(expr->sema_type != nullptr, "[core:err]: expression must be bound to a type");
 
     if(!sema_type_cmp(*expr->sema_type, *decl.info.type)) {

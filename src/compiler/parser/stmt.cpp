@@ -159,7 +159,7 @@ Statement::FnCall Parser::parse_fn_call() {
 Ptr<Statement::Stmt> Parser::parse_stmt_without_recovery() {
     if(cur_tok().match_keyword(Keyword::Mut, Keyword::Let)) {
         return mk_ptr(parse_local_decl());
-    } 
+    }
     if(cur_tok().match_keyword(Keyword::Fn)) {
         return mk_ptr(parse_fn_decl());
     }

@@ -69,6 +69,7 @@ struct TypeHash {
 
 struct Type {
     TypeFamily fam;
+    size_t ptr_level = 0;
 
     static CONST size_t INT_SIZE    = 8;
     static CONST size_t FLOAT_SIZE  = 8;
@@ -78,7 +79,7 @@ struct Type {
     static CONST size_t FREE_SIZE   = 0;
 
     virtual ~Type() = default;
-    Type(TypeFamily family) : fam(family) {}
+    Type(TypeFamily family) : fam(family), ptr_level{0} {}
 
     inline bool is_prim() { return fam == TypeFamily::Primitive; }
     inline bool is_ptr() { return fam == TypeFamily::Pointer; }
@@ -137,7 +138,7 @@ struct PointerType : virtual public Type {
     SharedPtr<Type> underlying;
 
     ~PointerType() override = default;
-    PointerType(SharedPtr<Type>&& type)
+    PointerType(SharedPtr<Type> type)
         : Type(TypeFamily::Pointer), underlying(std::move(type)) {}
 
     std::string as_str() const override {

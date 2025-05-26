@@ -217,11 +217,11 @@ struct VarInfo {
 };
 
 struct Assignment : public Stmt {
-    Identifier ident;
+    Identifier lvalue;
     Initializer init;
 
-    Assignment(Identifier&& ident, Initializer&& init) 
-        : Stmt(StmtKind::Assignment), ident(std::move(ident)), init(std::move(init)) {}
+    Assignment(Identifier&& lvalue, Initializer&& init) 
+        : Stmt(StmtKind::Assignment), lvalue(std::move(lvalue)), init(std::move(init)) {}
 };
 
 struct Var : public Stmt {
