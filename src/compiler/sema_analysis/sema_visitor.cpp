@@ -229,6 +229,27 @@ void SemanticVisitor::sema_analyze(UnaryOpNode& un) {
             }
             ASSERT(false, format("cannot apply '!' to type '{}'", un.lhs->sema_type->as_str()));
         }
+        case UnOpKind::AddrOf: 
+        {
+            ASSERT(un.lhs->category == ValueCategory::LValue, format("cannot take address of r-value expression: '{}'", un.lhs->id_str()));
+            un.sema_type = std::make_shared<PointerType>(un.lhs->sema_type);
+            un.category = ValueCategory::RValue;
+            break;
+        }
+        case UnOpKind::Dereference:
+        {
+            ASSERT(
+                un.lhs->sema_type->is_ptr(), 
+                format("cannot dereference non-pointer type: '{}'", un.lhs->sema_type->as_str())
+            );
+            ASSERT(
+                un.lhs->category == ValueCategory::LValue, 
+                format("cannot dereference r-value expression: '{}'", un.lhs->id_str())
+            );
+            un.category = ValueCategory::LValue;
+            un.sema_type = (std::dynamic_pointer_cast<PointerType>(un.lhs->sema_type))->underlying;
+            break;
+        }
         default:
             UNREACHABLE();
     }

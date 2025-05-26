@@ -40,6 +40,13 @@ std::string IrFn::dump() {
                 append(format("alloc {}, {}", inst.dst.value(), alloc_bytes));
                 break;
             }
+            case OpCode::Dereference:
+            {
+                ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for dereference instruction.");
+                auto& op = inst.parts.front();
+                append(format("{} = deref {}", inst.dst.value(), op->as_str()));
+                break;
+            }
             case OpCode::Assign:
             {
                 ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for assign instruction.");

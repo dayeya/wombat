@@ -86,9 +86,8 @@ enum class ExprKind: int {
     // A named variable.
     // E.g 'foo'
     Local,
-    // An array subscription.
-    // E.g 'foo[0]'
-    ArraySubscription
+    // An address of a local variable.
+    Address
 };
 
 struct BaseExpr {

@@ -149,6 +149,8 @@ private:
     Ptr<Expr::FnCall> expr_ident_fn();
     Ptr<Expr::Local> expr_ident_local();
     Ptr<Expr::UnaryExpr> expr_unary();
+    Ptr<Expr::UnaryExpr> expr_addr();
+    Ptr<Expr::UnaryExpr> expr_deref();
     Ptr<Expr::GroupExpr> expr_group();
     Ptr<Expr::Literal> expr_literal();
 

@@ -118,6 +118,7 @@ private:
             case UnOpKind::Neg: return OpCode::Neg;
             case UnOpKind::BitNot: return OpCode::BitNot;
             case UnOpKind::Not: return OpCode::Not;
+            case UnOpKind::Dereference: return OpCode::Dereference;
             default: {
                 ASSERT(false, std::format("[ir::err] unsupported unary code: '{}'", un_op_str(op)));
                 return OpCode::Nop;
@@ -143,6 +144,10 @@ private:
 
     inline Ptr<LabelOp> new_lbl_op(String ident) {
         return mk_ptr(LabelOp{ std::move(ident) });
+    }
+
+    inline Ptr<AddrOp> new_addr_op(String&& addr) {
+        return mk_ptr(AddrOp{ std::move(addr) });
     }
 
     inline void push_loop() {

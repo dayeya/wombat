@@ -54,6 +54,7 @@ private:
     void emit_call(Instruction& inst);
     void emit_assign(Instruction& inst);
     void emit_alloc(Instruction& inst);
+    void emit_deref(Instruction& inst);
     void emit_push(Instruction& inst);
     void emit_pop(Instruction& inst);
     void emit_ret(Instruction& inst);
@@ -88,6 +89,10 @@ private:
     Option<String> gain_symbol(Ptr<Operand>& op) {
         if(op->kind == OpKind::Lit) {
             return std::nullopt;
+        }
+        if(op->kind == OpKind::Addr) {
+            auto* addr_op = dynamic_cast<AddrOp*>(op.get());
+            return addr_op->ident;
         }
         return op->as_str();
     }

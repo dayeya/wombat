@@ -93,10 +93,8 @@ Expr::Precedence Parser::rhs_expr_precedence(Tokenizer::BinOpKind binary_op) {
 Ptr<Expr::UnaryExpr> Parser::expr_unary() {
     ASSERT(unary(), "unreachable: cannot parse something that is not an unary.");
 
-    Tokenizer::UnOpKind unary_op = un_op_from_token(cur_tok()).value();
+    UnOpKind unary_op = un_op_from_token(cur_tok()).value();
     Expr::Precedence prec = Expr::prec_for_un_op(unary_op);
-    
-    // Eat the operator.
     eat();
     auto unary_expr = expr(prec);
     return mk_ptr(Expr::UnaryExpr(unary_op, unary_expr));

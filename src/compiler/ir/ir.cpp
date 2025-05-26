@@ -314,8 +314,15 @@ Ptr<Operand> IrProgram::flatten_bin_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr)
 
 Ptr<Operand> IrProgram::flatten_un_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
     auto* un = dynamic_cast<UnaryOpNode*>(expr.get());
-    auto lhs = flatten_expr(ctx, un->lhs);
 
+    // Handle special unary operations.
+    if(un->op == UnOpKind::AddrOf) {
+        ASSERT(un->lhs->id == NodeId::Term, "unreachable case: address of non-terminal node.");
+        auto* term = dynamic_cast<VarTerminalNode*>(un->lhs.get());
+        return new_addr_op(term->ident.as_str());
+    }
+
+    auto lhs = flatten_expr(ctx, un->lhs);
     cur_frame_size += un->sema_type->wsizeof();
 
     // A temporary to hold the result.

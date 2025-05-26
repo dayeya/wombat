@@ -22,8 +22,8 @@ enum class OpCode: int {
     // Assigns data into a target.
     // E.g. 'x = 1'
     Assign,
-    // Loads a variable into a temporary.
-    Load,
+    // Dereference a pointer.
+    Dereference, // E.g. 'x = @buffer'
     // Creates a temporary from an expression
     // E.g. 'putnum(1 + 2) --> %t1 = 1 + 2'
     Temp,
@@ -83,6 +83,8 @@ enum class OpKind : int {
     Sym,
     // Operand is a temporary.
     Temp,
+    // Representing an address in memory.
+    Addr,
     // Operand is a label.
     Label
 };
@@ -116,6 +118,17 @@ struct VarOp : public Operand {
 
     String as_str() const {
         return name;
+    }
+};
+
+struct AddrOp : public Operand {
+    String ident;
+
+    AddrOp() : Operand(OpKind::Addr), ident{} {}
+    AddrOp(String&& addr) : Operand(OpKind::Addr), ident{std::move(addr)} {}
+
+    String as_str() const {
+        return std::format("&{}", ident);
     }
 };
 
@@ -163,7 +176,7 @@ struct Instruction {
             case OpCode::Label:       return "label";
             case OpCode::Copy:        return "copy";
             case OpCode::Assign:      return "assign";
-            case OpCode::Load:        return "load";
+            case OpCode::Dereference: return "deref";
             case OpCode::Alloc:       return "alloc";
             case OpCode::Ret:         return "ret";
             case OpCode::Temp:        return "temp";

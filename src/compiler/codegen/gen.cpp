@@ -43,12 +43,18 @@ void CodeGen::load_operand(
             size_t offset = stack.offset(sym.value());
             size_t memsize = stack.memsize(sym.value());
 
-            if (memsize == 1) {
-                appendln(format("movzx {}, byte [rbp - {}]", reg, offset));
-            } else {
-                appendln(format("mov {}, qword [rbp - {}]", reg, offset));
+            switch(memsize) {
+                case 1: appendln(format("movzx {}, byte [rbp - {}]", reg, offset)); break;
+                case 8: appendln(format("mov {}, qword [rbp - {}]", reg, offset)); break;
+                default: 
+                    UNREACHABLE();
             }
-
+            break;
+        }
+        case OpKind::Addr:
+        {
+            size_t offset = stack.offset(sym.value());
+            appendln(format("lea {}, [rbp - {}]", reg, offset));
             break;
         }
         default: 

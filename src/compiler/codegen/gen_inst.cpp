@@ -13,6 +13,22 @@ void CodeGen::emit_alloc(Instruction& inst) {
     appendln(std::move(doc));
 }
 
+void CodeGen::emit_deref(Instruction& inst) {
+    auto sym = inst.dst.value();
+    stack.allocate(sym, TEMP_SIZE);
+    
+    auto& op = inst.parts.front();
+    size_t offset = stack.offset(op->as_str());
+    size_t memsize = stack.memsize(op->as_str());
+
+    // load it into "rax", if op is a temp, we free it.
+    load_operand(op, "rax", gain_symbol(op));
+    appendln(format("mov rax, qword [rax]"));
+    size_t dest_offset = stack.offset(sym);
+    appendln(format("mov qword [rbp - {}], rax", dest_offset));
+    appendln("");
+}
+
 void CodeGen::emit_assign(Instruction& inst) {
     auto ident = inst.dst.value();
     auto& op = inst.parts.front();
@@ -167,6 +183,11 @@ void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
         case OpCode::Alloc: 
         {
             emit_alloc(inst);
+            break;
+        }
+        case OpCode::Dereference: 
+        {
+            emit_deref(inst);
             break;
         }
         case OpCode::Assign: 
