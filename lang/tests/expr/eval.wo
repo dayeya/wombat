@@ -1,0 +1,13 @@
+# fn int evaluate(a: int, b: int, c: int)
+#    return (a * (b + 3)) / (c - 1);
+# end
+
+# fn int main()
+#    let r: int = evaluate(4, 2, 3);
+#    putnum(r);
+#    return 0;
+# end
+
+fn int main()
+    
+end

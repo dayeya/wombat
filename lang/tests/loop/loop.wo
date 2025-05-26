@@ -1,16 +1,15 @@
-fn free main()
-	mut x: int = 1;
+fn int GCD(mut a: int, mut b: int)
 	loop {
-		if x == 5 {
-			putchar('h');
-			putchar('i');
-			putchar('\n');
-			break;
-		} else {
-			loop {
-				if x == 5 { break; }
-				x = x + 1;
-			}
-		}
-	}
+		if b == 0 { break; }
+        let temp: int = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+end
+
+fn int main()
+	let gcd: int = GCD(48, 32);
+	putnum(gcd);
+	return 0;
 end

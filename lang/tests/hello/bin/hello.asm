@@ -2,6 +2,8 @@ global _start
 ; #[extern(linkage)]
 extern putchar
 extern putnum
+extern quit
+extern assert
 
 section .data
 

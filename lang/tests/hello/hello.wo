@@ -14,7 +14,7 @@ fn free main()
     putchar('l');
     putchar('l');
     putcharws('o');
-
+    
     putchar('w');
     putchar('o');
     putchar('r');

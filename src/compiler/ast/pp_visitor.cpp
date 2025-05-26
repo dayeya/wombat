@@ -183,9 +183,8 @@ void PPVisitor::visit(FnCallNode& fn) {
 
 void PPVisitor::visit(AssignmentNode& an) {
     print_node_header("Assignment");
+    print(format("LValue: {}\n", an.lvalue.as_str()));
     print(format("Op: {}\n", assign_op_str(an.op)));
-    print_node_header("LValue");
-    an.lvalue->accept(*this);
     print_node_header("RValue");
     an.rvalue->accept(*this);
     decrease_depth(2);

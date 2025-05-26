@@ -189,7 +189,7 @@ Ptr<StmtNode> Parser::stmt_to_node(const Ptr<Statement::Stmt>& stmt) {
 
             AssignmentNode node(
                 assign_stmt->init.assignment, 
-                expr_to_node(assign_stmt->lvalue), 
+                assign_stmt->lvalue, 
                 expr_to_node(assign_stmt->init.expr)
             );
             return mk_ptr<AssignmentNode>(std::move(node));

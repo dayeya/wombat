@@ -196,23 +196,8 @@ Option<Initializer> Parser::parse_local_initializer() {
     }
     
     ASSERT(
-        cur_tok().matches_any(
-            TokenKind::Eq,
-            TokenKind::StarAssign,
-            TokenKind::SlashAssign,
-            TokenKind::PrecentAssign,
-            TokenKind::PlusAssign,
-            TokenKind::MinusAssign,
-            TokenKind::ShlAssign,
-            TokenKind::ShrAssign,
-            TokenKind::AmpersandAssign,
-            TokenKind::PipeAssign,
-            TokenKind::HatAssign
-        ),
-        std::format(
-            "expected an assignment operator but got '{}'", 
-            Tokenizer::tok_kind_str(cur_tok().kind)
-        )
+        cur_tok().match_kind(TokenKind::Eq),
+        std::format("expected a '=' but got '{}'", cur_tok().value)
     );
     auto assign_op = assign_op_from_token(cur_tok()).value();
 
@@ -273,9 +258,16 @@ Var Parser::parse_local_decl() {
 }
 
 Assignment Parser::parse_local_assignment() {
+    ASSERT(
+        cur_tok().match_kind(TokenKind::Identifier),
+        std::format(
+            "expected an identifier but got '{}'", 
+            Tokenizer::tok_kind_str(cur_tok().kind)
+        )
+    );
     Identifier lvalue(cur_tok().value);
-    eat();
 
+    eat();
     Option<Initializer> init = parse_local_initializer();
     ASSERT(
         init.has_value(),

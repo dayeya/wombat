@@ -73,10 +73,9 @@ void IrProgram::flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign) {
     Instruction::Parts ops;
     ops.push_back(flatten_expr(ctx, var->rvalue));
 
-    auto lvalue = flatten_expr(ctx, var->lvalue);
     ctx.push_back(new_inst(
         OpCode::Assign,
-        lvalue->as_str(),
+        var->lvalue.as_str(),
         std::move(ops)
     ));
 }

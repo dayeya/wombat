@@ -79,9 +79,10 @@ std::string IrFn::dump() {
             }
             case OpCode::Ret:
             {   
-                ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for ret instruction.");
-                auto& op = inst.parts.front();
-                append(format("ret {}", op->as_str()));
+                ASSERT(inst.parts.capacity() == 2, "unexpected number of operands for ret instruction.");
+                auto& op = inst.parts.at(0);
+                auto& lbl_op = inst.parts.at(1);
+                append(format("#[{}] ret {}", lbl_op->as_str(), op->as_str()));
                 break;
             }
             case OpCode::Jmp:
@@ -111,7 +112,7 @@ std::string IrFn::dump() {
             case OpCode::Sub:
             case OpCode::Mul:
             case OpCode::Div:
-            case OpCode::FlooredDiv:
+            case OpCode::Mod:
             case OpCode::And:
             case OpCode::Or:
             case OpCode::Eq:

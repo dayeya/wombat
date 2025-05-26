@@ -1,0 +1,43 @@
+fn free put_fizz()
+    putchar('f');
+    putchar('i');
+    putchar('z');
+    putchar('z');
+end
+
+fn free put_buzz()
+    putchar('b');
+    putchar('u');
+    putchar('z');
+    putchar('z');
+end
+
+fn free process_integer(i: int)
+    if i % 3 == 0 {
+        if i % 5 == 0 {
+            put_fizz();
+            put_buzz();
+            putchar('\n');
+        } else {
+            put_fizz();
+            putchar('\n');
+        }
+    } else {
+        if i % 5 == 0 {
+            put_buzz();
+            putchar('\n');
+        } else {
+            putnum(i);
+        }
+    }
+end
+
+fn free main()
+    mut i: int = 1;
+    loop {
+        # Condition.
+        if i > 100 { break; }
+        process_integer(i);
+        i = i + 1;
+    }
+end

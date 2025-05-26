@@ -14,51 +14,46 @@ _start:
 	mov rdi, 0 ; exit code of 0 (success)
 	syscall
 
-; FUNC GCD START_IMPL
-GCD:
+; FUNC evaluate START_IMPL
+evaluate:
 	push rbp
 	mov rbp, rsp
-	sub rsp, 32
+	sub rsp, 48
 	
 	mov qword [rbp - 8], rdi
 	mov qword [rbp - 16], rsi
-.br_loop_cnt1:
-	mov rax, qword [rbp - 8]
-	mov rbx, 0
-	cmp rax, rbx
-	sete al
-	movzx rax, al
-	mov qword [rbp - 24], rax
+	mov qword [rbp - 24], rdx
+	mov rax, qword [rbp - 16]
+	mov rbx, 3
+	add rax, rbx
+	mov qword [rbp - 32], rax
 	
 	mov rax, qword [rbp - 24]
-	cmp rax, 0
-	je .br_after2
-	jmp .br_loop_brk1
-.br_after2:
-	; 'temp' allocation of 8 bytes
+	mov rbx, qword [rbp - 32]
+	xor rdx, rdx
+	imul rbx
+	mov qword [rbp - 40], rax
+	
 	mov rax, qword [rbp - 8]
-	mov qword [rbp - 32], rax
-	mov rax, qword [rbp - 16]
-	mov rbx, qword [rbp - 8]
+	mov rbx, 1
+	sub rax, rbx
+	mov qword [rbp - 48], rax
+	
+	mov rax, qword [rbp - 40]
+	mov rbx, qword [rbp - 48]
 	; sign-extend rax. 
 	cqo
 	idiv rbx
-	mov qword [rbp - 40], rdx
+	mov qword [rbp - 56], rax
 	
-	mov rax, qword [rbp - 40]
-	mov qword [rbp - 8], rax
-	mov rax, qword [rbp - 32]
-	mov qword [rbp - 16], rax
-	jmp .br_loop_cnt1
-.br_loop_brk1:
-	mov rax, qword [rbp - 16]
-	jmp .end_GCD
+	mov rax, qword [rbp - 56]
+	jmp .end_evaluate
 
-.end_GCD:
+.end_evaluate:
 	mov rsp, rbp
 	pop rbp
 	ret
-; FUNC GCD END_IMPL
+; FUNC evaluate END_IMPL
 
 ; FUNC main START_IMPL
 main:
@@ -66,10 +61,11 @@ main:
 	mov rbp, rsp
 	sub rsp, 48
 	
-	; 'gcd' allocation of 8 bytes
-	mov rdi, 32
-	mov rsi, 48
-	call GCD
+	; 'r' allocation of 8 bytes
+	mov rdi, 3
+	mov rsi, 2
+	mov rdx, 4
+	call evaluate
 	mov qword [rbp - 16], rax
 	mov rax, qword [rbp - 16]
 	mov qword [rbp - 8], rax

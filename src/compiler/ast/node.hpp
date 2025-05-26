@@ -185,40 +185,6 @@ struct ArraySubscriptionNode : public ExprNode {
   }
 };
 
-struct AddrOf : public ExprNode {
-  Ptr<ExprNode> expr;
-
-  AddrOf(Ptr<ExprNode>&& expr)
-    : Node(NodeId::Un), 
-      ExprNode(NodeId::Un), 
-      expr(std::move(expr)) {}
-
-  void analyze(SemanticVisitor& analyzer) override {
-    analyzer.sema_analyze(*this);
-  }
-
-  void accept(PPVisitor& visitor) override {
-    visitor.visit(*this);
-  }
-};
-
-struct DereferenceNode : public ExprNode {
-  Ptr<ExprNode> expr;
-
-  Dereference(Ptr<ExprNode>&& expr)
-    : Node(NodeId::Un), 
-      ExprNode(NodeId::Un), 
-      expr(std::move(expr)) {}
-
-  void analyze(SemanticVisitor& analyzer) override {
-    analyzer.sema_analyze(*this);
-  }
-
-  void accept(PPVisitor& visitor) override {
-    visitor.visit(*this);
-  }
-};
-
 struct BinOpNode : public ExprNode {
   BinOpKind op;
   Ptr<ExprNode> lhs;
