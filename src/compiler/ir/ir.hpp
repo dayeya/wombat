@@ -57,6 +57,7 @@ private:
 
     // expression flattening.
     Ptr<Operand> flatten_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
+    Ptr<Operand> flatten_expr_into_addr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
     Ptr<Operand> flatten_lit_expr(Ptr<ExprNode>& expr);
     Ptr<Operand> flatten_bin_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
     Ptr<Operand> flatten_un_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr);
@@ -66,7 +67,8 @@ private:
     // statement flattening.
     void flatten_fn_call_from_stmt(LoweredBlock& ctx, Ptr<StmtNode>& fn_call);
     void flatten_var_decl(LoweredBlock& ctx, Ptr<StmtNode>& var_decl);
-    void flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign);
+    void flatten_assign(LoweredBlock& ctx, Ptr<StmtNode>& assign);
+    void flatten_deref_assign(LoweredBlock& ctx, Ptr<StmtNode>& deref);
     void flatten_ret_stmt(LoweredBlock& ctx, Ptr<StmtNode>& ret_stmt);
     void flatten_loop_stmt(LoweredBlock& ctx, Ptr<StmtNode>& loop_stmt);
     void flatten_brk_stmt(LoweredBlock& ctx, Ptr<StmtNode>& break_stmt);

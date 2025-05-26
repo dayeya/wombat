@@ -21,8 +21,9 @@ void CodeGen::emit_deref(Instruction& inst) {
     size_t offset = stack.offset(op->as_str());
     size_t memsize = stack.memsize(op->as_str());
 
-    // load it into "rax", if op is a temp, we free it.
+    // load it into "rax".
     load_operand(op, "rax", gain_symbol(op));
+
     appendln(format("mov rax, qword [rax]"));
     size_t dest_offset = stack.offset(sym);
     appendln(format("mov qword [rbp - {}], rax", dest_offset));
@@ -36,32 +37,34 @@ void CodeGen::emit_assign(Instruction& inst) {
     size_t offset = stack.offset(ident);
     size_t memsize = stack.memsize(ident);
 
-    // load it into "rax", if op is a temp, we free it.
-    load_operand(op, "rax", gain_symbol(op));
-
     switch(memsize)
     {
         case 1: {
-            String nasm = format(
-                "mov {} [rbp - {}], al", 
-                mem_ident_from_size(memsize), 
-                offset
-            );
+            load_operand(op, "rax", gain_symbol(op));
+            String nasm = format("mov byte [rbp - {}], al", offset);
             appendln(std::move(nasm));
             break;
         }
-        case 8: {
-            String nasm = format(
-                "mov {} [rbp - {}], rax", 
-                mem_ident_from_size(memsize), 
-                offset
-            );
+        case 8:
+        {
+            load_operand(op, "rax", gain_symbol(op));
+            String nasm = format("mov qword [rbp - {}], rax", offset);
             appendln(std::move(nasm));
             break;
         }
-        default:
+        default: 
             log(format("'{}' is of size {}, therefore we dont support it.", ident, memsize));
     }
+}
+
+void CodeGen::emit_store(Instruction& inst) {
+    auto& address = inst.parts.at(0);
+    auto& value = inst.parts.at(1);
+
+    load_operand(value, "rax", gain_symbol(value));
+    load_operand(address, "rbx", gain_symbol(address));
+
+    appendln("mov qword [rbx], rax");
 }
 
 void CodeGen::emit_push(Instruction& inst) {
@@ -85,9 +88,14 @@ void CodeGen::emit_push(Instruction& inst) {
 }
 
 void CodeGen::emit_ret(Instruction& inst) {
-    auto& op = inst.parts.at(0);
-    auto& label = inst.parts.at(1);
-    load_operand(op, "rax", gain_symbol(op));
+    size_t label_index = 0;
+
+    if (inst.parts.size() == 2) {
+        load_operand(inst.parts.at(0), "rax", gain_symbol(inst.parts.at(0)));
+        label_index = 1;
+    }
+
+    auto& label = inst.parts.at(label_index);
     appendln(format("jmp .end_{}", label->as_str()));
 }
 
@@ -188,6 +196,11 @@ void CodeGen::emit_instruction(IrFn& func, Instruction& inst) {
         case OpCode::Dereference: 
         {
             emit_deref(inst);
+            break;
+        }
+        case OpCode::Store: 
+        {
+            emit_store(inst);
             break;
         }
         case OpCode::Assign: 

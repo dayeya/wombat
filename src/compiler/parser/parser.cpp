@@ -194,6 +194,18 @@ Ptr<StmtNode> Parser::stmt_to_node(const Ptr<Statement::Stmt>& stmt) {
             );
             return mk_ptr<AssignmentNode>(std::move(node));
         }
+        case StmtKind::DerefAssignment:
+        {
+            auto* deref_assign_stmt = dynamic_cast<DerefAssignment*>(stmt.get());
+            ASSERT(deref_assign_stmt != nullptr, "unexpected behavior: failed to cast to a dereference assignment statement.");
+
+            DerefAssignmentNode node(
+                deref_assign_stmt->init.assignment,
+                expr_to_node(deref_assign_stmt->lvalue),
+                expr_to_node(deref_assign_stmt->init.expr)
+            );
+            return mk_ptr<DerefAssignmentNode>(std::move(node));
+        }
         case StmtKind::Import:
         {
             auto* import_stmt = dynamic_cast<Statement::Import*>(stmt.get());

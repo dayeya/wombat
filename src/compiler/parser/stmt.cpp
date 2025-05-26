@@ -189,6 +189,9 @@ Ptr<Statement::Stmt> Parser::parse_stmt_without_recovery() {
         }
         return mk_ptr(parse_local_assignment());
     }
+    if(cur_tok().match_kind(TokenKind::At)) {
+        return mk_ptr(parse_deref_assignment());
+    }
     ASSERT(false, std::format("unknown piece of code, got '{}'", cur_tok().value));
     return nullptr;
 }

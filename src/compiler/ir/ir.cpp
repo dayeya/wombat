@@ -33,10 +33,12 @@ void IrProgram::flatten_ret_stmt(LoweredBlock& block, Ptr<StmtNode>& ret_stmt) {
     auto* ret = dynamic_cast<ReturnNode*>(ret_stmt.get());
 
     Instruction::Parts ops;
-    ops.push_back(flatten_expr(block, ret->expr));
-    ops.push_back(new_lbl_op(ret->fn.as_str()));
+    if(ret->expr.get()) {
+        ops.push_back(flatten_expr(block, ret->expr));
+        cur_frame_size += ret->expr->sema_type->wsizeof();
+    }
 
-    cur_frame_size += ret->expr->sema_type->wsizeof();
+    ops.push_back(new_lbl_op(ret->fn.as_str()));
     block.push_back(new_inst(OpCode::Ret, ret->fn.as_str(), std::move(ops)));
 }
 
@@ -67,7 +69,7 @@ void IrProgram::flatten_var_decl(LoweredBlock& block, Ptr<StmtNode>& var_decl) {
     }
 }
 
-void IrProgram::flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign) {
+void IrProgram::flatten_assign(LoweredBlock& ctx, Ptr<StmtNode>& assign) {
     auto* var = dynamic_cast<AssignmentNode*>(assign.get());
 
     Instruction::Parts ops;
@@ -76,6 +78,23 @@ void IrProgram::flatten_assignment(LoweredBlock& ctx, Ptr<StmtNode>& assign) {
     ctx.push_back(new_inst(
         OpCode::Assign,
         var->lvalue.as_str(),
+        std::move(ops)
+    ));
+}
+
+void IrProgram::flatten_deref_assign(LoweredBlock& ctx, Ptr<StmtNode>& assign) {
+    auto* deref = dynamic_cast<DerefAssignmentNode*>(assign.get());
+
+    Ptr<Operand> address = flatten_expr_into_addr(ctx, deref->lvalue);
+    Ptr<Operand> value = flatten_expr(ctx, deref->rvalue);
+
+    Instruction::Parts ops;
+    ops.push_back(std::move(address));
+    ops.push_back(std::move(value));
+
+    ctx.push_back(new_inst(
+        OpCode::Store,
+        std::nullopt,
         std::move(ops)
     ));
 }
@@ -213,7 +232,8 @@ LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
         switch(child->id) 
         {
             case NodeId::VarDecl: flatten_var_decl(body, child);          break;
-            case NodeId::Assign: flatten_assignment(body, child);         break;
+            case NodeId::Assign: flatten_assign(body, child);             break;
+            case NodeId::DerefAssign: flatten_deref_assign(body, child);  break;
             case NodeId::If: flatten_branch(body, child);                 break;
             case NodeId::FnCall: flatten_fn_call_from_stmt(body, child);  break;
             case NodeId::Return: flatten_ret_stmt(body, child);           break;
@@ -222,7 +242,7 @@ LoweredBlock IrProgram::flatten_block(Ptr<BlockNode>& block) {
             default: {
                 ASSERT(
                     false,
-                    format("cannot generate IR code from {}", child->id_str())
+                    format("cannot generate ir code from {}", child->id_str())
                 );
             }
         }
@@ -379,6 +399,31 @@ Ptr<Operand> IrProgram::flatten_terminal(LoweredBlock& ctx, Ptr<ExprNode>& expr)
     auto* term = dynamic_cast<VarTerminalNode*>(expr.get());
     auto operand = new_var_op(std::move(term->ident.as_str()));
     return std::move(operand);
+}
+
+Ptr<Operand> IrProgram::flatten_expr_into_addr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {
+    switch(expr->id)
+    {
+        case NodeId::Term:
+        {
+            auto* var = dynamic_cast<VarTerminalNode*>(expr.get());
+            return new_addr_op(var->ident.as_str());
+        }
+        case NodeId::Un: 
+        {
+            auto* un = dynamic_cast<UnaryOpNode*>(expr.get());
+            if(un->op == UnOpKind::AddrOf) {
+                return flatten_expr(ctx, un->lhs);
+            } else if(un->op == UnOpKind::Dereference) {
+                return flatten_expr(ctx, un->lhs);
+            } else {
+                ASSERT(false, format("unary operation '{}' is not addressable", un_op_str(un->op)));
+            }
+            break;
+        }
+        default:
+            ASSERT(false, format("cannot flatten '{}' expression into address.", expr->id_str()));
+    }
 }
 
 Ptr<Operand> IrProgram::flatten_expr(LoweredBlock& ctx, Ptr<ExprNode>& expr) {

@@ -15,6 +15,7 @@ struct UnaryOpNode;
 struct VarDeclarationNode;
 struct VarTerminalNode;
 struct AssignmentNode;
+struct DerefAssignmentNode;
 struct FnHeaderNode;
 struct FnNode;
 struct BlockNode;
@@ -52,20 +53,12 @@ struct SemanticVisitor {
     inline bool sema_type_cmp(Type& given, Type& expected) {
         return given.hash() == expected.hash();
     }
-
-    bool sema_is_lval(Ptr<ExprNode>& expr);
-    bool sema_is_rval(Ptr<ExprNode>& expr);
     
-    // Compares the inner primitive type with 'expected'. 
-    bool sema_type_primitive_cmp(SharedPtr<Type>& ty, Primitive&& expected);
-
-    // Checks for possible pointer arithmetics.
-    // *returns* The type of the result.
     SharedPtr<Type> sema_ptr_arithmetics(const BinOpKind& op, SharedPtr<Type>& lhs, SharedPtr<Type>& rhs);
-
-    // Checks for valid compatibility between `lhs` and `rhs`.
-    // *returns* The type of the result.
     SharedPtr<Type> sema_process_type(const BinOpKind& op, SharedPtr<Type>& lhs, SharedPtr<Type>& rhs);
+    
+    bool sema_type_primitive_cmp(SharedPtr<Type>& ty, Primitive&& expected);
+    bool sema_ptr_mut_within_assignment(Ptr<ExprNode>& expr);
 
     void sema_analyze(LiteralNode& lit);
     void sema_analyze(BinOpNode& bin);
@@ -81,6 +74,7 @@ struct SemanticVisitor {
     void sema_analyze(ReturnNode& ret);
     void sema_analyze(FnCallNode& fn_call);
     void sema_analyze(AssignmentNode& assignment);
+    void sema_analyze(DerefAssignmentNode& deref_assignment);
     void sema_analyze(ImportNode& imprt);
 };
 

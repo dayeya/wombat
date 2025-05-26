@@ -23,7 +23,10 @@ enum class OpCode: int {
     // E.g. 'x = 1'
     Assign,
     // Dereference a pointer.
-    Dereference, // E.g. 'x = @buffer'
+    Dereference,
+    // Stores a value into memory.
+    // E.g. '@x = 1'
+    Store, 
     // Creates a temporary from an expression
     // E.g. 'putnum(1 + 2) --> %t1 = 1 + 2'
     Temp,
@@ -177,6 +180,7 @@ struct Instruction {
             case OpCode::Copy:        return "copy";
             case OpCode::Assign:      return "assign";
             case OpCode::Dereference: return "deref";
+            case OpCode::Store:      return "memset";
             case OpCode::Alloc:       return "alloc";
             case OpCode::Ret:         return "ret";
             case OpCode::Temp:        return "temp";

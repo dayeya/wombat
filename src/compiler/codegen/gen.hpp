@@ -53,6 +53,7 @@ private:
     void emit_instruction(IrFn& fn, Instruction& inst);
     void emit_call(Instruction& inst);
     void emit_assign(Instruction& inst);
+    void emit_store(Instruction& inst);
     void emit_alloc(Instruction& inst);
     void emit_deref(Instruction& inst);
     void emit_push(Instruction& inst);

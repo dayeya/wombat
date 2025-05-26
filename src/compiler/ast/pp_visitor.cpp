@@ -182,6 +182,17 @@ void PPVisitor::visit(AssignmentNode& an) {
     decrease_depth(2);
 }
 
+void PPVisitor::visit(DerefAssignmentNode& dn) {
+    print_node_header("Dereference_Assignment");
+    print(format("Op: {}\n", assign_op_str(dn.op)));
+    print_node_header("LValue");
+    dn.lvalue->accept(*this);
+    decrease_depth();
+    print_node_header("RValue");
+    dn.rvalue->accept(*this);
+    decrease_depth();
+}
+
 void PPVisitor::visit(ReturnNode& rn) {
     print_node_header("Return");
     print(format("Fn: {}\n", rn.fn.as_str()));

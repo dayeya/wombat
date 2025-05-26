@@ -10,6 +10,7 @@ struct UnaryOpNode;
 struct VarDeclarationNode;
 struct VarTerminalNode;
 struct AssignmentNode;
+struct DerefAssignmentNode;
 struct FnHeaderNode;
 struct FnNode;
 struct BlockNode;
@@ -65,6 +66,7 @@ struct PPVisitor {
     void visit(ReturnNode& rn);
     void visit(FnCallNode& fn);
     void visit(AssignmentNode& an);
+    void visit(DerefAssignmentNode& dn);
     void visit(ImportNode& im);
     void visit(BreakNode& brk);
     void visit(VarTerminalNode& vn);

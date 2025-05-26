@@ -1,7 +1,20 @@
+fn free swap(mut a: ptr(int), mut b: ptr(int))
+    @a = @a ^ @b;
+    @b = @a ^ @b;
+    @a = @b ^ @a;
+end
+
 fn int main()
-    let xs: ch = 'a';
-    let p: ptr<ch> = &xs;
-    putchar(inner);
-    @p = 'b';
-    putchar(@p);
+    let xs: int = 42;
+    let ys: int = 84;
+    putnum(xs);
+    putnum(ys);
+    putchar('\n');
+    swap(&xs, &ys);
+    putnum(xs);
+    putnum(ys);
+
+    mut p: ptr(int) = &xs;
+    @p = 3;
+    return 0;
 end

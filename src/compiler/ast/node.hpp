@@ -31,6 +31,8 @@ enum class NodeId : int {
     //
     // E.g: `x = 7;`
     Assign,
+    // Represents a dereference assignment.
+    DerefAssign,
     // Represents a function declaration.
     FnDecl,
     // Represents a block of statements.
@@ -74,6 +76,8 @@ struct Node {
           return "variable_declaration";
       case NodeId::Assign:
           return "assignment";
+      case NodeId::DerefAssign:
+          return "dereference_assignment";
       case NodeId::FnDecl:
           return "function_declaration";
       case NodeId::Block:
@@ -113,6 +117,8 @@ struct ExprNode : virtual public Node {
   SharedPtr<Type> sema_type;
   // The value category of the expression, which can be either l-value or r-value.
   ValueCategory category = ValueCategory::RValue;
+  // A mutability flag indicating whether the expression can be modified.
+  Mutability mut = Mutability::Immutable;
 
   ExprNode(NodeId&& id) : Node(std::move(id)), sema_type{nullptr} {}
   ExprNode(ExprNode&&) noexcept = default;
@@ -238,6 +244,31 @@ struct AssignmentNode : public StmtNode {
 
   AssignmentNode(Tokenizer::AssignOp op, Identifier lvalue, Ptr<ExprNode>&& rvalue)
     : Node(NodeId::Assign), 
+      StmtNode(NodeId::Assign), 
+      op{std::move(op)}, 
+      lvalue(std::move(lvalue)), 
+      rvalue(std::move(rvalue)) {}
+
+  void analyze(SemanticVisitor& analyzer) override {
+    analyzer.sema_analyze(*this);
+  }
+
+  void accept(PPVisitor& visitor) override {
+    visitor.visit(*this);
+  }
+};
+
+struct DerefAssignmentNode : public StmtNode {
+  Tokenizer::AssignOp op;
+  Ptr<ExprNode> lvalue;
+  Ptr<ExprNode> rvalue;
+
+  DerefAssignmentNode(
+    Tokenizer::AssignOp op, 
+    Ptr<ExprNode>&& lvalue, 
+    Ptr<ExprNode>&& rvalue
+  )
+    : Node(NodeId::DerefAssign), 
       StmtNode(NodeId::Assign), 
       op{std::move(op)}, 
       lvalue(std::move(lvalue)), 

@@ -34,18 +34,18 @@ Ptr<Type> Parser::parse_type() {
     {
         eat();
         ASSERT(
-            cur_tok().match_kind(TokenKind::OpenAngle),
-            std::format("expected `<` after ptr keyword but got '{}'", cur_tok().value)
+            cur_tok().match_kind(TokenKind::OpenParen),
+            std::format("expected `(` after ptr keyword but got '{}'", cur_tok().value)
         );
 
         // A pointer underlying type.
-        // E.g 'mut string_type_example: ptr<[5]ch>
+        // E.g 'mut string_type_example: ptr(int)
         eat();
         Ptr<Type> type = parse_type();
         
         ASSERT(
-            cur_tok().match_kind(TokenKind::CloseAngle),
-            std::format("expected `>` after ptr type but got '{}'", cur_tok().value)
+            cur_tok().match_kind(TokenKind::CloseParen),
+            std::format("expected `)` after ptr type but got '{}'", cur_tok().value)
         );
         eat();
 
@@ -246,6 +246,31 @@ Assignment Parser::parse_local_assignment() {
     Identifier lvalue(cur_tok().value);
 
     eat();
+    if(cur_tok().match_kind(TokenKind::SemiColon)) {
+        eat();
+        ASSERT(false, "expected '=' but got ';'");
+    }
+
+    Option<Initializer> init = parse_local_initializer();
+    ASSERT(
+        init.has_value(),
+        format(
+            "expected an assignment operator or but got '{}'", 
+            tok_kind_str(cur_tok().kind)
+        )
+    );
+
+    return Assignment(std::move(lvalue), std::move(init.value()));
+}
+
+DerefAssignment Parser::parse_deref_assignment() {
+    Ptr<Expr::UnaryExpr> lvalue = expr_unary();
+
+    if(cur_tok().match_kind(TokenKind::SemiColon)) {
+        eat();
+        ASSERT(false, "expected '=' but got ';'");
+    }
+    
     Option<Initializer> init = parse_local_initializer();
     ASSERT(
         init.has_value(),
@@ -255,5 +280,5 @@ Assignment Parser::parse_local_assignment() {
         )
     );
 
-    return Assignment(std::move(lvalue), std::move(init.value()));
+    return DerefAssignment(std::move(lvalue), std::move(init.value()));
 }

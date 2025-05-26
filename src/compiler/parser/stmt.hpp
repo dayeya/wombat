@@ -71,6 +71,8 @@ enum class StmtKind : int {
     //
     // E.g 'foo = 42;'
     Assignment,
+    // A dereference assignment.
+    DerefAssignment,
     // A function declaration.
     //
     // E.g 'fn int32 foo(mut bar: int32) ... end'
@@ -222,6 +224,14 @@ struct Assignment : public Stmt {
 
     Assignment(Identifier&& lvalue, Initializer&& init) 
         : Stmt(StmtKind::Assignment), lvalue(std::move(lvalue)), init(std::move(init)) {}
+};
+
+struct DerefAssignment : public Stmt {
+    Ptr<Expr::BaseExpr> lvalue;
+    Initializer init;
+
+    DerefAssignment(Ptr<Expr::BaseExpr>&& lvalue, Initializer&& init) 
+        : Stmt(StmtKind::DerefAssignment), lvalue(std::move(lvalue)), init(std::move(init)) {}
 };
 
 struct Var : public Stmt {

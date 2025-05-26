@@ -40,6 +40,14 @@ std::string IrFn::dump() {
                 append(format("alloc {}, {}", inst.dst.value(), alloc_bytes));
                 break;
             }
+            case OpCode::Store:
+            {
+                ASSERT(inst.parts.capacity() == 2, "unexpected number of operands for memset instruction.");
+                auto& op = inst.parts.at(0);
+                auto& value = inst.parts.at(1);
+                append(format("store({}) = {}", op->as_str(), value->as_str()));
+                break;
+            }
             case OpCode::Dereference:
             {
                 ASSERT(inst.parts.capacity() == 1, "unexpected number of operands for dereference instruction.");
@@ -86,10 +94,15 @@ std::string IrFn::dump() {
             }
             case OpCode::Ret:
             {   
-                ASSERT(inst.parts.capacity() == 2, "unexpected number of operands for ret instruction.");
-                auto& op = inst.parts.at(0);
-                auto& lbl_op = inst.parts.at(1);
-                append(format("#[{}] ret {}", lbl_op->as_str(), op->as_str()));
+                ASSERT(inst.parts.capacity() <= 2, "unexpected number of operands for ret instruction.");
+                if(inst.parts.size() < 2) {
+                    auto& lbl_op = inst.parts.at(0);
+                    append(format("#[{}] ret; ", lbl_op->as_str()));
+                } else {
+                    auto& op = inst.parts.at(0);
+                    auto& lbl_op = inst.parts.at(1);
+                    append(format("#[{}] ret {}", lbl_op->as_str(), op->as_str()));
+                }
                 break;
             }
             case OpCode::Jmp:

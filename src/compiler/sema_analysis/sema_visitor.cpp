@@ -2,6 +2,39 @@
 #include "sema_visitor.hpp"
 #include "typing.hpp"
 
+bool SemanticVisitor::sema_ptr_mut_within_assignment(Ptr<ExprNode>& expr) {
+    switch(expr->id)
+    {
+        case NodeId::Term:
+        {
+            auto* var = dynamic_cast<VarTerminalNode*>(expr.get());
+            ASSERT(table.sym_exists(var->ident), format("variable '{}' does not exist in the current scope", var->ident.as_str()));
+            SharedPtr<Symbol> sym = table.fetch_symbol(var->ident);
+            if (sym->sym_kind == SymKind::Var) {
+                SharedPtr<VarSymbol> metadata = std::dynamic_pointer_cast<VarSymbol>(sym);
+                if(metadata->mut != Mutability::Mutable) {
+                    ASSERT(
+                        false, 
+                        format("'{}' is not mutable", var->ident.as_str())
+                    );
+                    return false;
+                }
+                return true;
+            }
+        }
+        case NodeId::Un: 
+        {
+            auto* un = dynamic_cast<UnaryOpNode*>(expr.get());
+            return sema_ptr_mut_within_assignment(un->lhs);
+            break;
+        }
+        default: {
+            ASSERT(false, "unreachable");
+            return false;
+        }
+    }
+}
+
 bool SemanticVisitor::sema_type_primitive_cmp(
     SharedPtr<Type>& ty, 
     Primitive&& expected
@@ -229,7 +262,7 @@ void SemanticVisitor::sema_analyze(UnaryOpNode& un) {
             }
             ASSERT(false, format("cannot apply '!' to type '{}'", un.lhs->sema_type->as_str()));
         }
-        case UnOpKind::AddrOf: 
+        case UnOpKind::AddrOf:
         {
             ASSERT(un.lhs->category == ValueCategory::LValue, format("cannot take address of r-value expression: '{}'", un.lhs->id_str()));
             un.sema_type = std::make_shared<PointerType>(un.lhs->sema_type);
@@ -324,6 +357,25 @@ void SemanticVisitor::sema_analyze(AssignmentNode& assign) {
             UNREACHABLE();
     }    
 }
+
+void SemanticVisitor::sema_analyze(DerefAssignmentNode& deref_assign) {
+    deref_assign.lvalue->analyze(*this);
+    deref_assign.rvalue->analyze(*this);
+
+    ASSERT(
+        deref_assign.lvalue->category == ValueCategory::LValue, 
+        format("cannot dereference r-value expression: '{}'", deref_assign.lvalue->id_str())
+    );
+    sema_ptr_mut_within_assignment(deref_assign.lvalue);
+    ASSERT(
+        sema_type_cmp(*deref_assign.lvalue->sema_type, *deref_assign.rvalue->sema_type),
+        format(
+            "mismatched types: cannot assign '{}' to pointer of type '{}'", 
+            deref_assign.rvalue->sema_type->as_str(), 
+            deref_assign.lvalue->sema_type->as_str()
+        )
+    );
+};
 
 void SemanticVisitor::sema_analyze(VarDeclarationNode& decl) {
     ASSERT(

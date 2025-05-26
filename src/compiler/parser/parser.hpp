@@ -21,6 +21,7 @@ using Statement::Loop;
 using Declaration::Parameter;
 using Declaration::Var;
 using Declaration::Assignment;
+using Declaration::DerefAssignment;
 using Declaration::FnHeader;
 using Declaration::Fn;
 using Declaration::Initializer;
@@ -149,8 +150,6 @@ private:
     Ptr<Expr::FnCall> expr_ident_fn();
     Ptr<Expr::Local> expr_ident_local();
     Ptr<Expr::UnaryExpr> expr_unary();
-    Ptr<Expr::UnaryExpr> expr_addr();
-    Ptr<Expr::UnaryExpr> expr_deref();
     Ptr<Expr::GroupExpr> expr_group();
     Ptr<Expr::Literal> expr_literal();
 
@@ -160,6 +159,7 @@ private:
 
     Var parse_local_decl();
     Assignment parse_local_assignment();
+    DerefAssignment parse_deref_assignment();
     Option<Initializer> parse_local_initializer();
 
     Ptr<Type> parse_type();
